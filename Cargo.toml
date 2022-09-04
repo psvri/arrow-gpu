@@ -1,0 +1,17 @@
+[package]
+name = "arrow-gpu"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+wgpu = "0.13.1"
+tokio = { version = "1.20.1", features = ["macros", "rt-multi-thread"] }
+pollster = "0.2.5"
+bytemuck = "1.12.1"
+futures-intrusive = "0.4.0"
+
+[[bin]]
+name = "test_bin"
+path = "src/test_bin.rs"
