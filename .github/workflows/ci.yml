@@ -1,5 +1,8 @@
 name: CI
 
+on:
+  push
+
 jobs:
   test-build:
     name: ${{ matrix.name }}
