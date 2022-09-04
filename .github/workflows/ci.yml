@@ -1,0 +1,34 @@
+name: CI
+
+jobs:
+  test-build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Linux
+            run_test: true
+            setup_env: |
+              sudo apt-get update
+              sudo apt-get install -f -y libegl1-mesa-dev
+              sudo apt-get install -f -y mesa-vulkan-drivers
+          - os: macos-latest
+            name: Darwin
+            run_test: false # macos vm doesn't have software metal api
+          - os: windows-latest
+            name: Windows
+            run_test: true
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Environment
+        run: ${{ matrix.setup_env }}
+        shell: bash
+      - name: rust cargo tests
+        if: matrix.run_test
+        run: |
+          cargo test
