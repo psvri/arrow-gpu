@@ -32,8 +32,7 @@ impl<T: NativeType> PrimitiveArrayGpu<T> {
         let data = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Storage Buffer"),
             contents: bytemuck::cast_slice(&values),
-            usage: wgpu::BufferUsages::MAP_READ
-                | wgpu::BufferUsages::STORAGE
+            usage: wgpu::BufferUsages::STORAGE
                 | wgpu::BufferUsages::COPY_DST
                 | wgpu::BufferUsages::COPY_SRC,
         });
@@ -128,8 +127,7 @@ macro_rules! add_scalar_primitive {
                 let staging_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
                     label: None,
                     size,
-                    usage: wgpu::BufferUsages::MAP_READ
-                        | wgpu::BufferUsages::STORAGE
+                    usage: wgpu::BufferUsages::STORAGE
                         | wgpu::BufferUsages::COPY_DST
                         | wgpu::BufferUsages::COPY_SRC,
                     mapped_at_creation: false,
