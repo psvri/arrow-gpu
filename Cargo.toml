@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-wgpu = "0.14.0"
+wgpu = "0.14.2"
 pollster = "0.2.5"
 bytemuck = "1.12.3"
 futures-intrusive = "0.5.0"

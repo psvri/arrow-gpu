@@ -10,12 +10,14 @@ use bytemuck::Pod;
 use log::info;
 use wgpu::{util::DeviceExt, Adapter, Buffer, ComputePipeline, Device, Queue, ShaderModule};
 
+use crate::array::gpu_array::gpu_ops::u32_ops::bit_or_array;
+
 use super::NullBitBufferBuilder;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct GpuDevice {
-    device: Arc<Device>,
-    queue: Arc<Queue>,
+    device: Device,
+    queue: Queue,
 }
 
 impl GpuDevice {
@@ -45,10 +47,7 @@ impl GpuDevice {
 
         info!("{:?}", device);
 
-        Self {
-            device: Arc::new(device),
-            queue: Arc::new(queue),
-        }
+        Self { device, queue }
     }
 
     pub async fn from_adapter(adapter: Adapter) -> GpuDevice {
@@ -64,10 +63,7 @@ impl GpuDevice {
             .await
             .unwrap();
 
-        Self {
-            device: Arc::new(device),
-            queue: Arc::new(queue),
-        }
+        Self { device, queue }
     }
 
     #[inline]
@@ -157,11 +153,11 @@ impl GpuDevice {
 pub struct NullBitBufferGpu {
     bit_buffer: Arc<Buffer>,
     len: usize,
-    gpu_device: GpuDevice,
+    gpu_device: Arc<GpuDevice>,
 }
 
 impl NullBitBufferGpu {
-    fn new(gpu_device: GpuDevice, buffer_builder: &NullBitBufferBuilder) -> Self {
+    fn new(gpu_device: Arc<GpuDevice>, buffer_builder: &NullBitBufferBuilder) -> Self {
         let data = gpu_device.create_gpu_buffer_with_data(&buffer_builder.data);
 
         Self {
@@ -225,10 +221,17 @@ impl NullBitBufferGpu {
             }
             (Some(l), Some(r)) => {
                 assert_eq!(l.bit_buffer.size(), r.bit_buffer.size());
+                assert_eq!(l.len, r.len);
+                let new_bit_buffer =
+                    bit_or_array(&l.gpu_device, &l.bit_buffer, &r.bit_buffer).await;
                 let len = l.len;
                 let gpu_device = l.gpu_device.clone();
 
-                None
+                Some(Self {
+                    bit_buffer: Arc::new(new_bit_buffer),
+                    len,
+                    gpu_device,
+                })
             }
         }
     }

@@ -1,6 +1,10 @@
+use std::sync::Arc;
+
 use arrow_gpu::array::gpu_array::f32_gpu::Float32ArrayGPU;
 use arrow_gpu::array::gpu_array::u32_gpu::UInt32ArrayGPU;
+use arrow_gpu::array::gpu_array::GpuDevice;
 use arrow_gpu::kernels::add_ops::{ArrowAdd, ArrowAddAssign};
+use pollster::FutureExt;
 
 #[tokio::test]
 async fn main() {
@@ -29,9 +33,11 @@ async fn main() {
 
     env_logger::init();
 
+    let device = Arc::new(GpuDevice::new().block_on());
+
     let data = vec![u32::MAX, 1, 2, 3, 4];
-    let mut gpu_array = UInt32ArrayGPU::from(&data);
-    gpu_array.add_assign(100).await;
+    let mut gpu_array = UInt32ArrayGPU::from_vec(&data, device.clone());
+    gpu_array.add_assign(&100).await;
 
     //println!("{:?}", gpu_array.add_assign(100).await);
     println!("{:?}", gpu_array);
@@ -41,9 +47,9 @@ async fn main() {
     gpu_array.add_assign(-10).await;*/
 
     let data = vec![0.0f32, 1.0f32, 2.0f32, 3.0f32, 4.0f32];
-    let mut gpu_array = Float32ArrayGPU::from(&data);
-    gpu_array.add_assign(10.0).await;
-    println!("{:?}", gpu_array.add(200.0).await);
+    let mut gpu_array = Float32ArrayGPU::from_vec(&data, device.clone());
+    gpu_array.add_assign(&10.0).await;
+    println!("{:?}", gpu_array.add(&200.0).await);
 
     /*let data = vec![0u16, 1, 2, 3, 4];
     let mut gpu_array = PrimitiveArrayGpu::<u16>::from(&data);
