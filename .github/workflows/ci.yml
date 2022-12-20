@@ -42,7 +42,7 @@ jobs:
             ~/.cargo/git/db/
             target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.toml') }}
-          restore-keys: ${{ runner.os }}-cargo-
+        restore-keys: ${{ runner.os }}-cargo-
       - name: rust cargo tests
         if: matrix.run_test
         run: |
