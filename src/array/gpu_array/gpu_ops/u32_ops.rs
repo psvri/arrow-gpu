@@ -27,13 +27,22 @@ pub async fn add_assign_scalar(gpu_device: &GpuDevice, data: &Buffer, value: u32
     );
 }
 
-pub async fn and_array(gpu_device: &GpuDevice, left: &Buffer, right: &Buffer) -> Buffer {
-    array_op!(gpu_device, u32, left, right, U32_ARRAY_SHADER, "and_u32");
+pub async fn bit_and_array(gpu_device: &GpuDevice, left: &Buffer, right: &Buffer) -> Buffer {
+    array_op!(
+        gpu_device,
+        u32,
+        left,
+        right,
+        U32_ARRAY_SHADER,
+        "bit_and_u32"
+    );
+}
+
+pub async fn bit_or_array(gpu_device: &GpuDevice, left: &Buffer, right: &Buffer) -> Buffer {
+    array_op!(gpu_device, u32, left, right, U32_ARRAY_SHADER, "bit_or_u32");
 }
 
 pub async fn add_array(gpu_device: &GpuDevice, left: &Buffer, right: &Buffer) -> Buffer {
-    print_u32_array(gpu_device, left, "left");
-    print_u32_array(gpu_device, right, "right");
     array_op!(gpu_device, u32, left, right, U32_ARRAY_SHADER, "add_u32");
 }
 
@@ -67,7 +76,10 @@ pub fn print_u32_array(gpu_device: &GpuDevice, data: &Buffer, name: &str) {
         // dropped before we unmap the buffer.
         drop(data);
         staging_buffer.unmap(); // Unmaps buffer from memory
-        println!("inside ops add {} is {:?}", name, result);
+        println!("{} {:?}", name, result);
+        for i in result {
+            println!("{:#032b}", i);
+        }
     } else {
         panic!("failed to run compute on gpu!");
     }

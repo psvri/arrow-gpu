@@ -4,7 +4,7 @@ use wgpu::util::align_to;
 
 pub mod gpu_array;
 
-pub trait NativeType: Pod + Debug {}
+pub trait NativeType: Pod + Debug + Default {}
 
 impl NativeType for f32 {}
 impl NativeType for i64 {}

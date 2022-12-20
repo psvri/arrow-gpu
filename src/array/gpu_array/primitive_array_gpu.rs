@@ -9,7 +9,7 @@ use wgpu::Buffer;
 
 pub struct PrimitiveArrayGpu<T: NativeType> {
     pub(crate) data: Arc<Buffer>,
-    pub(crate) gpu_device: GpuDevice,
+    pub(crate) gpu_device: Arc<GpuDevice>,
     pub(crate) phantom: PhantomData<T>,
     /// Actual len of the array
     pub(crate) len: usize,
@@ -17,6 +17,57 @@ pub struct PrimitiveArrayGpu<T: NativeType> {
 }
 
 impl<T: NativeType> PrimitiveArrayGpu<T> {
+    pub fn from_optional_slice(value: &[Option<T>], gpu_device: Arc<GpuDevice>) -> Self {
+        let element_size = std::mem::size_of::<T>();
+
+        let aligned_size = align_to(value.len() * element_size, 4);
+        let mut new_vec = Vec::<T>::with_capacity(aligned_size / element_size);
+        let mut null_buffer_builder = NullBitBufferBuilder::new_with_capacity(value.len());
+
+        for (index, val) in value.iter().enumerate() {
+            match val {
+                Some(x) => {
+                    new_vec.push(*x);
+                }
+                None => {
+                    new_vec.push(T::default());
+                    null_buffer_builder.set_bit(index);
+                }
+            }
+        }
+
+        let data = gpu_device.create_gpu_buffer_with_data(&new_vec);
+        let null_buffer = NullBitBufferGpu::new(gpu_device.clone(), &null_buffer_builder);
+
+        Self {
+            data: Arc::new(data),
+            gpu_device,
+            phantom: Default::default(),
+            len: value.len(),
+            null_buffer: Some(null_buffer),
+        }
+    }
+
+    pub fn from_optional_vec(value: &Vec<Option<T>>, gpu_device: Arc<GpuDevice>) -> Self {
+        Self::from_optional_slice(&value[..], gpu_device)
+    }
+
+    pub fn from_slice(value: &[T], gpu_device: Arc<GpuDevice>) -> Self {
+        let data = gpu_device.create_gpu_buffer_with_data(value);
+
+        Self {
+            data: Arc::new(data),
+            gpu_device,
+            phantom: Default::default(),
+            len: value.len(),
+            null_buffer: None,
+        }
+    }
+
+    pub fn from_vec(value: &Vec<T>, gpu_device: Arc<GpuDevice>) -> Self {
+        Self::from_slice(&value[..], gpu_device)
+    }
+
     pub fn raw_values(&self) -> Option<Vec<T>> {
         let size = self.data.size() as wgpu::BufferAddress;
 
@@ -91,80 +142,6 @@ impl<T: NativeType> PrimitiveArrayGpu<T> {
     }
 }
 
-impl<T> From<&[T]> for PrimitiveArrayGpu<T>
-where
-    T: NativeType,
-{
-    fn from(value: &[T]) -> Self {
-        let gpu_device = GpuDevice::new().block_on();
-
-        let data = gpu_device.create_gpu_buffer_with_data(value);
-
-        Self {
-            data: Arc::new(data),
-            gpu_device,
-            phantom: Default::default(),
-            len: value.len(),
-            null_buffer: None,
-        }
-    }
-}
-
-impl<T> From<&Vec<T>> for PrimitiveArrayGpu<T>
-where
-    T: NativeType,
-{
-    fn from(value: &Vec<T>) -> Self {
-        Self::from(&value[..])
-    }
-}
-
-impl<T> From<&[Option<T>]> for PrimitiveArrayGpu<T>
-where
-    T: NativeType + Default,
-{
-    fn from(value: &[Option<T>]) -> Self {
-        let gpu_device = GpuDevice::new().block_on();
-        let element_size = std::mem::size_of::<T>();
-
-        let aligned_size = align_to(value.len() * element_size, 4);
-        let mut new_vec = Vec::<T>::with_capacity(aligned_size / element_size);
-        let mut null_buffer_builder = NullBitBufferBuilder::new_with_capacity(value.len());
-
-        for (index, val) in value.iter().enumerate() {
-            match val {
-                Some(x) => {
-                    new_vec.push(*x);
-                }
-                None => {
-                    new_vec.push(T::default());
-                    null_buffer_builder.set_bit(index);
-                }
-            }
-        }
-
-        let data = gpu_device.create_gpu_buffer_with_data(&new_vec);
-        let null_buffer = NullBitBufferGpu::new(gpu_device.clone(), &null_buffer_builder);
-
-        Self {
-            data: Arc::new(data),
-            gpu_device,
-            phantom: Default::default(),
-            len: value.len(),
-            null_buffer: Some(null_buffer),
-        }
-    }
-}
-
-impl<T> From<&Vec<Option<T>>> for PrimitiveArrayGpu<T>
-where
-    T: NativeType + Default,
-{
-    fn from(value: &Vec<Option<T>>) -> Self {
-        Self::from(&value[..])
-    }
-}
-
 impl<T: NativeType> Debug for PrimitiveArrayGpu<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{{")?;
@@ -221,13 +198,13 @@ use super::{GpuDevice, NullBitBufferGpu};
 
 #[cfg(test)]
 pub mod test {
-
     macro_rules! test_add_scalar {
         ($fn_name: ident, $ty: ident, $input: expr, $scalar: expr, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
+                let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
                 let data = $input;
-                let gpu_array = PrimitiveArrayGpu::<$ty>::from(&data);
+                let gpu_array = PrimitiveArrayGpu::<$ty>::from_vec(&data, device);
                 let new_gpu_array = gpu_array.add($scalar).await;
                 assert_eq!(gpu_array.raw_values().unwrap(), data);
                 assert_eq!(new_gpu_array.raw_values().unwrap(), $output);
@@ -240,10 +217,9 @@ pub mod test {
         ($fn_name: ident, $ty: ident, $input_1: expr, $input_2: expr, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
-                let gpu_array_1 = $ty::from(&$input_1);
-                println!("{:?}", gpu_array_1.raw_values());
-                let gpu_array_2 = $ty::from(&$input_2);
-                println!("{:?}", gpu_array_2.raw_values());
+                let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
+                let gpu_array_1 = $ty::from_optional_vec(&$input_1, device.clone());
+                let gpu_array_2 = $ty::from_optional_vec(&$input_2, device);
                 let new_gpu_array = gpu_array_1.add(&gpu_array_2).await;
                 assert_eq!(new_gpu_array.values(), $output);
             }
@@ -255,8 +231,9 @@ pub mod test {
         ($fn_name: ident, $ty: ident, $input: expr, $scalar: expr, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
+                let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
                 let data = $input;
-                let mut gpu_array = PrimitiveArrayGpu::<$ty>::from(&data);
+                let mut gpu_array = PrimitiveArrayGpu::<$ty>::from_vec(&data, device);
                 gpu_array.add_assign($scalar).await;
                 assert_eq!(gpu_array.raw_values().unwrap(), $output)
             }
@@ -264,8 +241,9 @@ pub mod test {
         ($fn_name: ident, $ty: ident, $input: expr, $scalar: expr, $output_raw: expr, $output_values:expr) => {
             #[tokio::test]
             async fn $fn_name() {
+                let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
                 let data = $input;
-                let mut gpu_array = PrimitiveArrayGpu::<$ty>::from(&data);
+                let mut gpu_array = PrimitiveArrayGpu::<$ty>::from_optional_vec(&data, device);
                 gpu_array.add_assign($scalar).await;
                 assert_eq!(gpu_array.raw_values().unwrap(), $output_raw);
                 assert_eq!(gpu_array.values(), $output_values);

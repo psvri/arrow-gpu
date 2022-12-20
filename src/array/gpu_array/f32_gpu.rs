@@ -21,11 +21,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_large_f32_array() {
-        let gpu_array = Float32ArrayGPU::from(
+        let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
+        let gpu_array = Float32ArrayGPU::from_vec(
             &(0..1024 * 1024 * 10)
                 .into_iter()
                 .map(|x| x as f32)
                 .collect::<Vec<f32>>(),
+            device,
         );
         let new_gpu_array = gpu_array.add(&100.0).await;
         for (index, value) in new_gpu_array.raw_values().unwrap().into_iter().enumerate() {
