@@ -32,12 +32,12 @@ pub async fn and_array(gpu_device: &GpuDevice, left: &Buffer, right: &Buffer) ->
 }
 
 pub async fn add_array(gpu_device: &GpuDevice, left: &Buffer, right: &Buffer) -> Buffer {
-    print_u32_array(gpu_device, left);
-    print_u32_array(gpu_device, right);
+    print_u32_array(gpu_device, left, "left");
+    print_u32_array(gpu_device, right, "right");
     array_op!(gpu_device, u32, left, right, U32_ARRAY_SHADER, "add_u32");
 }
 
-pub fn print_u32_array(gpu_device: &GpuDevice, data: &Buffer) {
+pub fn print_u32_array(gpu_device: &GpuDevice, data: &Buffer, name: &str) {
     let size = data.size() as wgpu::BufferAddress;
 
     let staging_buffer = gpu_device.create_retrive_buffer(size);
@@ -67,7 +67,7 @@ pub fn print_u32_array(gpu_device: &GpuDevice, data: &Buffer) {
         // dropped before we unmap the buffer.
         drop(data);
         staging_buffer.unmap(); // Unmaps buffer from memory
-        println!("inside ops add {:?}", result);
+        println!("inside ops add {} is {:?}", name, result);
     } else {
         panic!("failed to run compute on gpu!");
     }

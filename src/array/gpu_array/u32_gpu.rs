@@ -19,8 +19,8 @@ impl ArrowAdd<UInt32ArrayGPU> for UInt32ArrayGPU {
     type Output = Self;
 
     async fn add(&self, value: &UInt32ArrayGPU) -> Self::Output {
-        println!("add trait {:?}", self.raw_values());
-        println!("add trait {:?}", value.raw_values());
+        println!("inside add trait left is {:?}", self.raw_values());
+        println!("inside add trait right is {:?}", value.raw_values());
         let new_data_buffer = add_array(&self.gpu_device, &self.data, &value.data).await;
         let new_null_buffer =
             NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &value.null_buffer).await;
