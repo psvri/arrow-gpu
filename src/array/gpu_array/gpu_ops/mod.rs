@@ -44,7 +44,7 @@ macro_rules! scalar_op {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             cpass.set_pipeline(&compute_pipeline);
             cpass.set_bind_group(0, &bind_group_array, &[]);
-            cpass.insert_debug_marker("f32 add scalar");
+            cpass.insert_debug_marker("add scalar");
             let dispatch_size = $data.size() / std::mem::size_of::<$ty>() as u64;
             cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
         }
@@ -92,7 +92,7 @@ macro_rules! assign_scalar_op {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             cpass.set_pipeline(&compute_pipeline);
             cpass.set_bind_group(0, &bind_group_array, &[]);
-            cpass.insert_debug_marker("compute addition");
+            cpass.insert_debug_marker("add assign scalar");
             let dispatch_size = ($data.size() / 4) / std::mem::size_of::<$ty>() as u64;
             cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
         }
@@ -105,6 +105,59 @@ macro_rules! assign_scalar_op {
 }
 
 pub(crate) use assign_scalar_op;
+
+macro_rules! array_op {
+    ($gpu_device: ident, $ty: ident, $left: ident, $right: ident, $shader: ident, $entry_point: literal) => {
+        let compute_pipeline = $gpu_device.create_compute_pipeline($shader, $entry_point);
+
+        let size = $left.size();
+        let new_values_buffer = $gpu_device.create_empty_buffer(size);
+
+        let bind_group_layout = compute_pipeline.get_bind_group_layout(0);
+        let bind_group_array = $gpu_device
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: $left.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: $right.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: new_values_buffer.as_entire_binding(),
+                    },
+                ],
+            });
+
+        let mut encoder = $gpu_device
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+        {
+            let mut cpass =
+                encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
+            cpass.set_pipeline(&compute_pipeline);
+            cpass.set_bind_group(0, &bind_group_array, &[]);
+            cpass.insert_debug_marker("add array");
+            let dispatch_size = $left.size() / std::mem::size_of::<$ty>() as u64;
+            cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
+        }
+
+        let submission_index = $gpu_device.queue.submit(Some(encoder.finish()));
+        $gpu_device
+            .device
+            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+
+        return new_values_buffer;
+    };
+}
+
+pub(crate) use array_op;
 
 /*
 add_assign_primitive!(

@@ -10,6 +10,8 @@ use bytemuck::Pod;
 use log::info;
 use wgpu::{util::DeviceExt, Adapter, Buffer, ComputePipeline, Device, Queue, ShaderModule};
 
+use crate::array::gpu_array::gpu_ops::u32_ops::and_array;
+
 use super::NullBitBufferBuilder;
 
 #[derive(Debug, Clone)]
@@ -225,10 +227,16 @@ impl NullBitBufferGpu {
             }
             (Some(l), Some(r)) => {
                 assert_eq!(l.bit_buffer.size(), r.bit_buffer.size());
+                assert_eq!(l.len, r.len);
+                let new_bit_buffer = and_array(&l.gpu_device, &l.bit_buffer, &r.bit_buffer).await;
                 let len = l.len;
                 let gpu_device = l.gpu_device.clone();
 
-                None
+                Some(Self {
+                    bit_buffer: Arc::new(new_bit_buffer),
+                    len,
+                    gpu_device,
+                })
             }
         }
     }
