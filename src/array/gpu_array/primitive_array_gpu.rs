@@ -4,8 +4,8 @@ use pollster::FutureExt;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use std::sync::Arc;
-use wgpu::util::{align_to};
-use wgpu::{Buffer};
+use wgpu::util::align_to;
+use wgpu::Buffer;
 pub struct PrimitiveArrayGpu<T: NativeType> {
     pub(crate) data: Arc<Buffer>,
     pub(crate) gpu_device: GpuDevice,
@@ -59,27 +59,31 @@ impl<T: NativeType> PrimitiveArrayGpu<T> {
                 let mut result_vec = Vec::with_capacity(self.len);
 
                 // TODO rework this
-
-                match self.null_buffer.as_ref().unwrap().raw_values() {
-                    Some(null_bit_buffer) => {
-                        for (pos, val) in primitive_values.iter().enumerate() {
-                            let index = pos / 32;
-                            let bit_index = pos % 32;
-                            if null_bit_buffer[index] & 1 << bit_index == 1 << bit_index {
-                                result_vec.push(None)
-                            } else {
-                                result_vec.push(Some(*val))
+                match self.null_buffer.as_ref() {
+                    Some(buffer) => {
+                        match buffer.raw_values() {
+                            Some(null_bit_buffer) => {
+                                for (pos, val) in primitive_values.iter().enumerate() {
+                                    let index = pos / 32;
+                                    let bit_index = pos % 32;
+                                    if null_bit_buffer[index] & 1 << bit_index == 1 << bit_index {
+                                        result_vec.push(None)
+                                    } else {
+                                        result_vec.push(Some(*val))
+                                    }
+                                }
+                            }
+                            None => {
+                                for val in primitive_values {
+                                    result_vec.push(Some(val))
+                                }
                             }
                         }
-                    }
-                    None => {
-                        for val in primitive_values {
-                            result_vec.push(Some(val))
-                        }
-                    }
-                }
 
-                result_vec
+                        return result_vec;
+                    }
+                    None => vec![],
+                }
             }
             None => vec![],
         }

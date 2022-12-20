@@ -21,6 +21,7 @@ jobs:
           - os: macos-latest
             name: Darwin
             run_test: false # macos vm doesn't have software metal api
+            run_build: true
           - os: windows-latest
             name: Windows
             run_test: true
@@ -31,7 +32,22 @@ jobs:
       - name: Setup Environment
         run: ${{ matrix.setup_env }}
         shell: bash
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-
       - name: rust cargo tests
         if: matrix.run_test
         run: |
           cargo test
+      - name: rust cargo build
+        if: matrix.run_build
+        run: |
+          cargo build
