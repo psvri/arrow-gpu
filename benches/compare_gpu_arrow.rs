@@ -9,7 +9,7 @@ fn bench_cpu_f32_add(data: &mut Float32Array, value: f32) -> Float32Array {
 }
 
 fn bench_gpu_f32_add(data: &mut Float32ArrayGPU, value: f32) -> Float32ArrayGPU {
-    data.add(value).block_on()
+    data.add(&value).block_on()
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {

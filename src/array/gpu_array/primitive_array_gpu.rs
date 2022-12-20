@@ -6,6 +6,7 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 use wgpu::util::align_to;
 use wgpu::Buffer;
+
 pub struct PrimitiveArrayGpu<T: NativeType> {
     pub(crate) data: Arc<Buffer>,
     pub(crate) gpu_device: GpuDevice,
@@ -80,7 +81,7 @@ impl<T: NativeType> PrimitiveArrayGpu<T> {
                             }
                         }
 
-                        return result_vec;
+                        result_vec
                     }
                     None => vec![],
                 }
@@ -186,8 +187,8 @@ macro_rules! impl_add_trait {
         impl ArrowAdd<$ty> for PrimitiveArrayGpu<$ty> {
             type Output = Self;
 
-            async fn add(&mut self, value: $ty) -> Self::Output {
-                let new_buffer = $op(&self.gpu_device, &self.data, value).await;
+            async fn add(&self, value: &$ty) -> Self::Output {
+                let new_buffer = $op(&self.gpu_device, &self.data, *value).await;
 
                 Self {
                     data: Arc::new(new_buffer),
@@ -207,8 +208,8 @@ macro_rules! impl_add_assign_trait {
     ($ty: ident, $op: ident) => {
         #[async_trait]
         impl ArrowAddAssign<$ty> for PrimitiveArrayGpu<$ty> {
-            async fn add_assign(&mut self, value: $ty) {
-                $op(&self.gpu_device, &self.data, value).await;
+            async fn add_assign(&mut self, value: &$ty) {
+                $op(&self.gpu_device, &self.data, *value).await;
             }
         }
     };
@@ -226,7 +227,7 @@ pub mod test {
             #[tokio::test]
             async fn $fn_name() {
                 let data = $input;
-                let mut gpu_array = PrimitiveArrayGpu::<$ty>::from(&data);
+                let gpu_array = PrimitiveArrayGpu::<$ty>::from(&data);
                 let new_gpu_array = gpu_array.add($scalar).await;
                 assert_eq!(gpu_array.raw_values().unwrap(), data);
                 assert_eq!(new_gpu_array.raw_values().unwrap(), $output);
@@ -234,6 +235,21 @@ pub mod test {
         };
     }
     pub(crate) use test_add_scalar;
+
+    macro_rules! test_add_array {
+        ($fn_name: ident, $ty: ident, $input_1: expr, $input_2: expr, $output: expr) => {
+            #[tokio::test]
+            async fn $fn_name() {
+                let gpu_array_1 = $ty::from(&$input_1);
+                println!("{:?}", gpu_array_1.raw_values());
+                let gpu_array_2 = $ty::from(&$input_2);
+                println!("{:?}", gpu_array_2.raw_values());
+                let new_gpu_array = gpu_array_1.add(&gpu_array_2).await;
+                assert_eq!(new_gpu_array.values(), $output);
+            }
+        };
+    }
+    pub(crate) use test_add_array;
 
     macro_rules! test_add_assign_scalar {
         ($fn_name: ident, $ty: ident, $input: expr, $scalar: expr, $output: expr) => {
