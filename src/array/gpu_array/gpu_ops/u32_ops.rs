@@ -16,6 +16,18 @@ pub async fn add_scalar(gpu_device: &GpuDevice, data: &Buffer, value: u32) -> Bu
     scalar_op!(gpu_device, u32, data, value, U32_SCALAR_SHADER, "u32_add");
 }
 
+pub async fn sub_scalar(gpu_device: &GpuDevice, data: &Buffer, value: u32) -> Buffer {
+    scalar_op!(gpu_device, u32, data, value, U32_SCALAR_SHADER, "u32_sub");
+}
+
+pub async fn mul_scalar(gpu_device: &GpuDevice, data: &Buffer, value: u32) -> Buffer {
+    scalar_op!(gpu_device, u32, data, value, U32_SCALAR_SHADER, "u32_mul");
+}
+
+pub async fn div_scalar(gpu_device: &GpuDevice, data: &Buffer, value: u32) -> Buffer {
+    scalar_op!(gpu_device, u32, data, value, U32_SCALAR_SHADER, "u32_div");
+}
+
 pub async fn add_assign_scalar(gpu_device: &GpuDevice, data: &Buffer, value: u32) {
     assign_scalar_op!(
         gpu_device,
@@ -42,7 +54,7 @@ pub async fn bit_or_array(gpu_device: &GpuDevice, left: &Buffer, right: &Buffer)
     array_op!(gpu_device, u32, left, right, U32_ARRAY_SHADER, "bit_or_u32");
 }
 
-pub async fn add_array(gpu_device: &GpuDevice, left: &Buffer, right: &Buffer) -> Buffer {
+pub async fn add_array_u32(gpu_device: &GpuDevice, left: &Buffer, right: &Buffer) -> Buffer {
     array_op!(gpu_device, u32, left, right, U32_ARRAY_SHADER, "add_u32");
 }
 

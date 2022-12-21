@@ -158,13 +158,13 @@ impl<T: NativeType> Debug for PrimitiveArrayGpu<T> {
     }
 }
 
-macro_rules! impl_add_trait {
-    ($ty: ident, $op: ident) => {
+macro_rules! impl_scalar_ops {
+    ($trait_name: ident, $trait_function: ident, $ty: ident, $op: ident) => {
         #[async_trait]
-        impl ArrowAdd<$ty> for PrimitiveArrayGpu<$ty> {
+        impl $trait_name<$ty> for PrimitiveArrayGpu<$ty> {
             type Output = Self;
 
-            async fn add(&self, value: &$ty) -> Self::Output {
+            async fn $trait_function(&self, value: &$ty) -> Self::Output {
                 let new_buffer = $op(&self.gpu_device, &self.data, *value).await;
 
                 Self {
@@ -179,7 +179,76 @@ macro_rules! impl_add_trait {
     };
 }
 
+pub(crate) use impl_scalar_ops;
+
+macro_rules! impl_add_trait {
+    ($ty: ident, $op: ident) => {
+        impl_scalar_ops!(ArrowAdd, add, $ty, $op);
+    };
+}
+
 pub(crate) use impl_add_trait;
+
+macro_rules! impl_sub_trait {
+    ($ty: ident, $op: ident) => {
+        impl_scalar_ops!(ArrowSub, sub, $ty, $op);
+    };
+}
+
+pub(crate) use impl_sub_trait;
+
+macro_rules! impl_mul_trait {
+    ($ty: ident, $op: ident) => {
+        impl_scalar_ops!(ArrowMul, mul, $ty, $op);
+    };
+}
+
+pub(crate) use impl_mul_trait;
+
+macro_rules! impl_div_trait {
+    ($ty: ident, $op: ident) => {
+        impl_scalar_ops!(ArrowDiv, div, $ty, $op);
+    };
+}
+
+pub(crate) use impl_div_trait;
+
+macro_rules! impl_array_ops {
+    ($trait_name: ident, $trait_function: ident, $for_ty: ident, $rhs_ty: ident, $op: ident) => {
+        #[async_trait]
+        impl $trait_name<$rhs_ty> for $for_ty {
+            type Output = Self;
+
+            async fn $trait_function(&self, value: &$rhs_ty) -> Self::Output {
+                assert!(Arc::ptr_eq(&self.gpu_device, &value.gpu_device));
+                let new_data_buffer = $op(&self.gpu_device, &self.data, &value.data).await;
+                let new_null_buffer =
+                    NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &value.null_buffer)
+                        .await;
+
+                let result = Self {
+                    data: Arc::new(new_data_buffer),
+                    gpu_device: self.gpu_device.clone(),
+                    phantom: Default::default(),
+                    len: self.len,
+                    null_buffer: new_null_buffer,
+                };
+
+                result
+            }
+        }
+    };
+}
+
+pub(crate) use impl_array_ops;
+
+macro_rules! impl_array_add_trait {
+    ($for_ty: ident, $rhs_ty: ident, $op: ident) => {
+        impl_array_ops!(ArrowAdd, add, $for_ty, $rhs_ty, $op);
+    };
+}
+
+pub(crate) use impl_array_add_trait;
 
 macro_rules! impl_add_assign_trait {
     ($ty: ident, $op: ident) => {
@@ -198,20 +267,20 @@ use super::{GpuDevice, NullBitBufferGpu};
 
 #[cfg(test)]
 pub mod test {
-    macro_rules! test_add_scalar {
-        ($fn_name: ident, $ty: ident, $input: expr, $scalar: expr, $output: expr) => {
+    macro_rules! test_scalar_op {
+        ($fn_name: ident, $ty: ident, $input: expr, $scalar_fn: ident, $scalar: expr, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
                 let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
                 let data = $input;
                 let gpu_array = PrimitiveArrayGpu::<$ty>::from_vec(&data, device);
-                let new_gpu_array = gpu_array.add($scalar).await;
+                let new_gpu_array = gpu_array.$scalar_fn($scalar).await;
                 assert_eq!(gpu_array.raw_values().unwrap(), data);
                 assert_eq!(new_gpu_array.raw_values().unwrap(), $output);
             }
         };
     }
-    pub(crate) use test_add_scalar;
+    pub(crate) use test_scalar_op;
 
     macro_rules! test_add_array {
         ($fn_name: ident, $ty: ident, $input_1: expr, $input_2: expr, $output: expr) => {

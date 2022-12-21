@@ -15,3 +15,21 @@ var<storage, read> increment: u32;
 fn u32_add(@builtin(global_invocation_id) global_id: vec3<u32>) {
     new_values[global_id.x] = original_values[global_id.x] + increment;
 }
+
+@compute
+@workgroup_size(256)
+fn u32_sub(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    new_values[global_id.x] = original_values[global_id.x] - increment;
+}
+
+@compute
+@workgroup_size(256)
+fn u32_mul(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    new_values[global_id.x] = original_values[global_id.x] * increment;
+}
+
+@compute
+@workgroup_size(256)
+fn u32_div(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    new_values[global_id.x] = original_values[global_id.x] / increment;
+}

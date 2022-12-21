@@ -1,1 +1,1 @@
-pub mod add_ops;
+pub mod arithmetic;
