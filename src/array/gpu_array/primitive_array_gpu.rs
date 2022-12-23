@@ -13,7 +13,7 @@ pub struct PrimitiveArrayGpu<T: NativeType> {
     pub(crate) phantom: PhantomData<T>,
     /// Actual len of the array
     pub(crate) len: usize,
-    pub(crate) null_buffer: Option<NullBitBufferGpu>,
+    pub(crate) null_buffer: NullBitBufferGpu,
 }
 
 impl<T: NativeType> PrimitiveArrayGpu<T> {
@@ -28,10 +28,10 @@ impl<T: NativeType> PrimitiveArrayGpu<T> {
             match val {
                 Some(x) => {
                     new_vec.push(*x);
+                    null_buffer_builder.set_bit(index);
                 }
                 None => {
                     new_vec.push(T::default());
-                    null_buffer_builder.set_bit(index);
                 }
             }
         }
@@ -44,7 +44,7 @@ impl<T: NativeType> PrimitiveArrayGpu<T> {
             gpu_device,
             phantom: Default::default(),
             len: value.len(),
-            null_buffer: Some(null_buffer),
+            null_buffer,
         }
     }
 
@@ -54,13 +54,14 @@ impl<T: NativeType> PrimitiveArrayGpu<T> {
 
     pub fn from_slice(value: &[T], gpu_device: Arc<GpuDevice>) -> Self {
         let data = gpu_device.create_gpu_buffer_with_data(value);
+        let null_buffer = NullBitBufferGpu::new_set_with_capacity(gpu_device.clone(), value.len());
 
         Self {
             data: Arc::new(data),
             gpu_device,
             phantom: Default::default(),
             len: value.len(),
-            null_buffer: None,
+            null_buffer,
         }
     }
 
@@ -111,31 +112,24 @@ impl<T: NativeType> PrimitiveArrayGpu<T> {
                 let mut result_vec = Vec::with_capacity(self.len);
 
                 // TODO rework this
-                match self.null_buffer.as_ref() {
-                    Some(buffer) => {
-                        match buffer.raw_values() {
-                            Some(null_bit_buffer) => {
-                                for (pos, val) in primitive_values.iter().enumerate() {
-                                    let index = pos / 32;
-                                    let bit_index = pos % 32;
-                                    if null_bit_buffer[index] & 1 << bit_index == 1 << bit_index {
-                                        result_vec.push(None)
-                                    } else {
-                                        result_vec.push(Some(*val))
-                                    }
-                                }
-                            }
-                            None => {
-                                for val in primitive_values {
-                                    result_vec.push(Some(val))
-                                }
+                match self.null_buffer.raw_values() {
+                    Some(null_bit_buffer) => {
+                        for (pos, val) in primitive_values.iter().enumerate() {
+                            if (null_bit_buffer[pos / 8] & 1 << (pos % 8)) == 1 << (pos % 8) {
+                                result_vec.push(Some(*val))
+                            } else {
+                                result_vec.push(None)
                             }
                         }
-
-                        result_vec
                     }
-                    None => vec![],
+                    None => {
+                        for val in primitive_values {
+                            result_vec.push(Some(val))
+                        }
+                    }
                 }
+
+                result_vec
             }
             None => vec![],
         }

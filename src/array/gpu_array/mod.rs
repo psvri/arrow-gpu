@@ -10,7 +10,7 @@ use bytemuck::Pod;
 use log::info;
 use wgpu::{util::DeviceExt, Adapter, Buffer, ComputePipeline, Device, Queue, ShaderModule};
 
-use crate::array::gpu_array::gpu_ops::u32_ops::bit_or_array;
+use crate::array::gpu_array::gpu_ops::u32_ops::{bit_and_array};
 
 use super::NullBitBufferBuilder;
 
@@ -153,6 +153,7 @@ impl GpuDevice {
 pub struct NullBitBufferGpu {
     bit_buffer: Arc<Buffer>,
     len: usize,
+    buffer_len: usize,
     gpu_device: Arc<GpuDevice>,
 }
 
@@ -163,11 +164,24 @@ impl NullBitBufferGpu {
         Self {
             bit_buffer: Arc::new(data),
             len: buffer_builder.len,
+            buffer_len: buffer_builder.data.len(),
             gpu_device,
         }
     }
 
-    pub fn raw_values(&self) -> Option<Vec<u32>> {
+    fn new_set_with_capacity(gpu_device: Arc<GpuDevice>, size: usize) -> Self {
+        let buffer_builder = NullBitBufferBuilder::new_set_with_capacity(size);
+        let data = gpu_device.create_gpu_buffer_with_data(&buffer_builder.data);
+
+        Self {
+            bit_buffer: Arc::new(data),
+            len: buffer_builder.len,
+            buffer_len: buffer_builder.data.len(),
+            gpu_device,
+        }
+    }
+
+    pub fn raw_values(&self) -> Option<Vec<u8>> {
         let size = self.bit_buffer.size();
 
         let staging_buffer = self.gpu_device.create_retrive_buffer(size);
@@ -192,47 +206,35 @@ impl NullBitBufferGpu {
             // Gets contents of buffer
             let data = buffer_slice.get_mapped_range();
             // Since contents are got in bytes, this converts these bytes back to u32
-            let result: Vec<u32> = bytemuck::cast_slice(&data).to_vec();
+            let result: Vec<u8> = bytemuck::cast_slice(&data).to_vec();
 
             // With the current interface, we have to make sure all mapped views are
             // dropped before we unmap the buffer.
             drop(data);
             staging_buffer.unmap(); // Unmaps buffer from memory
-            Some(result[0..(self.bit_buffer.size() / 4) as usize].to_vec())
+            Some(result[0..self.buffer_len].to_vec())
         } else {
             panic!("failed to run compute on gpu!")
         }
     }
 
     async fn merge_null_bit_buffer(
-        left: &Option<NullBitBufferGpu>,
-        right: &Option<NullBitBufferGpu>,
-    ) -> Option<NullBitBufferGpu> {
-        match (left, right) {
-            (None, None) => None,
-            (None, Some(r)) | (Some(r), None) => {
-                let bit_buffer = Arc::new(r.gpu_device.clone_buffer(&r.bit_buffer));
+        left: &NullBitBufferGpu,
+        right: &NullBitBufferGpu,
+    ) -> NullBitBufferGpu {
+        assert_eq!(left.bit_buffer.size(), right.bit_buffer.size());
+        assert_eq!(left.len, right.len);
+        assert!(Arc::ptr_eq(&left.gpu_device, &right.gpu_device));
+        let new_bit_buffer =
+            bit_and_array(&left.gpu_device, &left.bit_buffer, &right.bit_buffer).await;
+        let len = left.len;
+        let gpu_device = left.gpu_device.clone();
 
-                Some(Self {
-                    bit_buffer,
-                    len: r.len,
-                    gpu_device: r.gpu_device.clone(),
-                })
-            }
-            (Some(l), Some(r)) => {
-                assert_eq!(l.bit_buffer.size(), r.bit_buffer.size());
-                assert_eq!(l.len, r.len);
-                let new_bit_buffer =
-                    bit_or_array(&l.gpu_device, &l.bit_buffer, &r.bit_buffer).await;
-                let len = l.len;
-                let gpu_device = l.gpu_device.clone();
-
-                Some(Self {
-                    bit_buffer: Arc::new(new_bit_buffer),
-                    len,
-                    gpu_device,
-                })
-            }
+        Self {
+            bit_buffer: Arc::new(new_bit_buffer),
+            len,
+            buffer_len: left.buffer_len,
+            gpu_device,
         }
     }
 }

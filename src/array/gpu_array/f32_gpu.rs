@@ -36,6 +36,41 @@ mod tests {
         }
     }
 
+    #[tokio::test]
+    async fn test_f32_array_from_optinal_vec() {
+        let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
+        let gpu_array_1 = Float32ArrayGPU::from_optional_vec(
+            &vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
+            device.clone(),
+        );
+        assert_eq!(
+            gpu_array_1.raw_values().unwrap(),
+            vec![0.0, 1.0, 0.0, 0.0, 4.0]
+        );
+        assert_eq!(
+            gpu_array_1.null_buffer.raw_values().unwrap(),
+            vec![0b00010011]
+        );
+        let gpu_array_2 = Float32ArrayGPU::from_optional_vec(
+            &vec![Some(1.0), Some(2.0), None, Some(4.0), None],
+            device,
+        );
+        assert_eq!(
+            gpu_array_2.raw_values().unwrap(),
+            vec![1.0, 2.0, 0.0, 4.0, 0.0]
+        );
+        assert_eq!(
+            gpu_array_2.null_buffer.raw_values().unwrap(),
+            vec![0b00001011]
+        );
+        let new_bit_buffer = NullBitBufferGpu::merge_null_bit_buffer(
+            &gpu_array_2.null_buffer,
+            &gpu_array_1.null_buffer,
+        )
+        .await;
+        assert_eq!(new_bit_buffer.raw_values().unwrap(), vec![0b00000011]);
+    }
+
     test_add_assign_scalar!(
         test_add_assign_f32_scalar_f32,
         f32,
