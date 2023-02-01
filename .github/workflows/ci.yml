@@ -18,13 +18,18 @@ jobs:
               sudo apt-get update
               sudo apt-get install -f -y libegl1-mesa-dev
               sudo apt-get install -f -y mesa-vulkan-drivers
+              rustup update
           - os: macos-latest
             name: Darwin
             run_test: false # macos vm doesn't have software metal api
             run_build: true
+            setup_env: |
+              rustup update
           - os: windows-latest
             name: Windows
             run_test: true
+            setup_env: |
+              rustup update
     
     steps:
       - name: Checkout
