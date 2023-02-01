@@ -1,4 +1,3 @@
-use super::gpu_ops::div_ceil;
 use super::{GpuDevice, NullBitBufferGpu};
 use crate::array::{ArrowPrimitiveType, NullBitBufferBuilder};
 

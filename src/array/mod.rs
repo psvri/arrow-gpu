@@ -118,7 +118,7 @@ pub struct GpuDevice {
 
 impl GpuDevice {
     pub async fn new() -> GpuDevice {
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
+        let instance = wgpu::Instance::default();
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {

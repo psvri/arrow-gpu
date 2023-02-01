@@ -37,6 +37,10 @@ jobs:
       - name: Setup Environment
         run: ${{ matrix.setup_env }}
         shell: bash
+      - name: Set up cargo nexttest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
       - name: Set up cargo cache
         uses: actions/cache@v3
         with:
@@ -51,7 +55,7 @@ jobs:
       - name: rust cargo tests
         if: matrix.run_test
         run: |
-          cargo test
+          cargo nextest run --status-level all
       - name: rust cargo build
         if: matrix.run_build
         run: |

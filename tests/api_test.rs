@@ -8,7 +8,7 @@ use pollster::FutureExt;
 
 #[tokio::test]
 async fn main() {
-    let instance = wgpu::Instance::new(wgpu::Backends::all());
+    let instance = wgpu::Instance::default();
 
     instance
         .enumerate_adapters(wgpu::Backends::all())
