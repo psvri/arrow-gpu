@@ -10,7 +10,7 @@ use bytemuck::Pod;
 use log::info;
 use wgpu::{util::DeviceExt, Adapter, Buffer, ComputePipeline, Device, Queue, ShaderModule};
 
-use crate::array::gpu_array::gpu_ops::u32_ops::{bit_and_array};
+use crate::array::gpu_array::gpu_ops::u32_ops::bit_and_array;
 
 use super::NullBitBufferBuilder;
 
@@ -147,6 +147,43 @@ impl GpuDevice {
 
         staging_buffer
     }
+
+    pub async fn retrive_data(&self, data: &Buffer) -> Vec<u8> {
+        let size = data.size() as wgpu::BufferAddress;
+
+        let staging_buffer = self.create_retrive_buffer(size);
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+
+        encoder.copy_buffer_to_buffer(&data, 0, &staging_buffer, 0, size);
+
+        let submission_index = self.queue.submit(Some(encoder.finish()));
+
+        let buffer_slice = staging_buffer.slice(..);
+        let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
+        buffer_slice.map_async(wgpu::MapMode::Read, move |v| sender.send(v).unwrap());
+
+        self.device
+            .poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
+
+        if let Some(Ok(())) = receiver.receive().await {
+            // Gets contents of buffer
+            let data = buffer_slice.get_mapped_range();
+            // Since contents are got in bytes, this converts these bytes back to u32
+            let result = data.to_vec();
+
+            // With the current interface, we have to make sure all mapped views are
+            // dropped before we unmap the buffer.
+            drop(data);
+            staging_buffer.unmap(); // Unmaps buffer from memory
+                                    // /println!("{:?}", result);
+
+            result
+        } else {
+            panic!("failed to run compute on gpu!");
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -182,40 +219,8 @@ impl NullBitBufferGpu {
     }
 
     pub fn raw_values(&self) -> Option<Vec<u8>> {
-        let size = self.bit_buffer.size();
-
-        let staging_buffer = self.gpu_device.create_retrive_buffer(size);
-        let mut encoder = self
-            .gpu_device
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-
-        encoder.copy_buffer_to_buffer(&self.bit_buffer, 0, &staging_buffer, 0, size);
-
-        let submission_index = self.gpu_device.queue.submit(Some(encoder.finish()));
-
-        let buffer_slice = staging_buffer.slice(..);
-        let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
-        buffer_slice.map_async(wgpu::MapMode::Read, move |v| sender.send(v).unwrap());
-
-        self.gpu_device
-            .device
-            .poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
-
-        if let Some(Ok(())) = receiver.receive().block_on() {
-            // Gets contents of buffer
-            let data = buffer_slice.get_mapped_range();
-            // Since contents are got in bytes, this converts these bytes back to u32
-            let result: Vec<u8> = bytemuck::cast_slice(&data).to_vec();
-
-            // With the current interface, we have to make sure all mapped views are
-            // dropped before we unmap the buffer.
-            drop(data);
-            staging_buffer.unmap(); // Unmaps buffer from memory
-            Some(result[0..self.buffer_len].to_vec())
-        } else {
-            panic!("failed to run compute on gpu!")
-        }
+        let result = &self.gpu_device.retrive_data(&self.bit_buffer).block_on();
+        Some(result[0..self.buffer_len].to_vec())
     }
 
     async fn merge_null_bit_buffer(

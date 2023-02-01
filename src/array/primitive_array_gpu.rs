@@ -1,4 +1,6 @@
-use crate::array::{NativeType, NullBitBufferBuilder};
+use super::gpu_ops::div_ceil;
+use super::{GpuDevice, NullBitBufferGpu};
+use crate::array::{ArrowPrimitiveType, NullBitBufferBuilder};
 
 use pollster::FutureExt;
 use std::fmt::{Debug, Formatter};
@@ -7,7 +9,7 @@ use std::sync::Arc;
 use wgpu::util::align_to;
 use wgpu::Buffer;
 
-pub struct PrimitiveArrayGpu<T: NativeType> {
+pub struct PrimitiveArrayGpu<T: ArrowPrimitiveType> {
     pub(crate) data: Arc<Buffer>,
     pub(crate) gpu_device: Arc<GpuDevice>,
     pub(crate) phantom: PhantomData<T>,
@@ -16,9 +18,9 @@ pub struct PrimitiveArrayGpu<T: NativeType> {
     pub(crate) null_buffer: NullBitBufferGpu,
 }
 
-impl<T: NativeType> PrimitiveArrayGpu<T> {
+impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
     pub fn from_optional_slice(value: &[Option<T>], gpu_device: Arc<GpuDevice>) -> Self {
-        let element_size = std::mem::size_of::<T>();
+        let element_size = T::ITEM_SIZE;
 
         let aligned_size = align_to(value.len() * element_size, 4);
         let mut new_vec = Vec::<T>::with_capacity(aligned_size / element_size);
@@ -70,40 +72,9 @@ impl<T: NativeType> PrimitiveArrayGpu<T> {
     }
 
     pub fn raw_values(&self) -> Option<Vec<T>> {
-        let size = self.data.size() as wgpu::BufferAddress;
-
-        let staging_buffer = self.gpu_device.create_retrive_buffer(size);
-        let mut encoder = self
-            .gpu_device
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-
-        encoder.copy_buffer_to_buffer(&self.data, 0, &staging_buffer, 0, size);
-
-        let submission_index = self.gpu_device.queue.submit(Some(encoder.finish()));
-
-        let buffer_slice = staging_buffer.slice(..);
-        let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
-        buffer_slice.map_async(wgpu::MapMode::Read, move |v| sender.send(v).unwrap());
-
-        self.gpu_device
-            .device
-            .poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
-
-        if let Some(Ok(())) = receiver.receive().block_on() {
-            // Gets contents of buffer
-            let data = buffer_slice.get_mapped_range();
-            // Since contents are got in bytes, this converts these bytes back to u32
-            let result: Vec<T> = bytemuck::cast_slice(&data).to_vec();
-
-            // With the current interface, we have to make sure all mapped views are
-            // dropped before we unmap the buffer.
-            drop(data);
-            staging_buffer.unmap(); // Unmaps buffer from memory
-            Some(result[0..self.len].to_vec())
-        } else {
-            panic!("failed to run compute on gpu!")
-        }
+        let result = &self.gpu_device.retrive_data(&self.data).block_on();
+        let result: Vec<T> = bytemuck::cast_slice(&result).to_vec();
+        Some(result[0..self.len].to_vec())
     }
 
     pub fn values(&self) -> Vec<Option<T>> {
@@ -136,7 +107,7 @@ impl<T: NativeType> PrimitiveArrayGpu<T> {
     }
 }
 
-impl<T: NativeType> Debug for PrimitiveArrayGpu<T> {
+impl<T: ArrowPrimitiveType> Debug for PrimitiveArrayGpu<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{{")?;
         writeln!(f, "{:?}", self.data)?;
@@ -244,20 +215,26 @@ macro_rules! impl_array_add_trait {
 
 pub(crate) use impl_array_add_trait;
 
-macro_rules! impl_add_assign_trait {
-    ($ty: ident, $op: ident) => {
+macro_rules! impl_unary_ops {
+    ($trait_name: ident, $trait_function: ident, $for_ty: ident, $out_ty: ident, $op: ident) => {
         #[async_trait]
-        impl ArrowAddAssign<$ty> for PrimitiveArrayGpu<$ty> {
-            async fn add_assign(&mut self, value: &$ty) {
-                $op(&self.gpu_device, &self.data, *value).await;
+        impl $trait_name for $for_ty {
+            type Output = $out_ty;
+
+            async fn $trait_function(&self) -> Self::Output {
+                $op(&self.gpu_device, &self.data, self.len).await
             }
         }
     };
 }
 
-pub(crate) use impl_add_assign_trait;
+pub(crate) use impl_unary_ops;
 
-use super::{GpuDevice, NullBitBufferGpu};
+macro_rules! impl_array_add_trait {
+    ($for_ty: ident, $rhs_ty: ident, $op: ident) => {
+        impl_array_ops!(ArrowAdd, add, $for_ty, $rhs_ty, $op);
+    };
+}
 
 #[cfg(test)]
 pub mod test {
@@ -265,7 +242,7 @@ pub mod test {
         ($fn_name: ident, $ty: ident, $input: expr, $scalar_fn: ident, $scalar: expr, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
-                let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
+                let device = Arc::new(crate::array::GpuDevice::new().await);
                 let data = $input;
                 let gpu_array = PrimitiveArrayGpu::<$ty>::from_vec(&data, device);
                 let new_gpu_array = gpu_array.$scalar_fn($scalar).await;
@@ -280,7 +257,7 @@ pub mod test {
         ($fn_name: ident, $ty: ident, $input_1: expr, $input_2: expr, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
-                let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
+                let device = Arc::new(crate::array::GpuDevice::new().await);
                 let gpu_array_1 = $ty::from_optional_vec(&$input_1, device.clone());
                 let gpu_array_2 = $ty::from_optional_vec(&$input_2, device);
                 let new_gpu_array = gpu_array_1.add(&gpu_array_2).await;
@@ -290,28 +267,25 @@ pub mod test {
     }
     pub(crate) use test_add_array;
 
-    macro_rules! test_add_assign_scalar {
-        ($fn_name: ident, $ty: ident, $input: expr, $scalar: expr, $output: expr) => {
+    macro_rules! test_unary_op_float {
+        ($fn_name: ident, $ty: ident, $input: expr, $unary_fn: ident, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
-                let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
+                let device = Arc::new(crate::array::GpuDevice::new().await);
                 let data = $input;
-                let mut gpu_array = PrimitiveArrayGpu::<$ty>::from_vec(&data, device);
-                gpu_array.add_assign($scalar).await;
-                assert_eq!(gpu_array.raw_values().unwrap(), $output)
-            }
-        };
-        ($fn_name: ident, $ty: ident, $input: expr, $scalar: expr, $output_raw: expr, $output_values:expr) => {
-            #[tokio::test]
-            async fn $fn_name() {
-                let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
-                let data = $input;
-                let mut gpu_array = PrimitiveArrayGpu::<$ty>::from_optional_vec(&data, device);
-                gpu_array.add_assign($scalar).await;
-                assert_eq!(gpu_array.raw_values().unwrap(), $output_raw);
-                assert_eq!(gpu_array.values(), $output_values);
+                let gpu_array = PrimitiveArrayGpu::<$ty>::from_vec(&data, device);
+                let new_gpu_array = gpu_array.$unary_fn().await;
+                let new_values = new_gpu_array.raw_values().unwrap();
+                for (index, new_value) in new_values.iter().enumerate() {
+                    if ($output[index] - new_value).abs() > 0.0001 {
+                        panic!(
+                            "assertion failed: `(left == right) \n left: `{:?}` \n right: `{:?}`",
+                            $output, new_values
+                        );
+                    }
+                }
             }
         };
     }
-    pub(crate) use test_add_assign_scalar;
+    pub(crate) use test_unary_op_float;
 }

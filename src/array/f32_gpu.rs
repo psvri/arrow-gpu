@@ -1,4 +1,4 @@
-use crate::kernels::arithmetic::*;
+use crate::kernels::{aggregate::ArrowSum, arithmetic::*, trigonometry::Trigonometry};
 use async_trait::async_trait;
 use std::sync::Arc;
 
@@ -13,16 +13,56 @@ impl_div_trait!(f32, div_scalar);
 
 impl_array_add_trait!(Float32ArrayGPU, Float32ArrayGPU, add_array_f32);
 
-impl_add_assign_trait!(f32, add_assign_scalar);
+impl_unary_ops!(ArrowSum, sum, Float32ArrayGPU, f32, sum);
+
+#[async_trait]
+impl Trigonometry for Float32ArrayGPU {
+    type Output = Self;
+
+    async fn sin(&self) -> Self::Output {
+        let new_buffer = sin_f32(&self.gpu_device, &self.data).await;
+
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: self.null_buffer.clone(),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::array::gpu_array::primitive_array_gpu::test::*;
+    use crate::array::primitive_array_gpu::test::*;
+
+    #[tokio::test]
+    async fn test_f32_sum() {
+        let device = Arc::new(crate::array::GpuDevice::new().await);
+        let gpu_array = Float32ArrayGPU::from_vec(
+            &(0..256 * 256)
+                .into_iter()
+                .map(|x| 1.0)
+                .collect::<Vec<f32>>(),
+            device.clone(),
+        );
+
+        assert_eq!(gpu_array.sum().await, 65536.0);
+
+        // TODO fix this
+        let cvec = (0..9_999)
+            .into_iter()
+            .map(|x| x as f32)
+            .collect::<Vec<f32>>();
+        let total = (0..9_999u32).into_iter().sum::<u32>() as f32;
+        let gpu_array = Float32ArrayGPU::from_vec(&cvec, device);
+        assert_eq!(gpu_array.sum().await, total);
+    }
 
     #[tokio::test]
     async fn test_large_f32_array() {
-        let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
+        let device = Arc::new(crate::array::GpuDevice::new().await);
         let gpu_array = Float32ArrayGPU::from_vec(
             &(0..1024 * 1024 * 10)
                 .into_iter()
@@ -38,7 +78,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_f32_array_from_optinal_vec() {
-        let device = Arc::new(crate::array::gpu_array::GpuDevice::new().await);
+        let device = Arc::new(crate::array::GpuDevice::new().await);
         let gpu_array_1 = Float32ArrayGPU::from_optional_vec(
             &vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
             device.clone(),
@@ -70,23 +110,6 @@ mod tests {
         .await;
         assert_eq!(new_bit_buffer.raw_values().unwrap(), vec![0b00000011]);
     }
-
-    test_add_assign_scalar!(
-        test_add_assign_f32_scalar_f32,
-        f32,
-        vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
-        &100.0,
-        vec![100.0, 101.0, 102.0, 103.0, 104.0]
-    );
-
-    test_add_assign_scalar!(
-        test_add_assign_f32_option_scalar_f32,
-        f32,
-        vec![Some(0.0f32), Some(1.0), Some(2.0), None, None],
-        &100.0,
-        vec![100.0, 101.0, 102.0, 100.0, 100.0],
-        vec![Some(100.0), Some(101.0), Some(102.0), None, None]
-    );
 
     test_add_array!(
         test_add_u32_array_u32,
@@ -130,5 +153,13 @@ mod tests {
         sub,
         &100.0,
         vec![-100.0, -99.0, -98.0, -97.0, -96.0]
+    );
+
+    test_unary_op_float!(
+        test_f32_sin,
+        f32,
+        vec![0.0, 1.0, 2.0, 3.0],
+        sin,
+        vec![0.0f32.sin(), 1.0f32.sin(), 2.0f32.sin(), 3.0f32.sin()]
     );
 }

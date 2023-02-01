@@ -8,9 +8,9 @@ edition = "2021"
 [dependencies]
 wgpu = "0.14.2"
 pollster = "0.2.5"
-bytemuck = "1.12.3"
+bytemuck = "1.13.0"
 futures-intrusive = "0.5.0"
-async-trait = "0.1.60"
+async-trait = "0.1.64"
 log =  { version =  "0.4.17" }
 
 
@@ -24,4 +24,8 @@ arrow = "29.0.0"
 
 [[bench]]
 name = "compare_gpu_arrow"
+harness = false
+
+[[bench]]
+name = "compare_sum"
 harness = false

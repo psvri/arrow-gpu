@@ -1,6 +1,9 @@
 pub mod f32_ops;
 pub mod u32_ops;
 
+use super::GpuDevice;
+use wgpu::{util::align_to, Buffer, Maintain};
+
 pub(crate) fn div_ceil(x: u64, y: u64) -> u64 {
     x / y + ((x % y > 0) as u64)
 }
@@ -60,52 +63,6 @@ macro_rules! scalar_op {
 
 pub(crate) use scalar_op;
 
-macro_rules! assign_scalar_op {
-    ($gpu_device: ident, $ty: ident,  $data: ident, $value: ident, $shader_path: ident, $entry_point: literal) => {
-        let value_buffer = $gpu_device.create_scalar_buffer(&$value);
-
-        let compute_pipeline = $gpu_device.create_compute_pipeline($shader_path, $entry_point);
-
-        let bind_group_layout = compute_pipeline.get_bind_group_layout(0);
-        let bind_group_array = $gpu_device
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                label: None,
-                layout: &bind_group_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: $data.as_entire_binding(),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: value_buffer.as_entire_binding(),
-                    },
-                ],
-            });
-
-        let mut encoder = $gpu_device
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-        {
-            let mut cpass =
-                encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
-            cpass.set_pipeline(&compute_pipeline);
-            cpass.set_bind_group(0, &bind_group_array, &[]);
-            cpass.insert_debug_marker("add assign scalar");
-            let dispatch_size = ($data.size() / 4) / std::mem::size_of::<$ty>() as u64;
-            cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
-        }
-
-        let submission_index = $gpu_device.queue.submit(Some(encoder.finish()));
-        $gpu_device
-            .device
-            .poll(Maintain::WaitForSubmissionIndex(submission_index));
-    };
-}
-
-pub(crate) use assign_scalar_op;
-
 macro_rules! array_op {
     ($gpu_device: ident, $ty: ident, $left: ident, $right: ident, $shader: ident, $entry_point: literal) => {
         let compute_pipeline = $gpu_device.create_compute_pipeline($shader, $entry_point);
@@ -158,6 +115,126 @@ macro_rules! array_op {
 }
 
 pub(crate) use array_op;
+
+macro_rules! unary_op {
+    ($gpu_device: ident, $ty: ident, $original_values: ident, $shader: ident, $entry_point: literal) => {
+        let compute_pipeline = $gpu_device.create_compute_pipeline($shader, $entry_point);
+
+        let size = $original_values.size();
+        let new_values_buffer = $gpu_device.create_empty_buffer(size);
+
+        let bind_group_layout = compute_pipeline.get_bind_group_layout(0);
+        let bind_group_array = $gpu_device
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: $original_values.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: new_values_buffer.as_entire_binding(),
+                    },
+                ],
+            });
+
+        let mut encoder = $gpu_device
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+        {
+            let mut cpass =
+                encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
+            cpass.set_pipeline(&compute_pipeline);
+            cpass.set_bind_group(0, &bind_group_array, &[]);
+            cpass.insert_debug_marker("sin_f32");
+            let dispatch_size = $original_values.size() / std::mem::size_of::<$ty>() as u64;
+            cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
+        }
+
+        let submission_index = $gpu_device.queue.submit(Some(encoder.finish()));
+        $gpu_device
+            .device
+            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+
+        return new_values_buffer;
+    };
+}
+
+pub(crate) use unary_op;
+
+pub(crate) fn reduction_op(
+    gpu_device: &GpuDevice,
+    item_size: usize,
+    data: &Buffer,
+    shader: &'static str,
+    entry_point: &str,
+    len: usize,
+) -> Buffer {
+    let compute_pipeline = gpu_device.create_compute_pipeline(shader, entry_point);
+
+    let size = data.size();
+    //println!("input size is {:?}", size);
+    let value_buffer = gpu_device.create_scalar_buffer(&len);
+    let new_values_buffer = gpu_device.create_empty_buffer(align_to(div_ceil(size as u64, 256), 4));
+    /*println!(
+        "new_values_buffer size is {:?} {:?}",
+        new_values_buffer.size(),
+        div_ceil(size as u64, 256)
+    );*/
+
+    let bind_group_layout = compute_pipeline.get_bind_group_layout(0);
+    let bind_group_array = gpu_device
+        .device
+        .create_bind_group(&wgpu::BindGroupDescriptor {
+            label: None,
+            layout: &bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: data.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: value_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: new_values_buffer.as_entire_binding(),
+                },
+            ],
+        });
+
+    let mut encoder = gpu_device
+        .device
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    {
+        let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
+        cpass.set_pipeline(&compute_pipeline);
+        cpass.set_bind_group(0, &bind_group_array, &[]);
+        cpass.insert_debug_marker("add array");
+        let dispatch_size = new_values_buffer.size() / item_size as u64;
+        //println!("dispathch size is {:?}", dispatch_size);
+        cpass.dispatch_workgroups(dispatch_size as u32, 1, 1);
+    }
+
+    let submission_index = gpu_device.queue.submit(Some(encoder.finish()));
+    gpu_device
+        .device
+        .poll(Maintain::WaitForSubmissionIndex(submission_index));
+
+    return new_values_buffer;
+}
+
+pub fn get_alignment(len: u64, item_size: u64) -> u64 {
+    match item_size {
+        1 => align_to(div_ceil(len, item_size), 256),
+        2 => align_to(div_ceil(len, item_size), 256),
+        _ => align_to(len, 256),
+    }
+}
 
 /*
 add_assign_primitive!(
