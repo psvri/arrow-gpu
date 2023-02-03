@@ -165,6 +165,56 @@ macro_rules! unary_op {
 
 pub(crate) use unary_op;
 
+macro_rules! braodcast_op {
+    ($gpu_device: ident, $ty: ident, $original_value: ident, $shader: ident, $entry_point: literal, $size: ident) => {
+        let compute_pipeline = $gpu_device.create_compute_pipeline($shader, $entry_point);
+
+        let value_buffer = $gpu_device.create_scalar_buffer(&$original_value);
+        let new_values_buffer =
+            $gpu_device.create_empty_buffer($size * std::mem::size_of::<$ty>() as u64);
+
+        let bind_group_layout = compute_pipeline.get_bind_group_layout(0);
+        let bind_group_array = $gpu_device
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: new_values_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: value_buffer.as_entire_binding(),
+                    },
+                ],
+            });
+
+        let mut encoder = $gpu_device
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+        {
+            let mut cpass =
+                encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
+            cpass.set_pipeline(&compute_pipeline);
+            cpass.set_bind_group(0, &bind_group_array, &[]);
+            cpass.insert_debug_marker("braodcast");
+            let dispatch_size = new_values_buffer.size() / std::mem::size_of::<$ty>() as u64;
+            cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
+        }
+
+        let submission_index = $gpu_device.queue.submit(Some(encoder.finish()));
+        $gpu_device
+            .device
+            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+
+        return new_values_buffer;
+    };
+}
+
+pub(crate) use braodcast_op;
+
 pub(crate) fn reduction_op(
     gpu_device: &GpuDevice,
     item_size: usize,

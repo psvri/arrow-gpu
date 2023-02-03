@@ -2,7 +2,7 @@ use crate::kernels::{aggregate::ArrowSum, arithmetic::*, trigonometry::Trigonome
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use super::{gpu_ops::f32_ops::*, primitive_array_gpu::*, NullBitBufferGpu};
+use super::{gpu_ops::f32_ops::*, primitive_array_gpu::*, GpuDevice, NullBitBufferGpu};
 
 pub type Float32ArrayGPU = PrimitiveArrayGpu<f32>;
 
@@ -14,6 +14,21 @@ impl_div_trait!(f32, div_scalar);
 impl_array_add_trait!(Float32ArrayGPU, Float32ArrayGPU, add_array_f32);
 
 impl_unary_ops!(ArrowSum, sum, Float32ArrayGPU, f32, sum);
+
+impl Float32ArrayGPU {
+    pub async fn braodcast(value: f32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+        let data = Arc::new(braodcast_f32(&gpu_device, value, len.try_into().unwrap()).await);
+        let null_buffer = NullBitBufferGpu::new_set_with_capacity(gpu_device.clone(), len);
+
+        Self {
+            data,
+            gpu_device,
+            phantom: std::marker::PhantomData,
+            len,
+            null_buffer,
+        }
+    }
+}
 
 #[async_trait]
 impl Trigonometry for Float32ArrayGPU {
@@ -44,7 +59,7 @@ mod tests {
         let gpu_array = Float32ArrayGPU::from_vec(
             &(0..256 * 256)
                 .into_iter()
-                .map(|x| 1.0)
+                .map(|_| 1.0)
                 .collect::<Vec<f32>>(),
             device.clone(),
         );
@@ -163,4 +178,6 @@ mod tests {
         sin,
         vec![0.0f32.sin(), 1.0f32.sin(), 2.0f32.sin(), 3.0f32.sin()]
     );
+
+    test_broadcast!(test_braodcast_f32, f32, 1.0);
 }

@@ -287,4 +287,19 @@ pub mod test {
         };
     }
     pub(crate) use test_unary_op_float;
+
+    macro_rules! test_broadcast {
+        ($fn_name: ident, $ty: ident, $input: expr) => {
+            #[tokio::test]
+            async fn $fn_name() {
+                let device = Arc::new(crate::array::GpuDevice::new().await);
+                let length = 100;
+                let new_gpu_array =
+                    PrimitiveArrayGpu::<$ty>::braodcast($input, length, device).await;
+                let new_values = new_gpu_array.raw_values().unwrap();
+                assert_eq!(new_values, vec![$input; length]);
+            }
+        };
+    }
+    pub(crate) use test_broadcast;
 }

@@ -2,7 +2,7 @@ use crate::kernels::arithmetic::*;
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use super::{gpu_ops::u32_ops::*, primitive_array_gpu::*, NullBitBufferGpu};
+use super::{gpu_ops::u32_ops::*, primitive_array_gpu::*, GpuDevice, NullBitBufferGpu};
 
 pub type UInt32ArrayGPU = PrimitiveArrayGpu<u32>;
 
@@ -12,6 +12,21 @@ impl_mul_trait!(u32, mul_scalar);
 impl_div_trait!(u32, div_scalar);
 
 impl_array_add_trait!(UInt32ArrayGPU, UInt32ArrayGPU, add_array_u32);
+
+impl UInt32ArrayGPU {
+    pub async fn braodcast(value: u32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+        let data = Arc::new(braodcast_u32(&gpu_device, value, len.try_into().unwrap()).await);
+        let null_buffer = NullBitBufferGpu::new_set_with_capacity(gpu_device.clone(), len);
+
+        Self {
+            data,
+            gpu_device,
+            phantom: std::marker::PhantomData,
+            len,
+            null_buffer,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -70,4 +85,6 @@ mod tests {
         &0,
         vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX, u32::MAX]
     );
+
+    test_broadcast!(test_braodcast_u32, u32, 1);
 }
