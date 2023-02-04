@@ -16,7 +16,7 @@ impl_array_add_trait!(UInt32ArrayGPU, UInt32ArrayGPU, add_array_u32);
 impl UInt32ArrayGPU {
     pub async fn braodcast(value: u32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let data = Arc::new(braodcast_u32(&gpu_device, value, len.try_into().unwrap()).await);
-        let null_buffer = NullBitBufferGpu::new_set_with_capacity(gpu_device.clone(), len);
+        let null_buffer = None;
 
         Self {
             data,

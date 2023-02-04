@@ -14,7 +14,7 @@ pub struct PrimitiveArrayGpu<T: ArrowPrimitiveType> {
     pub(crate) phantom: PhantomData<T>,
     /// Actual len of the array
     pub(crate) len: usize,
-    pub(crate) null_buffer: NullBitBufferGpu,
+    pub(crate) null_buffer: Option<NullBitBufferGpu>,
 }
 
 impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
@@ -55,7 +55,7 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
 
     pub fn from_slice(value: &[T], gpu_device: Arc<GpuDevice>) -> Self {
         let data = gpu_device.create_gpu_buffer_with_data(value);
-        let null_buffer = NullBitBufferGpu::new_set_with_capacity(gpu_device.clone(), value.len());
+        let null_buffer = None;
 
         Self {
             data: Arc::new(data),
@@ -70,22 +70,23 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
         Self::from_slice(&value[..], gpu_device)
     }
 
-    pub fn raw_values(&self) -> Option<Vec<T>> {
-        let result = &self.gpu_device.retrive_data(&self.data).block_on();
+    pub async fn raw_values(&self) -> Option<Vec<T>> {
+        let result = &self.gpu_device.retrive_data(&self.data).await;
         let result: Vec<T> = bytemuck::cast_slice(&result).to_vec();
         Some(result[0..self.len].to_vec())
     }
 
-    pub fn values(&self) -> Vec<Option<T>> {
-        match self.raw_values() {
+    pub async fn values(&self) -> Vec<Option<T>> {
+        match self.raw_values().await {
             Some(primitive_values) => {
                 let mut result_vec = Vec::with_capacity(self.len);
 
                 // TODO rework this
-                match self.null_buffer.raw_values() {
+                match &self.null_buffer {
                     Some(null_bit_buffer) => {
+                        let null_values = null_bit_buffer.raw_values().await;
                         for (pos, val) in primitive_values.iter().enumerate() {
-                            if (null_bit_buffer[pos / 8] & 1 << (pos % 8)) == 1 << (pos % 8) {
+                            if (null_values[pos / 8] & 1 << (pos % 8)) == 1 << (pos % 8) {
                                 result_vec.push(Some(*val))
                             } else {
                                 result_vec.push(None)
@@ -116,7 +117,7 @@ impl<T: ArrowPrimitiveType> Debug for PrimitiveArrayGpu<T> {
             f,
             "Array of length {} contains {:?}",
             self.len,
-            self.values()
+            self.values().block_on()
         )?;
         write!(f, "}}")
     }
@@ -245,8 +246,8 @@ pub mod test {
                 let data = $input;
                 let gpu_array = PrimitiveArrayGpu::<$ty>::from_vec(&data, device);
                 let new_gpu_array = gpu_array.$scalar_fn($scalar).await;
-                assert_eq!(gpu_array.raw_values().unwrap(), data);
-                assert_eq!(new_gpu_array.raw_values().unwrap(), $output);
+                assert_eq!(gpu_array.raw_values().await.unwrap(), data);
+                assert_eq!(new_gpu_array.raw_values().await.unwrap(), $output);
             }
         };
     }
@@ -260,7 +261,7 @@ pub mod test {
                 let gpu_array_1 = $ty::from_optional_vec(&$input_1, device.clone());
                 let gpu_array_2 = $ty::from_optional_vec(&$input_2, device);
                 let new_gpu_array = gpu_array_1.add(&gpu_array_2).await;
-                assert_eq!(new_gpu_array.values(), $output);
+                assert_eq!(new_gpu_array.values().await, $output);
             }
         };
     }
@@ -274,7 +275,7 @@ pub mod test {
                 let data = $input;
                 let gpu_array = PrimitiveArrayGpu::<$ty>::from_vec(&data, device);
                 let new_gpu_array = gpu_array.$unary_fn().await;
-                let new_values = new_gpu_array.raw_values().unwrap();
+                let new_values = new_gpu_array.raw_values().await.unwrap();
                 for (index, new_value) in new_values.iter().enumerate() {
                     if ($output[index] - new_value).abs() > 0.0001 {
                         panic!(
@@ -296,7 +297,7 @@ pub mod test {
                 let length = 100;
                 let new_gpu_array =
                     PrimitiveArrayGpu::<$ty>::braodcast($input, length, device).await;
-                let new_values = new_gpu_array.raw_values().unwrap();
+                let new_values = new_gpu_array.raw_values().await.unwrap();
                 assert_eq!(new_values, vec![$input; length]);
             }
         };

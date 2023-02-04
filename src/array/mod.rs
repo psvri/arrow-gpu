@@ -5,7 +5,6 @@ pub mod f32_gpu;
 pub(crate) mod gpu_ops;
 pub mod primitive_array_gpu;
 pub mod u32_gpu;
-use pollster::FutureExt;
 
 use std::{borrow::Cow, sync::Arc};
 
@@ -43,6 +42,7 @@ pub trait GPUArray {
 pub struct NullBitBufferBuilder {
     data: Vec<u8>,
     len: usize,
+    contains_nulls: bool,
 }
 
 impl NullBitBufferBuilder {
@@ -55,6 +55,7 @@ impl NullBitBufferBuilder {
         Self {
             data: vec![0; aligned_size],
             len: size,
+            contains_nulls: true,
         }
     }
 
@@ -68,7 +69,11 @@ impl NullBitBufferBuilder {
             data[aligned_size - 1] = u8::MAX >> (8 - diff);
         }
 
-        Self { data, len: size }
+        Self {
+            data,
+            len: size,
+            contains_nulls: false,
+        }
     }
 
     pub fn set_bit(&mut self, pos: usize) {
@@ -291,14 +296,18 @@ pub struct NullBitBufferGpu {
 }
 
 impl NullBitBufferGpu {
-    fn new(gpu_device: Arc<GpuDevice>, buffer_builder: &NullBitBufferBuilder) -> Self {
-        let data = gpu_device.create_gpu_buffer_with_data(&buffer_builder.data);
+    fn new(gpu_device: Arc<GpuDevice>, buffer_builder: &NullBitBufferBuilder) -> Option<Self> {
+        if buffer_builder.contains_nulls {
+            let data = gpu_device.create_gpu_buffer_with_data(&buffer_builder.data);
 
-        Self {
-            bit_buffer: Arc::new(data),
-            len: buffer_builder.len,
-            buffer_len: buffer_builder.data.len(),
-            gpu_device,
+            Some(Self {
+                bit_buffer: Arc::new(data),
+                len: buffer_builder.len,
+                buffer_len: buffer_builder.data.len(),
+                gpu_device,
+            })
+        } else {
+            None
         }
     }
 
@@ -314,28 +323,34 @@ impl NullBitBufferGpu {
         }
     }
 
-    pub fn raw_values(&self) -> Option<Vec<u8>> {
-        let result = &self.gpu_device.retrive_data(&self.bit_buffer).block_on();
-        Some(result[0..self.buffer_len].to_vec())
+    pub async fn raw_values(&self) -> Vec<u8> {
+        let result = &self.gpu_device.retrive_data(&self.bit_buffer).await;
+        result[0..self.buffer_len].to_vec()
     }
 
-    async fn merge_null_bit_buffer(
-        left: &NullBitBufferGpu,
-        right: &NullBitBufferGpu,
-    ) -> NullBitBufferGpu {
-        assert_eq!(left.bit_buffer.size(), right.bit_buffer.size());
-        assert_eq!(left.len, right.len);
-        assert!(Arc::ptr_eq(&left.gpu_device, &right.gpu_device));
-        let new_bit_buffer =
-            bit_and_array(&left.gpu_device, &left.bit_buffer, &right.bit_buffer).await;
-        let len = left.len;
-        let gpu_device = left.gpu_device.clone();
+    pub async fn merge_null_bit_buffer(
+        left: &Option<NullBitBufferGpu>,
+        right: &Option<NullBitBufferGpu>,
+    ) -> Option<NullBitBufferGpu> {
+        match (left, right) {
+            (None, None) => None,
+            (Some(x), None) | (None, Some(x)) => Some(x.clone()),
+            (Some(left), Some(right)) => {
+                assert_eq!(left.bit_buffer.size(), right.bit_buffer.size());
+                assert_eq!(left.len, right.len);
+                assert!(Arc::ptr_eq(&left.gpu_device, &right.gpu_device));
+                let new_bit_buffer =
+                    bit_and_array(&left.gpu_device, &left.bit_buffer, &right.bit_buffer).await;
+                let len = left.len;
+                let gpu_device = left.gpu_device.clone();
 
-        Self {
-            bit_buffer: Arc::new(new_bit_buffer),
-            len,
-            buffer_len: left.buffer_len,
-            gpu_device,
+                Some(Self {
+                    bit_buffer: Arc::new(new_bit_buffer),
+                    len,
+                    buffer_len: left.buffer_len,
+                    gpu_device,
+                })
+            }
         }
     }
 }

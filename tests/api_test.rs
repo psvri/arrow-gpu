@@ -40,6 +40,6 @@ async fn main() {
     println!("{:?}", gpu_array.add(&100).await);
 
     let data = vec![0.0f32, 1.0f32, 2.0f32, 3.0f32, 4.0f32];
-    let mut gpu_array = Float32ArrayGPU::from_vec(&data, device.clone());
+    let gpu_array = Float32ArrayGPU::from_vec(&data, device.clone());
     println!("{:?}", gpu_array.add(&200.0).await)
 }

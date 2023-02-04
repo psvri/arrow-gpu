@@ -18,7 +18,7 @@ impl_unary_ops!(ArrowSum, sum, Float32ArrayGPU, f32, sum);
 impl Float32ArrayGPU {
     pub async fn braodcast(value: f32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let data = Arc::new(braodcast_f32(&gpu_device, value, len.try_into().unwrap()).await);
-        let null_buffer = NullBitBufferGpu::new_set_with_capacity(gpu_device.clone(), len);
+        let null_buffer = None;
 
         Self {
             data,
@@ -77,7 +77,10 @@ mod tests {
     }
 
     #[tokio::test]
-    #[cfg_attr(target_os = "windows", ignore= "Not passing in CI but passes in local 🤔")]
+    #[cfg_attr(
+        target_os = "windows",
+        ignore = "Not passing in CI but passes in local 🤔"
+    )]
     async fn test_large_f32_array() {
         let device = Arc::new(crate::array::GpuDevice::new().await);
         let gpu_array = Float32ArrayGPU::from_vec(
@@ -88,7 +91,13 @@ mod tests {
             device,
         );
         let new_gpu_array = gpu_array.add(&100.0).await;
-        for (index, value) in new_gpu_array.raw_values().unwrap().into_iter().enumerate() {
+        for (index, value) in new_gpu_array
+            .raw_values()
+            .await
+            .unwrap()
+            .into_iter()
+            .enumerate()
+        {
             assert_eq!((index as f32) + 100.0, value);
         }
     }
@@ -101,11 +110,11 @@ mod tests {
             device.clone(),
         );
         assert_eq!(
-            gpu_array_1.raw_values().unwrap(),
+            gpu_array_1.raw_values().await.unwrap(),
             vec![0.0, 1.0, 0.0, 0.0, 4.0]
         );
         assert_eq!(
-            gpu_array_1.null_buffer.raw_values().unwrap(),
+            gpu_array_1.null_buffer.as_ref().unwrap().raw_values().await,
             vec![0b00010011]
         );
         let gpu_array_2 = Float32ArrayGPU::from_optional_vec(
@@ -113,11 +122,11 @@ mod tests {
             device,
         );
         assert_eq!(
-            gpu_array_2.raw_values().unwrap(),
+            gpu_array_2.raw_values().await.unwrap(),
             vec![1.0, 2.0, 0.0, 4.0, 0.0]
         );
         assert_eq!(
-            gpu_array_2.null_buffer.raw_values().unwrap(),
+            gpu_array_2.null_buffer.as_ref().unwrap().raw_values().await,
             vec![0b00001011]
         );
         let new_bit_buffer = NullBitBufferGpu::merge_null_bit_buffer(
@@ -125,7 +134,7 @@ mod tests {
             &gpu_array_1.null_buffer,
         )
         .await;
-        assert_eq!(new_bit_buffer.raw_values().unwrap(), vec![0b00000011]);
+        assert_eq!(new_bit_buffer.unwrap().raw_values().await, vec![0b00000011]);
     }
 
     test_add_array!(
