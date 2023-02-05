@@ -62,5 +62,12 @@ pub async fn sin_f32(gpu_device: &GpuDevice, left: &Buffer) -> Buffer {
 }
 
 pub async fn braodcast_f32(gpu_device: &GpuDevice, left: f32, size: u64) -> Buffer {
-    braodcast_op!(gpu_device, f32, left, F32_BRAODCAST_SHADER, "broadcast", size);
+    braodcast_op!(
+        gpu_device,
+        f32,
+        left,
+        F32_BRAODCAST_SHADER,
+        "broadcast",
+        size
+    );
 }

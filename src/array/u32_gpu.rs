@@ -2,7 +2,10 @@ use crate::kernels::arithmetic::*;
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use super::{gpu_ops::u32_ops::*, primitive_array_gpu::*, GpuDevice, NullBitBufferGpu};
+use super::{
+    gpu_ops::u32_ops::*, primitive_array_gpu::*, ArrowArrayGPU, ArrowType, GpuDevice,
+    NullBitBufferGpu,
+};
 
 pub type UInt32ArrayGPU = PrimitiveArrayGpu<u32>;
 
@@ -25,6 +28,16 @@ impl UInt32ArrayGPU {
             len,
             null_buffer,
         }
+    }
+}
+
+impl ArrowArrayGPU for UInt32ArrayGPU {
+    fn get_data_type() -> ArrowType {
+        ArrowType::UInt32Type
+    }
+
+    fn get_memory_used(&self) -> u64 {
+        self.data.size()
     }
 }
 

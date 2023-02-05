@@ -35,8 +35,9 @@ macro_rules! impl_primitive_type {
 impl_primitive_type!(f32, f32, 4);
 impl_primitive_type!(u32, u32, 4);
 
-pub trait GPUArray {
+pub trait ArrowArrayGPU {
     fn get_data_type() -> ArrowType;
+    fn get_memory_used(&self) -> u64;
 }
 
 pub struct NullBitBufferBuilder {

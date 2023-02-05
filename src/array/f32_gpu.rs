@@ -2,7 +2,10 @@ use crate::kernels::{aggregate::ArrowSum, arithmetic::*, trigonometry::Trigonome
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use super::{gpu_ops::f32_ops::*, primitive_array_gpu::*, GpuDevice, NullBitBufferGpu};
+use super::{
+    gpu_ops::f32_ops::*, primitive_array_gpu::*, ArrowArrayGPU, ArrowType, GpuDevice,
+    NullBitBufferGpu,
+};
 
 pub type Float32ArrayGPU = PrimitiveArrayGpu<f32>;
 
@@ -30,6 +33,16 @@ impl Float32ArrayGPU {
     }
 }
 
+impl ArrowArrayGPU for Float32ArrayGPU {
+    fn get_data_type() -> ArrowType {
+        ArrowType::Float32Type
+    }
+
+    fn get_memory_used(&self) -> u64 {
+        self.data.size()
+    }
+}
+
 #[async_trait]
 impl Trigonometry for Float32ArrayGPU {
     type Output = Self;
@@ -50,7 +63,7 @@ impl Trigonometry for Float32ArrayGPU {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::array::primitive_array_gpu::test::*;
+    use crate::{array::primitive_array_gpu::test::*, kernels::trigonometry::*};
 
     #[ignore = "Not passing in CI but passes in local 🤔"]
     #[tokio::test]
@@ -183,9 +196,10 @@ mod tests {
 
     test_unary_op_float!(
         test_f32_sin,
-        f32,
+        Float32ArrayGPU,
         vec![0.0, 1.0, 2.0, 3.0],
         sin,
+        sin_dyn,
         vec![0.0f32.sin(), 1.0f32.sin(), 2.0f32.sin(), 3.0f32.sin()]
     );
 
