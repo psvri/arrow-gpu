@@ -1,5 +1,5 @@
 use bytemuck::Pod;
-use std::fmt::Debug;
+use std::{any::Any, fmt::Debug};
 use wgpu::util::align_to;
 pub mod f32_gpu;
 pub(crate) mod gpu_ops;
@@ -35,8 +35,9 @@ macro_rules! impl_primitive_type {
 impl_primitive_type!(f32, f32, 4);
 impl_primitive_type!(u32, u32, 4);
 
-pub trait ArrowArrayGPU {
-    fn get_data_type() -> ArrowType;
+pub trait ArrowArrayGPU: Any {
+    fn as_any(&self) -> &dyn Any;
+    fn get_data_type(&self) -> ArrowType;
     fn get_memory_used(&self) -> u64;
 }
 

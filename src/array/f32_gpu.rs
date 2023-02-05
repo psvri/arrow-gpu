@@ -1,6 +1,6 @@
 use crate::kernels::{aggregate::ArrowSum, arithmetic::*, trigonometry::Trigonometry};
 use async_trait::async_trait;
-use std::sync::Arc;
+use std::{any::Any, sync::Arc};
 
 use super::{
     gpu_ops::f32_ops::*, primitive_array_gpu::*, ArrowArrayGPU, ArrowType, GpuDevice,
@@ -34,7 +34,11 @@ impl Float32ArrayGPU {
 }
 
 impl ArrowArrayGPU for Float32ArrayGPU {
-    fn get_data_type() -> ArrowType {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn get_data_type(&self) -> ArrowType {
         ArrowType::Float32Type
     }
 

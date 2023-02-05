@@ -301,7 +301,7 @@ pub mod test {
                 }
 
                 let new_gpu_array = $unary_fn_dyn(&gpu_array).await;
-                let new_values = (*new_gpu_array.downcast_ref::<$ty>().unwrap())
+                let new_values = (*new_gpu_array.as_any().downcast_ref::<$ty>().unwrap())
                     .raw_values()
                     .await
                     .unwrap();
