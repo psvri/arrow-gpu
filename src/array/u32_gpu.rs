@@ -91,27 +91,33 @@ mod tests {
 
     test_scalar_op!(
         test_sub_u32_scalar_u32,
-        u32,
+        UInt32ArrayGPU,
+        UInt32ArrayGPU,
         vec![0, 100, 200, 3, 104],
         sub_scalar,
+        sub_scalar_dyn,
         100,
         vec![u32::MAX - 99, 0, 100, u32::MAX - 96, 4]
     );
 
     test_scalar_op!(
         test_mul_u32_scalar_u32,
-        u32,
+        UInt32ArrayGPU,
+        UInt32ArrayGPU,
         vec![0, u32::MAX, 2, 3, 4],
         mul_scalar,
+        mul_scalar_dyn,
         100,
         vec![0, u32::MAX - 99, 200, 300, 400]
     );
 
     test_scalar_op!(
         test_div_u32_scalar_u32,
-        u32,
+        UInt32ArrayGPU,
+        UInt32ArrayGPU,
         vec![0, 1, 100, 260, 450],
         div_scalar,
+        div_scalar_dyn,
         100,
         vec![0, 0, 1, 2, 4]
     );

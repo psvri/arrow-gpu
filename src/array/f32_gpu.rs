@@ -199,27 +199,33 @@ mod tests {
 
     test_scalar_op!(
         test_div_f32_scalar_f32,
-        f32,
+        Float32ArrayGPU,
+        Float32ArrayGPU,
         vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
         div_scalar,
+        div_scalar_dyn,
         100.0,
         vec![0.0, 0.01, 0.02, 0.03, 0.04]
     );
 
     test_scalar_op!(
         test_mul_f32_scalar_f32,
-        f32,
+        Float32ArrayGPU,
+        Float32ArrayGPU,
         vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
         mul_scalar,
+        mul_scalar_dyn,
         100.0,
         vec![0.0, 100.0, 200.0, 300.0, 400.0]
     );
 
     test_scalar_op!(
         test_sub_f32_scalar_f32,
-        f32,
+        Float32ArrayGPU,
+        Float32ArrayGPU,
         vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
         sub_scalar,
+        sub_scalar_dyn,
         100.0,
         vec![-100.0, -99.0, -98.0, -97.0, -96.0]
     );

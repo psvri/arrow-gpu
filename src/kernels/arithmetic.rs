@@ -69,3 +69,39 @@ pub async fn add_scalar_dyn(data: &ArrowArrayGPU, value: &ArrowArrayGPU) -> Arro
         _ => panic!("Operation not supported"),
     }
 }
+
+pub async fn sub_scalar_dyn(data: &ArrowArrayGPU, value: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (data, value) {
+        (ArrowArrayGPU::Float32ArrayGPU(arr), ArrowArrayGPU::Float32ArrayGPU(scalar)) => {
+            arr.sub_scalar(scalar).await.into()
+        }
+        (ArrowArrayGPU::UInt32ArrayGPU(arr), ArrowArrayGPU::UInt32ArrayGPU(scalar)) => {
+            arr.sub_scalar(scalar).await.into()
+        }
+        _ => panic!("Operation not supported"),
+    }
+}
+
+pub async fn mul_scalar_dyn(data: &ArrowArrayGPU, value: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (data, value) {
+        (ArrowArrayGPU::Float32ArrayGPU(arr), ArrowArrayGPU::Float32ArrayGPU(scalar)) => {
+            arr.mul_scalar(scalar).await.into()
+        }
+        (ArrowArrayGPU::UInt32ArrayGPU(arr), ArrowArrayGPU::UInt32ArrayGPU(scalar)) => {
+            arr.mul_scalar(scalar).await.into()
+        }
+        _ => panic!("Operation not supported"),
+    }
+}
+
+pub async fn div_scalar_dyn(data: &ArrowArrayGPU, value: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (data, value) {
+        (ArrowArrayGPU::Float32ArrayGPU(arr), ArrowArrayGPU::Float32ArrayGPU(scalar)) => {
+            arr.div_scalar(scalar).await.into()
+        }
+        (ArrowArrayGPU::UInt32ArrayGPU(arr), ArrowArrayGPU::UInt32ArrayGPU(scalar)) => {
+            arr.div_scalar(scalar).await.into()
+        }
+        _ => panic!("Operation not supported"),
+    }
+}
