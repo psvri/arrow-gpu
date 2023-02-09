@@ -4,6 +4,7 @@ use wgpu::util::align_to;
 pub mod f32_gpu;
 pub(crate) mod gpu_ops;
 pub mod primitive_array_gpu;
+pub mod u16_gpu;
 pub mod u32_gpu;
 
 use std::{borrow::Cow, sync::Arc};
@@ -13,6 +14,12 @@ use wgpu::{util::DeviceExt, Adapter, Buffer, ComputePipeline, Device, Queue, Sha
 
 use crate::array::gpu_ops::u32_ops::bit_and_array;
 
+use f32_gpu::Float32ArrayGPU;
+use u32_gpu::UInt32ArrayGPU;
+
+use self::u16_gpu::UInt16ArrayGPU;
+
+#[non_exhaustive]
 pub enum ArrowType {
     Float32Type,
     UInt32Type,
@@ -34,11 +41,20 @@ macro_rules! impl_primitive_type {
 
 impl_primitive_type!(f32, f32, 4);
 impl_primitive_type!(u32, u32, 4);
+impl_primitive_type!(u16, u16, 2);
 
-pub trait ArrowArrayGPU: Any {
+pub trait ArrowArray: Any + Sync + Send + Debug {
     fn as_any(&self) -> &dyn Any;
     fn get_data_type(&self) -> ArrowType;
     fn get_memory_used(&self) -> u64;
+}
+
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum ArrowArrayGPU {
+    Float32ArrayGPU(Float32ArrayGPU),
+    UInt32ArrayGPU(UInt32ArrayGPU),
+    UInt16ArrayGPU(UInt16ArrayGPU),
 }
 
 pub struct NullBitBufferBuilder {

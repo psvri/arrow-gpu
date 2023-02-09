@@ -4,7 +4,7 @@ use arrow::array::Float32Array;
 use arrow::compute::kernels::aggregate::sum;
 use arrow_gpu::{
     array::{f32_gpu::Float32ArrayGPU, GpuDevice},
-    kernels::{aggregate::ArrowSum, arithmetic::*},
+    kernels::aggregate::ArrowSum,
 };
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use pollster::FutureExt;

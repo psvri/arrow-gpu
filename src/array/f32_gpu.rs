@@ -1,18 +1,21 @@
-use crate::kernels::{aggregate::ArrowSum, arithmetic::*, trigonometry::Trigonometry};
+use crate::{
+    kernels::{aggregate::ArrowSum, arithmetic::*, trigonometry::Trigonometry},
+    ArrowErrorGPU,
+};
 use async_trait::async_trait;
 use std::{any::Any, sync::Arc};
 
 use super::{
-    gpu_ops::f32_ops::*, primitive_array_gpu::*, ArrowArrayGPU, ArrowType, GpuDevice,
+    gpu_ops::f32_ops::*, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowType, GpuDevice,
     NullBitBufferGpu,
 };
 
 pub type Float32ArrayGPU = PrimitiveArrayGpu<f32>;
 
-impl_add_trait!(f32, add_scalar);
-impl_sub_trait!(f32, sub_scalar);
-impl_mul_trait!(f32, mul_scalar);
-impl_div_trait!(f32, div_scalar);
+impl_add_scalar_trait!(f32, add_scalar);
+impl_sub_scalar_trait!(f32, sub_scalar);
+impl_mul_scalar_trait!(f32, mul_scalar);
+impl_div_scalar_trait!(f32, div_scalar);
 
 impl_array_add_trait!(Float32ArrayGPU, Float32ArrayGPU, add_array_f32);
 
@@ -33,7 +36,27 @@ impl Float32ArrayGPU {
     }
 }
 
-impl ArrowArrayGPU for Float32ArrayGPU {
+impl Into<ArrowArrayGPU> for Float32ArrayGPU {
+    fn into(self) -> ArrowArrayGPU {
+        ArrowArrayGPU::Float32ArrayGPU(self)
+    }
+}
+
+impl TryFrom<ArrowArrayGPU> for Float32ArrayGPU {
+    type Error = ArrowErrorGPU;
+
+    fn try_from(value: ArrowArrayGPU) -> Result<Self, Self::Error> {
+        match value {
+            ArrowArrayGPU::Float32ArrayGPU(x) => Ok(x),
+            x => Err(ArrowErrorGPU::CastingNotSupported(format!(
+                "could not cast {:?} into Float32ArrayGPU",
+                x
+            ))),
+        }
+    }
+}
+
+impl ArrowArray for Float32ArrayGPU {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -105,9 +128,10 @@ mod tests {
                 .into_iter()
                 .map(|x| x as f32)
                 .collect::<Vec<f32>>(),
-            device,
+            device.clone(),
         );
-        let new_gpu_array = gpu_array.add(&100.0).await;
+        let values_array = Float32ArrayGPU::from_vec(&vec![100.0], device);
+        let new_gpu_array = gpu_array.add_scalar(&values_array).await;
         for (index, value) in new_gpu_array
             .raw_values()
             .await
@@ -164,10 +188,12 @@ mod tests {
 
     test_scalar_op!(
         test_add_f32_scalar_f32,
-        f32,
+        Float32ArrayGPU,
+        Float32ArrayGPU,
         vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
-        add,
-        &100.0,
+        add_scalar,
+        add_scalar_dyn,
+        100.0,
         vec![100.0, 101.0, 102.0, 103.0, 104.0]
     );
 
@@ -175,8 +201,8 @@ mod tests {
         test_div_f32_scalar_f32,
         f32,
         vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
-        div,
-        &100.0,
+        div_scalar,
+        100.0,
         vec![0.0, 0.01, 0.02, 0.03, 0.04]
     );
 
@@ -184,8 +210,8 @@ mod tests {
         test_mul_f32_scalar_f32,
         f32,
         vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
-        mul,
-        &100.0,
+        mul_scalar,
+        100.0,
         vec![0.0, 100.0, 200.0, 300.0, 400.0]
     );
 
@@ -193,13 +219,14 @@ mod tests {
         test_sub_f32_scalar_f32,
         f32,
         vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
-        sub,
-        &100.0,
+        sub_scalar,
+        100.0,
         vec![-100.0, -99.0, -98.0, -97.0, -96.0]
     );
 
     test_unary_op_float!(
         test_f32_sin,
+        Float32ArrayGPU,
         Float32ArrayGPU,
         vec![0.0, 1.0, 2.0, 3.0],
         sin,

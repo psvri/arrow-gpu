@@ -1,4 +1,5 @@
 pub mod f32_ops;
+pub mod u16_ops;
 pub mod u32_ops;
 
 use super::GpuDevice;
@@ -9,10 +10,8 @@ pub(crate) fn div_ceil(x: u64, y: u64) -> u64 {
 }
 
 macro_rules! scalar_op {
-    ($gpu_device: ident, $ty: ident, $data: ident, $value: ident, $shader: ident, $entry_point: literal) => {
+    ($gpu_device: ident, $ty: ident, $data: ident, $value_buffer: ident, $shader: ident, $entry_point: literal) => {
         let compute_pipeline = $gpu_device.create_compute_pipeline($shader, $entry_point);
-
-        let value_buffer = $gpu_device.create_scalar_buffer(&$value);
 
         let size = $data.size() as wgpu::BufferAddress;
         let new_values_buffer = $gpu_device.create_empty_buffer(size);
@@ -34,7 +33,7 @@ macro_rules! scalar_op {
                     },
                     wgpu::BindGroupEntry {
                         binding: 2,
-                        resource: value_buffer.as_entire_binding(),
+                        resource: $value_buffer.as_entire_binding(),
                     },
                 ],
             });
@@ -117,10 +116,10 @@ macro_rules! array_op {
 pub(crate) use array_op;
 
 macro_rules! unary_op {
-    ($gpu_device: ident, $ty: ident, $original_values: ident, $shader: ident, $entry_point: literal) => {
+    ($gpu_device: ident, $ty: ident, $original_values: ident, $shader: ident, $entry_point: literal, $multiplier: expr) => {
         let compute_pipeline = $gpu_device.create_compute_pipeline($shader, $entry_point);
 
-        let size = $original_values.size();
+        let size = $original_values.size() * 2;
         let new_values_buffer = $gpu_device.create_empty_buffer(size);
 
         let bind_group_layout = compute_pipeline.get_bind_group_layout(0);
@@ -278,7 +277,7 @@ pub(crate) fn reduction_op(
     return new_values_buffer;
 }
 
-pub fn get_alignment(len: u64, item_size: u64) -> u64 {
+/*pub fn get_alignment(len: u64, item_size: u64) -> u64 {
     match item_size {
         1 => align_to(div_ceil(len, item_size), 256),
         2 => align_to(div_ceil(len, item_size), 256),
@@ -286,7 +285,6 @@ pub fn get_alignment(len: u64, item_size: u64) -> u64 {
     }
 }
 
-/*
 add_assign_primitive!(
     i64,
     "../../../compute_shaders/add_u64_or_i64_scalar.wgsl",

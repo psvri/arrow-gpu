@@ -11,19 +11,19 @@ const U32_SCALAR_SHADER: &str = include_str!("../../../compute_shaders/u32_scala
 const U32_ARRAY_SHADER: &str = include_str!("../../../compute_shaders/u32_array.wgsl");
 const U32_BRAODCAST_SHADER: &str = include_str!("../../../compute_shaders/u32/broadcast.wgsl");
 
-pub async fn add_scalar(gpu_device: &GpuDevice, data: &Buffer, value: u32) -> Buffer {
+pub async fn add_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {
     scalar_op!(gpu_device, u32, data, value, U32_SCALAR_SHADER, "u32_add");
 }
 
-pub async fn sub_scalar(gpu_device: &GpuDevice, data: &Buffer, value: u32) -> Buffer {
+pub async fn sub_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {
     scalar_op!(gpu_device, u32, data, value, U32_SCALAR_SHADER, "u32_sub");
 }
 
-pub async fn mul_scalar(gpu_device: &GpuDevice, data: &Buffer, value: u32) -> Buffer {
+pub async fn mul_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {
     scalar_op!(gpu_device, u32, data, value, U32_SCALAR_SHADER, "u32_mul");
 }
 
-pub async fn div_scalar(gpu_device: &GpuDevice, data: &Buffer, value: u32) -> Buffer {
+pub async fn div_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {
     scalar_op!(gpu_device, u32, data, value, U32_SCALAR_SHADER, "u32_div");
 }
 

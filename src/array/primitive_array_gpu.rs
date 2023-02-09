@@ -126,11 +126,11 @@ impl<T: ArrowPrimitiveType> Debug for PrimitiveArrayGpu<T> {
 macro_rules! impl_scalar_ops {
     ($trait_name: ident, $trait_function: ident, $ty: ident, $op: ident) => {
         #[async_trait]
-        impl $trait_name<$ty> for PrimitiveArrayGpu<$ty> {
+        impl $trait_name<PrimitiveArrayGpu<$ty>> for PrimitiveArrayGpu<$ty> {
             type Output = Self;
 
-            async fn $trait_function(&self, value: &$ty) -> Self::Output {
-                let new_buffer = $op(&self.gpu_device, &self.data, *value).await;
+            async fn $trait_function(&self, value: &PrimitiveArrayGpu<$ty>) -> Self::Output {
+                let new_buffer = $op(&self.gpu_device, &self.data, &value.data).await;
 
                 Self {
                     data: Arc::new(new_buffer),
@@ -146,37 +146,37 @@ macro_rules! impl_scalar_ops {
 
 pub(crate) use impl_scalar_ops;
 
-macro_rules! impl_add_trait {
+macro_rules! impl_add_scalar_trait {
     ($ty: ident, $op: ident) => {
-        impl_scalar_ops!(ArrowAdd, add, $ty, $op);
+        impl_scalar_ops!(ArrowScalarAdd, add_scalar, $ty, $op);
     };
 }
 
-pub(crate) use impl_add_trait;
+pub(crate) use impl_add_scalar_trait;
 
-macro_rules! impl_sub_trait {
+macro_rules! impl_sub_scalar_trait {
     ($ty: ident, $op: ident) => {
-        impl_scalar_ops!(ArrowSub, sub, $ty, $op);
+        impl_scalar_ops!(ArrowScalarSub, sub_scalar, $ty, $op);
     };
 }
 
-pub(crate) use impl_sub_trait;
+pub(crate) use impl_sub_scalar_trait;
 
-macro_rules! impl_mul_trait {
+macro_rules! impl_mul_scalar_trait {
     ($ty: ident, $op: ident) => {
-        impl_scalar_ops!(ArrowMul, mul, $ty, $op);
+        impl_scalar_ops!(ArrowScalarMul, mul_scalar, $ty, $op);
     };
 }
 
-pub(crate) use impl_mul_trait;
+pub(crate) use impl_mul_scalar_trait;
 
-macro_rules! impl_div_trait {
+macro_rules! impl_div_scalar_trait {
     ($ty: ident, $op: ident) => {
-        impl_scalar_ops!(ArrowDiv, div, $ty, $op);
+        impl_scalar_ops!(ArrowScalarDiv, div_scalar, $ty, $op);
     };
 }
 
-pub(crate) use impl_div_trait;
+pub(crate) use impl_div_scalar_trait;
 
 macro_rules! impl_array_ops {
     ($trait_name: ident, $trait_function: ident, $for_ty: ident, $rhs_ty: ident, $op: ident) => {
@@ -230,12 +230,6 @@ macro_rules! impl_unary_ops {
 
 pub(crate) use impl_unary_ops;
 
-macro_rules! impl_array_add_trait {
-    ($for_ty: ident, $rhs_ty: ident, $op: ident) => {
-        impl_array_ops!(ArrowAdd, add, $for_ty, $rhs_ty, $op);
-    };
-}
-
 #[cfg(test)]
 pub mod test {
     macro_rules! test_scalar_op {
@@ -244,10 +238,29 @@ pub mod test {
             async fn $fn_name() {
                 let device = Arc::new(crate::array::GpuDevice::new().await);
                 let data = $input;
-                let gpu_array = PrimitiveArrayGpu::<$ty>::from_vec(&data, device);
-                let new_gpu_array = gpu_array.$scalar_fn($scalar).await;
-                assert_eq!(gpu_array.raw_values().await.unwrap(), data);
-                assert_eq!(new_gpu_array.raw_values().await.unwrap(), $output);
+                let array = PrimitiveArrayGpu::<$ty>::from_vec(&data, device.clone());
+                let value_array = PrimitiveArrayGpu::<$ty>::from_vec(&vec![$scalar], device);
+                let new_array = array.$scalar_fn(&value_array).await;
+                assert_eq!(new_array.raw_values().await.unwrap(), $output);
+            }
+        };
+        ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $scalar_fn: ident, $scalar_fn_dyn: ident, $scalar: expr, $output: expr) => {
+            #[tokio::test]
+            async fn $fn_name() {
+                let device = Arc::new(crate::array::GpuDevice::new().await);
+                let data = $input;
+                let array = $input_ty::from_vec(&data, device.clone());
+                let value_array = $input_ty::from_vec(&vec![$scalar], device);
+                let new_array = array.$scalar_fn(&value_array).await;
+                assert_eq!(new_array.raw_values().await.unwrap(), $output);
+
+                let new_gpu_array = $scalar_fn_dyn(&array.into(), &value_array.into()).await;
+                let new_values = $output_ty::try_from(new_gpu_array)
+                    .unwrap()
+                    .raw_values()
+                    .await
+                    .unwrap();
+                assert_eq!(new_values, $output);
             }
         };
     }
@@ -283,12 +296,12 @@ pub mod test {
     }
 
     macro_rules! test_unary_op_float {
-        ($fn_name: ident, $ty: ident, $input: expr, $unary_fn: ident, $unary_fn_dyn: ident, $output: expr) => {
+        ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $unary_fn_dyn: ident, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
                 let device = Arc::new(crate::array::GpuDevice::new().await);
                 let data = $input;
-                let gpu_array = $ty::from_vec(&data, device);
+                let gpu_array = $input_ty::from_vec(&data, device);
                 let new_gpu_array = gpu_array.$unary_fn().await;
                 let new_values = new_gpu_array.raw_values().await.unwrap();
                 for (index, new_value) in new_values.iter().enumerate() {
@@ -300,8 +313,8 @@ pub mod test {
                     }
                 }
 
-                let new_gpu_array = $unary_fn_dyn(&gpu_array).await;
-                let new_values = (*new_gpu_array.as_any().downcast_ref::<$ty>().unwrap())
+                let new_gpu_array = $unary_fn_dyn(&(gpu_array.into())).await;
+                let new_values = $output_ty::try_from(new_gpu_array).unwrap()
                     .raw_values()
                     .await
                     .unwrap();

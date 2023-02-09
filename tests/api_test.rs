@@ -37,9 +37,11 @@ async fn main() {
 
     let data = vec![u32::MAX, 1, 2, 3, 4];
     let gpu_array = UInt32ArrayGPU::from_vec(&data, device.clone());
-    println!("{:?}", gpu_array.add(&100).await);
+    let value_array = UInt32ArrayGPU::from_vec(&vec![100], device.clone());
+    println!("{:?}", gpu_array.add_scalar(&value_array).await);
 
     let data = vec![0.0f32, 1.0f32, 2.0f32, 3.0f32, 4.0f32];
     let gpu_array = Float32ArrayGPU::from_vec(&data, device.clone());
-    println!("{:?}", gpu_array.add(&200.0).await)
+    let value_array = Float32ArrayGPU::from_vec(&vec![200.0], device.clone());
+    println!("{:?}", gpu_array.add_scalar(&value_array).await)
 }

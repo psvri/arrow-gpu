@@ -11,19 +11,19 @@ const F32_REDUCTION_SHADER: &str = include_str!("../../../compute_shaders/f32_re
 const F32_UNARY_SHADER: &str = include_str!("../../../compute_shaders/f32_unary.wgsl");
 const F32_BRAODCAST_SHADER: &str = include_str!("../../../compute_shaders/f32/broadcast.wgsl");
 
-pub async fn add_scalar(gpu_device: &GpuDevice, data: &Buffer, value: f32) -> Buffer {
+pub async fn add_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {
     scalar_op!(gpu_device, f32, data, value, F32_SCALAR_SHADER, "f32_add");
 }
 
-pub async fn sub_scalar(gpu_device: &GpuDevice, data: &Buffer, value: f32) -> Buffer {
+pub async fn sub_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {
     scalar_op!(gpu_device, f32, data, value, F32_SCALAR_SHADER, "f32_sub");
 }
 
-pub async fn mul_scalar(gpu_device: &GpuDevice, data: &Buffer, value: f32) -> Buffer {
+pub async fn mul_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {
     scalar_op!(gpu_device, f32, data, value, F32_SCALAR_SHADER, "f32_mul");
 }
 
-pub async fn div_scalar(gpu_device: &GpuDevice, data: &Buffer, value: f32) -> Buffer {
+pub async fn div_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {
     scalar_op!(gpu_device, f32, data, value, F32_SCALAR_SHADER, "f32_div");
 }
 
@@ -58,7 +58,7 @@ pub fn get_f32_array(gpu_device: &GpuDevice, data: &Buffer) -> Vec<f32> {
 }
 
 pub async fn sin_f32(gpu_device: &GpuDevice, left: &Buffer) -> Buffer {
-    unary_op!(gpu_device, u32, left, F32_UNARY_SHADER, "sin_f32");
+    unary_op!(gpu_device, u32, left, F32_UNARY_SHADER, "sin_f32", 1);
 }
 
 pub async fn braodcast_f32(gpu_device: &GpuDevice, left: f32, size: u64) -> Buffer {
