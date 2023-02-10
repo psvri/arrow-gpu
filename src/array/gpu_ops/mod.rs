@@ -1,6 +1,7 @@
 pub mod f32_ops;
 pub mod u16_ops;
 pub mod u32_ops;
+pub mod u8_ops;
 
 use super::GpuDevice;
 use wgpu::{util::align_to, Buffer, Maintain};
@@ -119,7 +120,7 @@ macro_rules! unary_op {
     ($gpu_device: ident, $ty: ident, $original_values: ident, $shader: ident, $entry_point: literal, $multiplier: expr) => {
         let compute_pipeline = $gpu_device.create_compute_pipeline($shader, $entry_point);
 
-        let size = $original_values.size() * 2;
+        let size = $original_values.size() * $multiplier;
         let new_values_buffer = $gpu_device.create_empty_buffer(size);
 
         let bind_group_layout = compute_pipeline.get_bind_group_layout(0);

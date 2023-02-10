@@ -5,10 +5,10 @@ use wgpu::Maintain;
 
 use crate::array::GpuDevice;
 
-const F32_SCALAR_SHADER: &str = include_str!("../../../compute_shaders/f32_scalar.wgsl");
-const F32_ARRAY_SHADER: &str = include_str!("../../../compute_shaders/f32_array.wgsl");
-const F32_REDUCTION_SHADER: &str = include_str!("../../../compute_shaders/f32_reduction.wgsl");
-const F32_UNARY_SHADER: &str = include_str!("../../../compute_shaders/f32_unary.wgsl");
+const F32_SCALAR_SHADER: &str = include_str!("../../../compute_shaders/f32/scalar.wgsl");
+const F32_ARRAY_SHADER: &str = include_str!("../../../compute_shaders/f32/array.wgsl");
+const F32_REDUCTION_SHADER: &str = include_str!("../../../compute_shaders/f32/reduction.wgsl");
+const F32_UNARY_SHADER: &str = include_str!("../../../compute_shaders/f32/unary.wgsl");
 const F32_BRAODCAST_SHADER: &str = include_str!("../../../compute_shaders/f32/broadcast.wgsl");
 
 pub async fn add_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {

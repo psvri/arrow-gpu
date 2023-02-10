@@ -7,8 +7,8 @@ use crate::array::GpuDevice;
 
 use super::*;
 
-const U32_SCALAR_SHADER: &str = include_str!("../../../compute_shaders/u32_scalar.wgsl");
-const U32_ARRAY_SHADER: &str = include_str!("../../../compute_shaders/u32_array.wgsl");
+const U32_SCALAR_SHADER: &str = include_str!("../../../compute_shaders/u32/scalar.wgsl");
+const U32_ARRAY_SHADER: &str = include_str!("../../../compute_shaders/u32/array.wgsl");
 const U32_BRAODCAST_SHADER: &str = include_str!("../../../compute_shaders/u32/broadcast.wgsl");
 
 pub async fn add_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {
