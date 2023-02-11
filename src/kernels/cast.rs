@@ -13,6 +13,9 @@ pub async fn cast_dyn(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
         (ArrowArrayGPU::Int16ArrayGPU(x), ArrowType::Int32Type) => {
             Cast::<Int32ArrayGPU>::cast(x).await.into()
         }
+        (ArrowArrayGPU::Int8ArrayGPU(x), ArrowType::Int32Type) => {
+            Cast::<Int32ArrayGPU>::cast(x).await.into()
+        }
         (x, y) => panic!("Casting between {x:?} into {y:?} is not possible"),
     }
 }

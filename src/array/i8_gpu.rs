@@ -7,18 +7,21 @@ use std::sync::Arc;
 
 use super::{
     f32_gpu::Float32ArrayGPU,
-    gpu_ops::{div_ceil, i16_ops::*, u32_ops::*},
+    gpu_ops::{div_ceil, i8_ops::*, u32_ops::*},
     i32_gpu::Int32ArrayGPU,
     primitive_array_gpu::*,
     ArrowArrayGPU, GpuDevice,
 };
 
-pub type Int16ArrayGPU = PrimitiveArrayGpu<i16>;
+pub type Int8ArrayGPU = PrimitiveArrayGpu<i8>;
 
-impl Int16ArrayGPU {
-    pub async fn braodcast(value: i16, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
-        let new_len = div_ceil(len.try_into().unwrap(), 2);
-        let boradcast_value = (value as u32) | ((value as u32) << 16);
+impl Int8ArrayGPU {
+    pub async fn braodcast(value: i8, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+        let new_len = div_ceil(len.try_into().unwrap(), 4);
+        let boradcast_value = (value as u32)
+            | ((value as u32) << 8)
+            | ((value as u32) << 16)
+            | ((value as u32) << 24);
         let data = Arc::new(braodcast_u32(&gpu_device, boradcast_value, new_len).await);
         let null_buffer = None;
 
@@ -33,11 +36,11 @@ impl Int16ArrayGPU {
 }
 
 #[async_trait]
-impl Trigonometry for Int16ArrayGPU {
+impl Trigonometry for Int8ArrayGPU {
     type Output = Float32ArrayGPU;
 
     async fn sin(&self) -> Self::Output {
-        let new_buffer = sin_i16(&self.gpu_device, &self.data).await;
+        let new_buffer = sin_i8(&self.gpu_device, &self.data).await;
 
         Float32ArrayGPU {
             data: Arc::new(new_buffer),
@@ -50,7 +53,7 @@ impl Trigonometry for Int16ArrayGPU {
 }
 
 #[async_trait]
-impl Cast<Int32ArrayGPU> for Int16ArrayGPU {
+impl Cast<Int32ArrayGPU> for Int8ArrayGPU {
     type Output = Int32ArrayGPU;
 
     async fn cast(&self) -> Self::Output {
@@ -66,20 +69,20 @@ impl Cast<Int32ArrayGPU> for Int16ArrayGPU {
     }
 }
 
-impl Into<ArrowArrayGPU> for Int16ArrayGPU {
+impl Into<ArrowArrayGPU> for Int8ArrayGPU {
     fn into(self) -> ArrowArrayGPU {
-        ArrowArrayGPU::Int16ArrayGPU(self)
+        ArrowArrayGPU::Int8ArrayGPU(self)
     }
 }
 
-impl TryFrom<ArrowArrayGPU> for Int16ArrayGPU {
+impl TryFrom<ArrowArrayGPU> for Int8ArrayGPU {
     type Error = ArrowErrorGPU;
 
     fn try_from(value: ArrowArrayGPU) -> Result<Self, Self::Error> {
         match value {
-            ArrowArrayGPU::Int16ArrayGPU(x) => Ok(x),
+            ArrowArrayGPU::Int8ArrayGPU(x) => Ok(x),
             x => Err(ArrowErrorGPU::CastingNotSupported(format!(
-                "could not cast {:?} into Int16ArrayGPU",
+                "could not cast {:?} into Int8ArrayGPU",
                 x
             ))),
         }
@@ -90,18 +93,18 @@ impl TryFrom<ArrowArrayGPU> for Int16ArrayGPU {
 mod tests {
     use super::*;
     use crate::{
-        array::{primitive_array_gpu::test::*, ArrowType},
-        kernels::{cast::cast_dyn, trigonometry::sin_dyn},
+        array::primitive_array_gpu::test::*, array::ArrowType, kernels::cast::*,
+        kernels::trigonometry::sin_dyn,
     };
     use std::sync::Arc;
 
-    test_broadcast!(test_braodcast_i16, i16, 1);
+    test_broadcast!(test_braodcast_i8, i8, 1);
 
     test_unary_op_float!(
-        test_i16_sin,
-        Int16ArrayGPU,
+        test_i8_sin,
+        Int8ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3],
+        vec![0, 1, 2, 3, 5],
         sin,
         sin_dyn,
         vec![
@@ -109,19 +112,17 @@ mod tests {
             1.0f32.sin(),
             2.0f32.sin(),
             3.0f32.sin(),
-            -1.0f32.sin(),
-            -2.0f32.sin(),
-            -3.0f32.sin()
+            5.0f32.sin()
         ]
     );
 
     test_cast_op!(
-        test_cast_i16_to_i32,
-        Int16ArrayGPU,
+        test_cast_i8_to_i32,
+        Int8ArrayGPU,
         Int32ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3],
+        vec![0, 1, 2, 3, -1, -2, -3, -7, 7],
         cast,
         Int32Type,
-        vec![0, 1, 2, 3, -1, -2, -3]
+        vec![0, 1, 2, 3, -1, -2, -3, -7, 7]
     );
 }

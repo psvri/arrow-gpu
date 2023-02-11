@@ -5,6 +5,7 @@ pub mod f32_gpu;
 pub(crate) mod gpu_ops;
 pub mod i16_gpu;
 pub mod i32_gpu;
+pub mod i8_gpu;
 pub mod primitive_array_gpu;
 pub mod u16_gpu;
 pub mod u32_gpu;
@@ -20,6 +21,7 @@ use crate::array::gpu_ops::u32_ops::bit_and_array;
 use f32_gpu::Float32ArrayGPU;
 use i16_gpu::Int16ArrayGPU;
 use i32_gpu::Int32ArrayGPU;
+use i8_gpu::Int8ArrayGPU;
 use u16_gpu::UInt16ArrayGPU;
 use u32_gpu::UInt32ArrayGPU;
 use u8_gpu::UInt8ArrayGPU;
@@ -29,8 +31,11 @@ use u8_gpu::UInt8ArrayGPU;
 pub enum ArrowType {
     Float32Type,
     UInt32Type,
+    UInt16Type,
+    UInt8Type,
     Int32Type,
     Int16Type,
+    Int8Type,
 }
 
 pub trait ArrowPrimitiveType: Pod + Debug + Default {
@@ -53,6 +58,7 @@ impl_primitive_type!(u16, u16, 2);
 impl_primitive_type!(u8, u8, 1);
 impl_primitive_type!(i32, i32, 4);
 impl_primitive_type!(i16, i16, 4);
+impl_primitive_type!(i8, i8, 1);
 
 pub trait ArrowArray: Any + Sync + Send + Debug {
     fn as_any(&self) -> &dyn Any;
@@ -69,6 +75,7 @@ pub enum ArrowArrayGPU {
     UInt8ArrayGPU(UInt8ArrayGPU),
     Int32ArrayGPU(Int32ArrayGPU),
     Int16ArrayGPU(Int16ArrayGPU),
+    Int8ArrayGPU(Int8ArrayGPU),
 }
 
 pub struct NullBitBufferBuilder {

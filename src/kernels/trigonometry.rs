@@ -14,6 +14,7 @@ pub async fn sin_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
         ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.sin().await.into(),
         ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.sin().await.into(),
         ArrowArrayGPU::Int16ArrayGPU(arr) => arr.sin().await.into(),
+        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.sin().await.into(),
         _ => panic!("Operation not supported"),
     }
 }
