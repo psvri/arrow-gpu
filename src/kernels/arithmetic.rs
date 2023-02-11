@@ -69,6 +69,9 @@ pub async fn add_scalar_dyn(data: &ArrowArrayGPU, value: &ArrowArrayGPU) -> Arro
         (ArrowArrayGPU::Int32ArrayGPU(arr), ArrowArrayGPU::Int32ArrayGPU(scalar)) => {
             arr.add_scalar(scalar).await.into()
         }
+        (ArrowArrayGPU::Date32ArrayGPU(arr), ArrowArrayGPU::Date32ArrayGPU(scalar)) => {
+            arr.add_scalar(scalar).await.into()
+        }
         _ => panic!("Operation not supported"),
     }
 }

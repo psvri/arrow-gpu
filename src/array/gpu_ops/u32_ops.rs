@@ -9,7 +9,7 @@ use super::*;
 
 const U32_SCALAR_SHADER: &str = include_str!("../../../compute_shaders/u32/scalar.wgsl");
 const U32_ARRAY_SHADER: &str = include_str!("../../../compute_shaders/u32/array.wgsl");
-const U32_BRAODCAST_SHADER: &str = include_str!("../../../compute_shaders/u32/broadcast.wgsl");
+const U32_BROADCAST_SHADER: &str = include_str!("../../../compute_shaders/u32/broadcast.wgsl");
 
 pub async fn add_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {
     scalar_op!(gpu_device, u32, data, value, U32_SCALAR_SHADER, "u32_add");
@@ -85,12 +85,12 @@ pub fn print_u32_array(gpu_device: &GpuDevice, data: &Buffer, name: &str) {
     }
 }
 
-pub async fn braodcast_u32(gpu_device: &GpuDevice, left: u32, size: u64) -> Buffer {
-    braodcast_op!(
+pub async fn broadcast_u32(gpu_device: &GpuDevice, left: u32, size: u64) -> Buffer {
+    broadcast_op!(
         gpu_device,
         u32,
         left,
-        U32_BRAODCAST_SHADER,
+        U32_BROADCAST_SHADER,
         "broadcast",
         size
     );

@@ -9,7 +9,7 @@ const F32_SCALAR_SHADER: &str = include_str!("../../../compute_shaders/f32/scala
 const F32_ARRAY_SHADER: &str = include_str!("../../../compute_shaders/f32/array.wgsl");
 const F32_REDUCTION_SHADER: &str = include_str!("../../../compute_shaders/f32/reduction.wgsl");
 const F32_UNARY_SHADER: &str = include_str!("../../../compute_shaders/f32/unary.wgsl");
-const F32_BRAODCAST_SHADER: &str = include_str!("../../../compute_shaders/f32/broadcast.wgsl");
+const F32_BROADCAST_SHADER: &str = include_str!("../../../compute_shaders/f32/broadcast.wgsl");
 
 pub async fn add_scalar(gpu_device: &GpuDevice, data: &Buffer, value: &Buffer) -> Buffer {
     scalar_op!(gpu_device, f32, data, value, F32_SCALAR_SHADER, "f32_add");
@@ -61,12 +61,12 @@ pub async fn sin_f32(gpu_device: &GpuDevice, left: &Buffer) -> Buffer {
     unary_op!(gpu_device, u32, left, F32_UNARY_SHADER, "sin_f32", 1);
 }
 
-pub async fn braodcast_f32(gpu_device: &GpuDevice, left: f32, size: u64) -> Buffer {
-    braodcast_op!(
+pub async fn broadcast_f32(gpu_device: &GpuDevice, left: f32, size: u64) -> Buffer {
+    broadcast_op!(
         gpu_device,
         f32,
         left,
-        F32_BRAODCAST_SHADER,
+        F32_BROADCAST_SHADER,
         "broadcast",
         size
     );

@@ -18,11 +18,14 @@ pub struct PrimitiveArrayGpu<T: ArrowPrimitiveType> {
 }
 
 impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
-    pub fn from_optional_slice(value: &[Option<T>], gpu_device: Arc<GpuDevice>) -> Self {
+    pub fn from_optional_slice(
+        value: &[Option<T::NativeType>],
+        gpu_device: Arc<GpuDevice>,
+    ) -> Self {
         let element_size = T::ITEM_SIZE;
 
         let aligned_size = align_to(value.len() * element_size, 4);
-        let mut new_vec = Vec::<T>::with_capacity(aligned_size / element_size);
+        let mut new_vec = Vec::<T::NativeType>::with_capacity(aligned_size / element_size);
         let mut null_buffer_builder = NullBitBufferBuilder::new_with_capacity(value.len());
 
         for (index, val) in value.iter().enumerate() {
@@ -32,7 +35,7 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
                     null_buffer_builder.set_bit(index);
                 }
                 None => {
-                    new_vec.push(T::default());
+                    new_vec.push(T::NativeType::default());
                 }
             }
         }
@@ -49,11 +52,14 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
         }
     }
 
-    pub fn from_optional_vec(value: &Vec<Option<T>>, gpu_device: Arc<GpuDevice>) -> Self {
+    pub fn from_optional_vec(
+        value: &Vec<Option<T::NativeType>>,
+        gpu_device: Arc<GpuDevice>,
+    ) -> Self {
         Self::from_optional_slice(&value[..], gpu_device)
     }
 
-    pub fn from_slice(value: &[T], gpu_device: Arc<GpuDevice>) -> Self {
+    pub fn from_slice(value: &[T::NativeType], gpu_device: Arc<GpuDevice>) -> Self {
         let data = gpu_device.create_gpu_buffer_with_data(value);
         let null_buffer = None;
 
@@ -66,17 +72,17 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
         }
     }
 
-    pub fn from_vec(value: &Vec<T>, gpu_device: Arc<GpuDevice>) -> Self {
+    pub fn from_vec(value: &Vec<T::NativeType>, gpu_device: Arc<GpuDevice>) -> Self {
         Self::from_slice(&value[..], gpu_device)
     }
 
-    pub async fn raw_values(&self) -> Option<Vec<T>> {
+    pub async fn raw_values(&self) -> Option<Vec<T::NativeType>> {
         let result = &self.gpu_device.retrive_data(&self.data).await;
-        let result: Vec<T> = bytemuck::cast_slice(&result).to_vec();
+        let result: Vec<T::NativeType> = bytemuck::cast_slice(&result).to_vec();
         Some(result[0..self.len].to_vec())
     }
 
-    pub async fn values(&self) -> Vec<Option<T>> {
+    pub async fn values(&self) -> Vec<Option<T::NativeType>> {
         match self.raw_values().await {
             Some(primitive_values) => {
                 let mut result_vec = Vec::with_capacity(self.len);
@@ -362,8 +368,7 @@ pub mod test {
             async fn $fn_name() {
                 let device = Arc::new(crate::array::GpuDevice::new().await);
                 let length = 100;
-                let new_gpu_array =
-                    PrimitiveArrayGpu::<$ty>::braodcast($input, length, device).await;
+                let new_gpu_array = $ty::broadcast($input, length, device).await;
                 let new_values = new_gpu_array.raw_values().await.unwrap();
                 assert_eq!(new_values, vec![$input; length]);
             }

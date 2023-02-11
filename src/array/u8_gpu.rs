@@ -15,13 +15,13 @@ use super::{
 pub type UInt8ArrayGPU = PrimitiveArrayGpu<u8>;
 
 impl UInt8ArrayGPU {
-    pub async fn braodcast(value: u8, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+    pub async fn broadcast(value: u8, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let new_len = div_ceil(len.try_into().unwrap(), 4);
-        let boradcast_value = (value as u32)
+        let broadcast_value = (value as u32)
             | ((value as u32) << 8)
             | ((value as u32) << 16)
             | ((value as u32) << 24);
-        let data = Arc::new(braodcast_u32(&gpu_device, boradcast_value, new_len).await);
+        let data = Arc::new(broadcast_u32(&gpu_device, broadcast_value, new_len).await);
         let null_buffer = None;
 
         Self {
@@ -77,7 +77,7 @@ mod tests {
     use crate::{array::primitive_array_gpu::test::*, kernels::trigonometry::sin_dyn};
     use std::sync::Arc;
 
-    test_broadcast!(test_braodcast_u8, u8, 1);
+    test_broadcast!(test_braodcast_u8, UInt8ArrayGPU, 1);
 
     test_unary_op_float!(
         test_u8_sin,

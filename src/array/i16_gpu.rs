@@ -16,10 +16,10 @@ use super::{
 pub type Int16ArrayGPU = PrimitiveArrayGpu<i16>;
 
 impl Int16ArrayGPU {
-    pub async fn braodcast(value: i16, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+    pub async fn broadcast(value: i16, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let new_len = div_ceil(len.try_into().unwrap(), 2);
-        let boradcast_value = (value as u32) | ((value as u32) << 16);
-        let data = Arc::new(braodcast_u32(&gpu_device, boradcast_value, new_len).await);
+        let broadcast_value = (value as u32) | ((value as u32) << 16);
+        let data = Arc::new(broadcast_u32(&gpu_device, broadcast_value, new_len).await);
         let null_buffer = None;
 
         Self {
@@ -95,7 +95,7 @@ mod tests {
     };
     use std::sync::Arc;
 
-    test_broadcast!(test_braodcast_i16, i16, 1);
+    test_broadcast!(test_broadcast_i16, Int16ArrayGPU, 1);
 
     test_unary_op_float!(
         test_i16_sin,

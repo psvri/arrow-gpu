@@ -37,8 +37,8 @@ impl TryFrom<ArrowArrayGPU> for UInt32ArrayGPU {
 }
 
 impl UInt32ArrayGPU {
-    pub async fn braodcast(value: u32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
-        let data = Arc::new(braodcast_u32(&gpu_device, value, len.try_into().unwrap()).await);
+    pub async fn broadcast(value: u32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+        let data = Arc::new(broadcast_u32(&gpu_device, value, len.try_into().unwrap()).await);
         let null_buffer = None;
 
         Self {
@@ -131,5 +131,5 @@ mod tests {
         vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX, u32::MAX]
     );
 
-    test_broadcast!(test_braodcast_u32, u32, 1);
+    test_broadcast!(test_broadcast_u32, UInt32ArrayGPU, 1);
 }

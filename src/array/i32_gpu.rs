@@ -1,15 +1,39 @@
-use crate::{kernels::arithmetic::*, ArrowErrorGPU};
+use crate::{
+    kernels::{arithmetic::*, broadcast::Broadcast},
+    ArrowErrorGPU,
+};
 use async_trait::async_trait;
 use std::{any::Any, sync::Arc};
 
 use super::{
-    gpu_ops::i32_ops::*, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowType, GpuDevice,
-    NullBitBufferGpu,
+    gpu_ops::i32_ops::*, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowPrimitiveType,
+    ArrowType, GpuDevice, NullBitBufferGpu, RustNativeType,
 };
 
 pub type Int32ArrayGPU = PrimitiveArrayGpu<i32>;
 
-impl_add_scalar_trait!(i32, add_scalar);
+//impl_add_scalar_trait!(i32, add_scalar);
+
+#[async_trait]
+impl<T> ArrowScalarAdd<PrimitiveArrayGpu<T>> for PrimitiveArrayGpu<T>
+where
+    T: ArrowPrimitiveType<NativeType = i32>,
+{
+    type Output = Self;
+
+    async fn add_scalar(&self, value: &PrimitiveArrayGpu<T>) -> Self::Output {
+        let new_buffer = add_scalar(&self.gpu_device, &self.data, &value.data).await;
+
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: self.null_buffer.clone(),
+        }
+    }
+}
+
 impl_sub_scalar_trait!(i32, sub_scalar);
 impl_mul_scalar_trait!(i32, mul_scalar);
 impl_div_scalar_trait!(i32, div_scalar);
@@ -36,9 +60,12 @@ impl TryFrom<ArrowArrayGPU> for Int32ArrayGPU {
     }
 }
 
-impl Int32ArrayGPU {
-    pub async fn braodcast(value: i32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
-        let data = Arc::new(braodcast_i32(&gpu_device, value, len.try_into().unwrap()).await);
+#[async_trait]
+impl<T: ArrowPrimitiveType<NativeType = i32>> Broadcast<i32> for PrimitiveArrayGpu<T> {
+    type Output = PrimitiveArrayGpu<T>;
+
+    async fn broadcast(value: i32, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
+        let data = Arc::new(broadcast_i32(&gpu_device, value, len.try_into().unwrap()).await);
         let null_buffer = None;
 
         Self {
@@ -133,5 +160,5 @@ mod tests {
         vec![-1; 5]
     );
 
-    test_broadcast!(test_braodcast_i32, i32, 1);
+    test_broadcast!(test_broadcast_i32, Int32ArrayGPU, 1);
 }

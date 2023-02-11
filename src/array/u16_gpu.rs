@@ -3,7 +3,7 @@ use crate::{
     ArrowErrorGPU,
 };
 use async_trait::async_trait;
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use super::{
     f32_gpu::Float32ArrayGPU,
@@ -15,10 +15,10 @@ use super::{
 pub type UInt16ArrayGPU = PrimitiveArrayGpu<u16>;
 
 impl UInt16ArrayGPU {
-    pub async fn braodcast(value: u16, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+    pub async fn broadcast(value: u16, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let new_len = div_ceil(len.try_into().unwrap(), 2);
-        let boradcast_value = (value as u32) | ((value as u32) << 16);
-        let data = Arc::new(braodcast_u32(&gpu_device, boradcast_value, new_len).await);
+        let broadcast_value = (value as u32) | ((value as u32) << 16);
+        let data = Arc::new(broadcast_u32(&gpu_device, broadcast_value, new_len).await);
         let null_buffer = None;
 
         Self {
@@ -74,7 +74,7 @@ mod tests {
     use crate::{array::primitive_array_gpu::test::*, kernels::trigonometry::sin_dyn};
     use std::sync::Arc;
 
-    test_broadcast!(test_braodcast_u16, u16, 1);
+    test_broadcast!(test_broadcast_u16, UInt16ArrayGPU, 1);
 
     test_unary_op_float!(
         test_u16_sin,

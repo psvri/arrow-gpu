@@ -168,7 +168,7 @@ macro_rules! unary_op {
 
 pub(crate) use unary_op;
 
-macro_rules! braodcast_op {
+macro_rules! broadcast_op {
     ($gpu_device: ident, $ty: ident, $original_value: ident, $shader: ident, $entry_point: literal, $size: ident) => {
         let compute_pipeline = $gpu_device.create_compute_pipeline($shader, $entry_point);
 
@@ -202,7 +202,7 @@ macro_rules! braodcast_op {
                 encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
             cpass.set_pipeline(&compute_pipeline);
             cpass.set_bind_group(0, &bind_group_array, &[]);
-            cpass.insert_debug_marker("braodcast");
+            cpass.insert_debug_marker("broadcast");
             let dispatch_size = new_values_buffer.size() / std::mem::size_of::<$ty>() as u64;
             cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
         }
@@ -216,7 +216,7 @@ macro_rules! braodcast_op {
     };
 }
 
-pub(crate) use braodcast_op;
+pub(crate) use broadcast_op;
 
 pub(crate) fn reduction_op(
     gpu_device: &GpuDevice,

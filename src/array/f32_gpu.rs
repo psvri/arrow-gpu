@@ -22,8 +22,8 @@ impl_array_add_trait!(Float32ArrayGPU, Float32ArrayGPU, add_array_f32);
 impl_unary_ops!(ArrowSum, sum, Float32ArrayGPU, f32, sum);
 
 impl Float32ArrayGPU {
-    pub async fn braodcast(value: f32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
-        let data = Arc::new(braodcast_f32(&gpu_device, value, len.try_into().unwrap()).await);
+    pub async fn broadcast(value: f32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+        let data = Arc::new(broadcast_f32(&gpu_device, value, len.try_into().unwrap()).await);
         let null_buffer = None;
 
         Self {
@@ -240,5 +240,5 @@ mod tests {
         vec![0.0f32.sin(), 1.0f32.sin(), 2.0f32.sin(), 3.0f32.sin()]
     );
 
-    test_broadcast!(test_braodcast_f32, f32, 1.0);
+    test_broadcast!(test_broadcast_f32, Float32ArrayGPU, 1.0);
 }
