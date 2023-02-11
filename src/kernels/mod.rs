@@ -2,6 +2,7 @@ use crate::array::ArrowArrayGPU;
 
 pub mod aggregate;
 pub mod arithmetic;
+pub mod cast;
 pub mod trigonometry;
 
 #[derive(Debug)]

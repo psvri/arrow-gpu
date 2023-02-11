@@ -288,6 +288,7 @@ pub mod test {
             || (left.is_nan() && !right.is_nan())
             || (right.is_nan() && !left.is_nan())
             || (left - right) > 0.0001
+            || (left - right) < -0.0001
         {
             false
         } else {
@@ -330,6 +331,30 @@ pub mod test {
         };
     }
     pub(crate) use test_unary_op_float;
+
+    macro_rules! test_cast_op {
+        ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $cast_type: ident, $output: expr) => {
+            #[tokio::test]
+            async fn $fn_name() {
+                let device = Arc::new(crate::array::GpuDevice::new().await);
+                let data = $input;
+                let gpu_array = $input_ty::from_vec(&data, device);
+                let new_gpu_array = gpu_array.$unary_fn().await;
+                let new_values = new_gpu_array.raw_values().await.unwrap();
+                assert_eq!(new_values, $output);
+                println!("{:?}", new_values);
+
+                let new_gpu_array = cast_dyn(&gpu_array.into(), &ArrowType::$cast_type).await;
+                let new_values = $output_ty::try_from(new_gpu_array)
+                    .unwrap()
+                    .raw_values()
+                    .await
+                    .unwrap();
+                assert_eq!(new_values, $output);
+            }
+        };
+    }
+    pub(crate) use test_cast_op;
 
     macro_rules! test_broadcast {
         ($fn_name: ident, $ty: ident, $input: expr) => {

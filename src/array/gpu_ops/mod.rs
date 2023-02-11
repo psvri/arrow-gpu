@@ -1,4 +1,6 @@
 pub mod f32_ops;
+pub mod i16_ops;
+pub mod i32_ops;
 pub mod u16_ops;
 pub mod u32_ops;
 pub mod u8_ops;
