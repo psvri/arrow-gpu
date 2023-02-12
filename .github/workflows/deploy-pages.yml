@@ -14,9 +14,9 @@ jobs:
       with:
         fetch-depth: 0
     - name: Set up mdbook
-        uses: taiki-e/install-action@v2
-        with:
-          tool: mdbook
+      uses: taiki-e/install-action@v2
+      with:
+        tool: mdbook
     - name: Deploy GitHub Pages
       run: |
         cd docs
