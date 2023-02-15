@@ -4,26 +4,146 @@ use crate::{
 };
 use async_trait::async_trait;
 use std::{any::Any, sync::Arc};
+use wgpu::Buffer;
 
 use super::{
-    gpu_ops::f32_ops::*, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowType, GpuDevice,
-    NullBitBufferGpu,
+    gpu_device::GpuDevice, gpu_ops::f32_ops::*, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU,
+    ArrowType, NullBitBufferGpu,
 };
+
+const F32_SCALAR_SHADER: &str = include_str!("../../compute_shaders/f32/scalar.wgsl");
+const F32_ARRAY_SHADER: &str = include_str!("../../compute_shaders/f32/array.wgsl");
+const F32_REDUCTION_SHADER: &str = include_str!("../../compute_shaders/f32/reduction.wgsl");
+const F32_TRIGONOMETRY_SHADER: &str = include_str!("../../compute_shaders/f32/trigonometry.wgsl");
+const F32_BROADCAST_SHADER: &str = include_str!("../../compute_shaders/f32/broadcast.wgsl");
 
 pub type Float32ArrayGPU = PrimitiveArrayGpu<f32>;
 
-impl_add_scalar_trait!(f32, add_scalar);
-impl_sub_scalar_trait!(f32, sub_scalar);
-impl_mul_scalar_trait!(f32, mul_scalar);
-impl_div_scalar_trait!(f32, div_scalar);
+#[async_trait]
+impl ArrowScalarAdd<Float32ArrayGPU> for Float32ArrayGPU {
+    type Output = Self;
 
-impl_array_add_trait!(Float32ArrayGPU, Float32ArrayGPU, add_array_f32);
+    async fn add_scalar(&self, value: &Float32ArrayGPU) -> Self::Output {
+        let new_buffer = self
+            .gpu_device
+            .apply_scalar_function(
+                &self.data,
+                &value.data,
+                self.data.size(),
+                4,
+                F32_SCALAR_SHADER,
+                "f32_add",
+            )
+            .await;
+
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: self.null_buffer.clone(),
+        }
+    }
+}
+
+#[async_trait]
+impl ArrowScalarSub<Float32ArrayGPU> for Float32ArrayGPU {
+    type Output = Self;
+
+    async fn sub_scalar(&self, value: &Float32ArrayGPU) -> Self::Output {
+        let new_buffer = self
+            .gpu_device
+            .apply_scalar_function(
+                &self.data,
+                &value.data,
+                self.data.size(),
+                4,
+                F32_SCALAR_SHADER,
+                "f32_sub",
+            )
+            .await;
+
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: self.null_buffer.clone(),
+        }
+    }
+}
+
+#[async_trait]
+impl ArrowScalarMul<Float32ArrayGPU> for Float32ArrayGPU {
+    type Output = Self;
+
+    async fn mul_scalar(&self, value: &Float32ArrayGPU) -> Self::Output {
+        let new_buffer = self
+            .gpu_device
+            .apply_scalar_function(
+                &self.data,
+                &value.data,
+                self.data.size(),
+                4,
+                F32_SCALAR_SHADER,
+                "f32_mul",
+            )
+            .await;
+
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: self.null_buffer.clone(),
+        }
+    }
+}
+
+#[async_trait]
+impl ArrowScalarDiv<Float32ArrayGPU> for Float32ArrayGPU {
+    type Output = Self;
+
+    async fn div_scalar(&self, value: &Float32ArrayGPU) -> Self::Output {
+        let new_buffer = self
+            .gpu_device
+            .apply_scalar_function(
+                &self.data,
+                &value.data,
+                self.data.size(),
+                4,
+                F32_SCALAR_SHADER,
+                "f32_div",
+            )
+            .await;
+
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: self.null_buffer.clone(),
+        }
+    }
+}
+
+//impl_array_add_trait!(Float32ArrayGPU, Float32ArrayGPU, add_array_f32);
 
 impl_unary_ops!(ArrowSum, sum, Float32ArrayGPU, f32, sum);
 
 impl Float32ArrayGPU {
     pub async fn broadcast(value: f32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
-        let data = Arc::new(broadcast_f32(&gpu_device, value, len.try_into().unwrap()).await);
+        let scalar_buffer = &gpu_device.create_scalar_buffer(&value);
+        let gpu_buffer = gpu_device
+            .apply_broadcast_function(
+                &scalar_buffer,
+                4 * len as u64,
+                4,
+                F32_BROADCAST_SHADER,
+                "broadcast",
+            )
+            .await;
+        let data = Arc::new(gpu_buffer);
         let null_buffer = None;
 
         Self {
@@ -68,6 +188,18 @@ impl ArrowArray for Float32ArrayGPU {
     fn get_memory_used(&self) -> u64 {
         self.data.size()
     }
+
+    fn get_gpu_device(&self) -> &GpuDevice {
+        &self.gpu_device
+    }
+
+    fn get_buffer(&self) -> &Buffer {
+        &self.data
+    }
+
+    fn get_null_bit_buffer(&self) -> Option<&NullBitBufferGpu> {
+        self.null_buffer.as_ref()
+    }
 }
 
 #[async_trait]
@@ -75,7 +207,16 @@ impl Trigonometry for Float32ArrayGPU {
     type Output = Self;
 
     async fn sin(&self) -> Self::Output {
-        let new_buffer = sin_f32(&self.gpu_device, &self.data).await;
+        let new_buffer = self
+            .gpu_device
+            .apply_unary_function(
+                &self.data,
+                self.data.size(),
+                4,
+                F32_TRIGONOMETRY_SHADER,
+                "sin_f32",
+            )
+            .await;
 
         Self {
             data: Arc::new(new_buffer),
@@ -87,6 +228,31 @@ impl Trigonometry for Float32ArrayGPU {
     }
 }
 
+#[async_trait]
+impl ArrowAdd<Float32ArrayGPU> for Float32ArrayGPU {
+    type Output = Self;
+
+    async fn add(&self, value: &Float32ArrayGPU) -> Self::Output {
+        assert!(Arc::ptr_eq(&self.gpu_device, &value.gpu_device));
+        let new_data_buffer = self
+            .gpu_device
+            .apply_binary_function(&self.data, &value.data, 4, F32_ARRAY_SHADER, "add_f32")
+            .await;
+        let new_null_buffer =
+            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &value.null_buffer).await;
+
+        let result = Self {
+            data: Arc::new(new_data_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: new_null_buffer,
+        };
+
+        result
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -95,7 +261,7 @@ mod tests {
     #[ignore = "Not passing in CI but passes in local 🤔"]
     #[tokio::test]
     async fn test_f32_sum() {
-        let device = Arc::new(crate::array::GpuDevice::new().await);
+        let device = Arc::new(GpuDevice::new().await);
         let gpu_array = Float32ArrayGPU::from_vec(
             &(0..256 * 256)
                 .into_iter()
@@ -122,7 +288,7 @@ mod tests {
         ignore = "Not passing in CI but passes in local 🤔"
     )]
     async fn test_large_f32_array() {
-        let device = Arc::new(crate::array::GpuDevice::new().await);
+        let device = Arc::new(GpuDevice::new().await);
         let gpu_array = Float32ArrayGPU::from_vec(
             &(0..1024 * 1024 * 10)
                 .into_iter()
@@ -145,7 +311,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_f32_array_from_optinal_vec() {
-        let device = Arc::new(crate::array::GpuDevice::new().await);
+        let device = Arc::new(GpuDevice::new().await);
         let gpu_array_1 = Float32ArrayGPU::from_optional_vec(
             &vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
             device.clone(),

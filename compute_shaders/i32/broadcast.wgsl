@@ -1,10 +1,10 @@
 @group(0)
 @binding(0)
-var<storage, write> new_values: array<i32>;
+var<storage, read> operand: i32;
 
 @group(0)
 @binding(1)
-var<storage, read> operand: i32;
+var<storage, write> new_values: array<i32>;
 
 @compute
 @workgroup_size(256)

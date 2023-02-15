@@ -4,6 +4,7 @@ pub mod aggregate;
 pub mod arithmetic;
 pub mod broadcast;
 pub mod cast;
+pub mod logical;
 pub mod trigonometry;
 
 #[derive(Debug)]

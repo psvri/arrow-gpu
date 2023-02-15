@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use crate::array::GpuDevice;
+use crate::array::gpu_device::GpuDevice;
 
 #[async_trait]
 pub trait Broadcast<Rhs> {

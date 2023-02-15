@@ -12,13 +12,13 @@ var<storage, write> new_values: array<u32>;
 
 @compute
 @workgroup_size(256)
-fn bit_and_u32(@builtin(global_invocation_id) global_id: vec3<u32>) {
+fn bitwise_and(@builtin(global_invocation_id) global_id: vec3<u32>) {
     new_values[global_id.x] = left_values[global_id.x] & right_values[global_id.x];
 }
 
 @compute
 @workgroup_size(256)
-fn bit_or_u32(@builtin(global_invocation_id) global_id: vec3<u32>) {
+fn bitwise_or(@builtin(global_invocation_id) global_id: vec3<u32>) {
     new_values[global_id.x] = left_values[global_id.x] | right_values[global_id.x];
 }
 

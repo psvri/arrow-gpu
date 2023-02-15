@@ -3,14 +3,41 @@ use async_trait::async_trait;
 use std::{any::Any, sync::Arc};
 
 use super::{
-    gpu_ops::i32_ops::*, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowType, GpuDevice,
-    NullBitBufferGpu,
+    gpu_device::GpuDevice, primitive_array_gpu::*, u32_gpu::U32_SCALAR_SHADER,
+    ArrowArray, ArrowArrayGPU,
 };
 
 #[derive(Default, Debug)]
 pub struct Date32Type {}
 
 pub type Date32ArrayGPU = PrimitiveArrayGpu<Date32Type>;
+
+#[async_trait]
+impl ArrowScalarAdd<Date32ArrayGPU> for Date32ArrayGPU {
+    type Output = Self;
+
+    async fn add_scalar(&self, value: &Date32ArrayGPU) -> Self::Output {
+        let new_buffer = self
+            .gpu_device
+            .apply_scalar_function(
+                &self.data,
+                &value.data,
+                self.data.size(),
+                4,
+                U32_SCALAR_SHADER,
+                "u32_add",
+            )
+            .await;
+
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: self.null_buffer.clone(),
+        }
+    }
+}
 
 impl Into<ArrowArrayGPU> for Date32ArrayGPU {
     fn into(self) -> ArrowArrayGPU {

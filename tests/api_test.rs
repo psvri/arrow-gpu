@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use arrow_gpu::array::f32_gpu::Float32ArrayGPU;
+use arrow_gpu::array::gpu_device::GpuDevice;
 use arrow_gpu::array::u32_gpu::UInt32ArrayGPU;
-use arrow_gpu::array::GpuDevice;
 use arrow_gpu::kernels::arithmetic::*;
 use pollster::FutureExt;
 

@@ -6,12 +6,19 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 use super::{
-    f32_gpu::Float32ArrayGPU,
-    gpu_ops::{div_ceil, i16_ops::*, u32_ops::*},
-    i32_gpu::Int32ArrayGPU,
-    primitive_array_gpu::*,
-    ArrowArrayGPU, GpuDevice,
+    f32_gpu::Float32ArrayGPU, gpu_device::GpuDevice, gpu_ops::div_ceil, i32_gpu::Int32ArrayGPU,
+    primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU, ArrowArrayGPU,
 };
+
+const I16_TRIGONOMETRY_SHADER: &str = concat!(
+    include_str!("../../compute_shaders/i16/utils.wgsl"),
+    include_str!("../../compute_shaders/i16/trigonometry.wgsl")
+);
+
+const I16_CAST_I32_SHADER: &str = concat!(
+    include_str!("../../compute_shaders/i16/utils.wgsl"),
+    include_str!("../../compute_shaders/i16/cast_i32.wgsl")
+);
 
 pub type Int16ArrayGPU = PrimitiveArrayGpu<i16>;
 
@@ -19,7 +26,9 @@ impl Int16ArrayGPU {
     pub async fn broadcast(value: i16, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let new_len = div_ceil(len.try_into().unwrap(), 2);
         let broadcast_value = (value as u32) | ((value as u32) << 16);
-        let data = Arc::new(broadcast_u32(&gpu_device, broadcast_value, new_len).await);
+        let gpu_buffer =
+            UInt32ArrayGPU::create_broadcast_buffer(broadcast_value, new_len, &gpu_device).await;
+        let data = Arc::new(gpu_buffer);
         let null_buffer = None;
 
         Self {
@@ -37,7 +46,16 @@ impl Trigonometry for Int16ArrayGPU {
     type Output = Float32ArrayGPU;
 
     async fn sin(&self) -> Self::Output {
-        let new_buffer = sin_i16(&self.gpu_device, &self.data).await;
+        let new_buffer = self
+            .gpu_device
+            .apply_unary_function(
+                &self.data,
+                self.data.size() * 2,
+                2,
+                I16_TRIGONOMETRY_SHADER,
+                "sin_i16",
+            )
+            .await;
 
         Float32ArrayGPU {
             data: Arc::new(new_buffer),
@@ -54,7 +72,16 @@ impl Cast<Int32ArrayGPU> for Int16ArrayGPU {
     type Output = Int32ArrayGPU;
 
     async fn cast(&self) -> Self::Output {
-        let new_buffer = cast_i32(&self.gpu_device, &self.data).await;
+        let new_buffer = self
+            .gpu_device
+            .apply_unary_function(
+                &self.data,
+                self.data.size() * 2,
+                2,
+                I16_CAST_I32_SHADER,
+                "cast_i32",
+            )
+            .await;
 
         Int32ArrayGPU {
             data: Arc::new(new_buffer),

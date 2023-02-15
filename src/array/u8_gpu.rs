@@ -7,10 +7,17 @@ use std::sync::Arc;
 
 use super::{
     f32_gpu::Float32ArrayGPU,
-    gpu_ops::{div_ceil, u32_ops::*, u8_ops::sin_u8},
+    gpu_device::GpuDevice,
+    gpu_ops::{div_ceil},
     primitive_array_gpu::*,
-    ArrowArrayGPU, GpuDevice,
+    u32_gpu::UInt32ArrayGPU,
+    ArrowArrayGPU,
 };
+
+const U8_TRIGONOMETRY_SHADER: &str = concat!(
+    include_str!("../../compute_shaders/u8/utils.wgsl"),
+    include_str!("../../compute_shaders/u8/trigonometry.wgsl")
+);
 
 pub type UInt8ArrayGPU = PrimitiveArrayGpu<u8>;
 
@@ -21,7 +28,9 @@ impl UInt8ArrayGPU {
             | ((value as u32) << 8)
             | ((value as u32) << 16)
             | ((value as u32) << 24);
-        let data = Arc::new(broadcast_u32(&gpu_device, broadcast_value, new_len).await);
+        let gpu_buffer =
+            UInt32ArrayGPU::create_broadcast_buffer(broadcast_value, new_len, &gpu_device).await;
+        let data = Arc::new(gpu_buffer);
         let null_buffer = None;
 
         Self {
@@ -39,7 +48,16 @@ impl Trigonometry for UInt8ArrayGPU {
     type Output = Float32ArrayGPU;
 
     async fn sin(&self) -> Self::Output {
-        let new_buffer = sin_u8(&self.gpu_device, &self.data).await;
+        let new_buffer = self
+            .gpu_device
+            .apply_unary_function(
+                &self.data,
+                self.data.size() * 4,
+                1,
+                U8_TRIGONOMETRY_SHADER,
+                "sin_u8",
+            )
+            .await;
 
         Float32ArrayGPU {
             data: Arc::new(new_buffer),
@@ -77,7 +95,7 @@ mod tests {
     use crate::{array::primitive_array_gpu::test::*, kernels::trigonometry::sin_dyn};
     use std::sync::Arc;
 
-    test_broadcast!(test_braodcast_u8, UInt8ArrayGPU, 1);
+    test_broadcast!(test_broadcast_u8, UInt8ArrayGPU, 1);
 
     test_unary_op_float!(
         test_u8_sin,

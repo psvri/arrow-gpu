@@ -3,7 +3,7 @@ use std::sync::Arc;
 use arrow::array::Float32Array;
 use arrow::compute::kernels::aggregate::sum;
 use arrow_gpu::{
-    array::{f32_gpu::Float32ArrayGPU, GpuDevice},
+    array::{f32_gpu::Float32ArrayGPU, gpu_device::GpuDevice},
     kernels::aggregate::ArrowSum,
 };
 use criterion::{black_box, criterion_group, criterion_main, Criterion};

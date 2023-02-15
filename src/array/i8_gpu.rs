@@ -6,12 +6,19 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 use super::{
-    f32_gpu::Float32ArrayGPU,
-    gpu_ops::{div_ceil, i8_ops::*, u32_ops::*},
-    i32_gpu::Int32ArrayGPU,
-    primitive_array_gpu::*,
-    ArrowArrayGPU, GpuDevice,
+    f32_gpu::Float32ArrayGPU, gpu_device::GpuDevice, gpu_ops::div_ceil, i32_gpu::Int32ArrayGPU,
+    primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU, ArrowArrayGPU,
 };
+
+const I8_TRIGONOMETRY_SHADER: &str = concat!(
+    include_str!("../../compute_shaders/i8/utils.wgsl"),
+    include_str!("../../compute_shaders/i8/trigonometry.wgsl")
+);
+
+const I8_CAST_I32_SHADER: &str = concat!(
+    include_str!("../../compute_shaders/i8/utils.wgsl"),
+    include_str!("../../compute_shaders/i8/cast_i32.wgsl")
+);
 
 pub type Int8ArrayGPU = PrimitiveArrayGpu<i8>;
 
@@ -22,7 +29,9 @@ impl Int8ArrayGPU {
             | ((value as u32) << 8)
             | ((value as u32) << 16)
             | ((value as u32) << 24);
-        let data = Arc::new(broadcast_u32(&gpu_device, broadcast_value, new_len).await);
+        let gpu_buffer =
+            UInt32ArrayGPU::create_broadcast_buffer(broadcast_value, new_len, &gpu_device).await;
+        let data = Arc::new(gpu_buffer);
         let null_buffer = None;
 
         Self {
@@ -40,7 +49,16 @@ impl Trigonometry for Int8ArrayGPU {
     type Output = Float32ArrayGPU;
 
     async fn sin(&self) -> Self::Output {
-        let new_buffer = sin_i8(&self.gpu_device, &self.data).await;
+        let new_buffer = self
+            .gpu_device
+            .apply_unary_function(
+                &self.data,
+                self.data.size() * 4,
+                1,
+                I8_TRIGONOMETRY_SHADER,
+                "sin_i8",
+            )
+            .await;
 
         Float32ArrayGPU {
             data: Arc::new(new_buffer),
@@ -57,7 +75,16 @@ impl Cast<Int32ArrayGPU> for Int8ArrayGPU {
     type Output = Int32ArrayGPU;
 
     async fn cast(&self) -> Self::Output {
-        let new_buffer = cast_i32(&self.gpu_device, &self.data).await;
+        let new_buffer = self
+            .gpu_device
+            .apply_unary_function(
+                &self.data,
+                self.data.size() * 4,
+                1,
+                I8_CAST_I32_SHADER,
+                "cast_i32",
+            )
+            .await;
 
         Int32ArrayGPU {
             data: Arc::new(new_buffer),
@@ -104,7 +131,7 @@ mod tests {
         test_i8_sin,
         Int8ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, 5],
+        vec![0, 1, 2, 3, 5, -7, -8],
         sin,
         sin_dyn,
         vec![
@@ -112,7 +139,9 @@ mod tests {
             1.0f32.sin(),
             2.0f32.sin(),
             3.0f32.sin(),
-            5.0f32.sin()
+            5.0f32.sin(),
+            -7.0f32.sin(),
+            -8.0f32.sin(),
         ]
     );
 
