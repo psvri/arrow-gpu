@@ -17,7 +17,7 @@ tokio-test = "0.4.2"
 env_logger = "0.10.0"
 tokio = { version = "1.22.0", features = ["macros", "rt-multi-thread"] }
 criterion = "0.4"
-arrow = "32.0.0"
+arrow = "33.0.0"
 
 
 [[bench]]
