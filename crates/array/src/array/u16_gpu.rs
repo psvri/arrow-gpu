@@ -7,10 +7,8 @@ use super::{
     ArrowArrayGPU,
 };
 
-pub const U16_UTILS: &str = include_str!("../../compute_shaders/u16/utils.wgsl");
-
 const U16_SCALAR_SHADER: &str = concat!(
-    include_str!("../../compute_shaders/u16/utils.wgsl"),
+    include_str!("../../../../compute_shaders/u16/utils.wgsl"),
     include_str!("../../compute_shaders/u16/scalar.wgsl")
 );
 
@@ -62,9 +60,9 @@ impl ArrowScalarAdd<UInt16ArrayGPU> for UInt16ArrayGPU {
     }
 }
 
-impl Into<ArrowArrayGPU> for UInt16ArrayGPU {
-    fn into(self) -> ArrowArrayGPU {
-        ArrowArrayGPU::UInt16ArrayGPU(self)
+impl From<UInt16ArrayGPU> for ArrowArrayGPU {
+    fn from(val: UInt16ArrayGPU) -> Self {
+        ArrowArrayGPU::UInt16ArrayGPU(val)
     }
 }
 

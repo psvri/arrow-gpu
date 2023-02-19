@@ -1,4 +1,4 @@
-use crate::{kernels::arithmetic::*, ArrowErrorGPU};
+use crate::ArrowErrorGPU;
 
 use std::sync::Arc;
 
@@ -30,9 +30,9 @@ impl UInt8ArrayGPU {
     }
 }
 
-impl Into<ArrowArrayGPU> for UInt8ArrayGPU {
-    fn into(self) -> ArrowArrayGPU {
-        ArrowArrayGPU::UInt8ArrayGPU(self)
+impl From<UInt8ArrayGPU> for ArrowArrayGPU {
+    fn from(val: UInt8ArrayGPU) -> ArrowArrayGPU {
+        ArrowArrayGPU::UInt8ArrayGPU(val)
     }
 }
 

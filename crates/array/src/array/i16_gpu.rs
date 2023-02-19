@@ -1,19 +1,11 @@
-use crate::{
-    kernels::{arithmetic::*, cast::Cast},
-    ArrowErrorGPU,
-};
-use async_trait::async_trait;
+use crate::ArrowErrorGPU;
+
 use std::sync::Arc;
 
 use super::{
-    gpu_device::GpuDevice, gpu_ops::div_ceil, i32_gpu::Int32ArrayGPU, primitive_array_gpu::*,
-    u32_gpu::UInt32ArrayGPU, ArrowArrayGPU,
+    gpu_device::GpuDevice, gpu_ops::div_ceil, primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU,
+    ArrowArrayGPU,
 };
-
-const I16_CAST_I32_SHADER: &str = concat!(
-    include_str!("../../compute_shaders/i16/utils.wgsl"),
-    include_str!("../../compute_shaders/i16/cast_i32.wgsl")
-);
 
 pub type Int16ArrayGPU = PrimitiveArrayGpu<i16>;
 
@@ -36,35 +28,9 @@ impl Int16ArrayGPU {
     }
 }
 
-#[async_trait]
-impl Cast<Int32ArrayGPU> for Int16ArrayGPU {
-    type Output = Int32ArrayGPU;
-
-    async fn cast(&self) -> Self::Output {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 2,
-                2,
-                I16_CAST_I32_SHADER,
-                "cast_i32",
-            )
-            .await;
-
-        Int32ArrayGPU {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: self.null_buffer.clone(),
-        }
-    }
-}
-
-impl Into<ArrowArrayGPU> for Int16ArrayGPU {
-    fn into(self) -> ArrowArrayGPU {
-        ArrowArrayGPU::Int16ArrayGPU(self)
+impl From<Int16ArrayGPU> for ArrowArrayGPU {
+    fn from(val: Int16ArrayGPU) -> Self {
+        ArrowArrayGPU::Int16ArrayGPU(val)
     }
 }
 
@@ -85,21 +51,8 @@ impl TryFrom<ArrowArrayGPU> for Int16ArrayGPU {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        array::{primitive_array_gpu::test::*, ArrowType},
-        kernels::cast::cast_dyn,
-    };
+    use crate::array::primitive_array_gpu::test::*;
     use std::sync::Arc;
 
     test_broadcast!(test_broadcast_i16, Int16ArrayGPU, 1);
-
-    test_cast_op!(
-        test_cast_i16_to_i32,
-        Int16ArrayGPU,
-        Int32ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3],
-        cast,
-        Int32Type,
-        vec![0, 1, 2, 3, -1, -2, -3]
-    );
 }

@@ -155,9 +155,9 @@ impl Float32ArrayGPU {
     }
 }
 
-impl Into<ArrowArrayGPU> for Float32ArrayGPU {
-    fn into(self) -> ArrowArrayGPU {
-        ArrowArrayGPU::Float32ArrayGPU(self)
+impl From<Float32ArrayGPU> for ArrowArrayGPU {
+    fn from(val: Float32ArrayGPU) -> Self {
+        ArrowArrayGPU::Float32ArrayGPU(val)
     }
 }
 

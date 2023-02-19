@@ -197,9 +197,9 @@ impl ArrowAdd<Int32ArrayGPU> for Int32ArrayGPU {
     }
 }
 
-impl Into<ArrowArrayGPU> for Int32ArrayGPU {
-    fn into(self) -> ArrowArrayGPU {
-        ArrowArrayGPU::Int32ArrayGPU(self)
+impl From<Int32ArrayGPU> for ArrowArrayGPU {
+    fn from(val: Int32ArrayGPU) -> Self {
+        ArrowArrayGPU::Int32ArrayGPU(val)
     }
 }
 

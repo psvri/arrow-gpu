@@ -386,6 +386,6 @@ impl GpuDevice {
         self.device
             .poll(Maintain::WaitForSubmissionIndex(submission_index));
 
-        return new_values_buffer;
+        new_values_buffer
     }
 }

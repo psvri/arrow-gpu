@@ -1,19 +1,10 @@
-use crate::{
-    kernels::{arithmetic::*, cast::Cast},
-    ArrowErrorGPU,
-};
-use async_trait::async_trait;
+use crate::ArrowErrorGPU;
 use std::sync::Arc;
 
 use super::{
-    gpu_device::GpuDevice, gpu_ops::div_ceil, i32_gpu::Int32ArrayGPU, primitive_array_gpu::*,
-    u32_gpu::UInt32ArrayGPU, ArrowArrayGPU,
+    gpu_device::GpuDevice, gpu_ops::div_ceil, primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU,
+    ArrowArrayGPU,
 };
-
-const I8_CAST_I32_SHADER: &str = concat!(
-    include_str!("../../compute_shaders/i8/utils.wgsl"),
-    include_str!("../../compute_shaders/i8/cast_i32.wgsl")
-);
 
 pub type Int8ArrayGPU = PrimitiveArrayGpu<i8>;
 
@@ -39,35 +30,9 @@ impl Int8ArrayGPU {
     }
 }
 
-#[async_trait]
-impl Cast<Int32ArrayGPU> for Int8ArrayGPU {
-    type Output = Int32ArrayGPU;
-
-    async fn cast(&self) -> Self::Output {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 4,
-                1,
-                I8_CAST_I32_SHADER,
-                "cast_i32",
-            )
-            .await;
-
-        Int32ArrayGPU {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: self.null_buffer.clone(),
-        }
-    }
-}
-
-impl Into<ArrowArrayGPU> for Int8ArrayGPU {
-    fn into(self) -> ArrowArrayGPU {
-        ArrowArrayGPU::Int8ArrayGPU(self)
+impl From<Int8ArrayGPU> for ArrowArrayGPU {
+    fn from(val: Int8ArrayGPU) -> Self {
+        ArrowArrayGPU::Int8ArrayGPU(val)
     }
 }
 
@@ -88,18 +53,8 @@ impl TryFrom<ArrowArrayGPU> for Int8ArrayGPU {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{array::primitive_array_gpu::test::*, array::ArrowType, kernels::cast::*};
+    use crate::array::primitive_array_gpu::test::*;
     use std::sync::Arc;
 
     test_broadcast!(test_broadcast_i8, Int8ArrayGPU, 1);
-
-    test_cast_op!(
-        test_cast_i8_to_i32,
-        Int8ArrayGPU,
-        Int32ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3, -7, 7],
-        cast,
-        Int32Type,
-        vec![0, 1, 2, 3, -1, -2, -3, -7, 7]
-    );
 }

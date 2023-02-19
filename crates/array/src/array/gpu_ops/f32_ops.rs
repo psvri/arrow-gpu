@@ -4,10 +4,7 @@ use wgpu::Buffer;
 
 use crate::array::gpu_device::GpuDevice;
 
-const F32_SCALAR_SHADER: &str = include_str!("../../../compute_shaders/f32/scalar.wgsl");
-const F32_ARRAY_SHADER: &str = include_str!("../../../compute_shaders/f32/array.wgsl");
 const F32_REDUCTION_SHADER: &str = include_str!("../../../compute_shaders/f32/reduction.wgsl");
-const F32_BROADCAST_SHADER: &str = include_str!("../../../compute_shaders/f32/broadcast.wgsl");
 
 pub async fn sum(gpu_device: &GpuDevice, left: &Buffer, mut len: usize) -> f32 {
     //get_f32_array(gpu_device, &left);

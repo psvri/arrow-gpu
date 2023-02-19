@@ -1,10 +1,9 @@
 use crate::{kernels::arithmetic::*, ArrowErrorGPU};
 use async_trait::async_trait;
-use std::{any::Any, sync::Arc};
+use std::sync::Arc;
 
 use super::{
-    gpu_device::GpuDevice, primitive_array_gpu::*, u32_gpu::U32_SCALAR_SHADER, ArrowArray,
-    ArrowArrayGPU,
+    gpu_device::GpuDevice, primitive_array_gpu::*, u32_gpu::U32_SCALAR_SHADER, ArrowArrayGPU,
 };
 
 #[derive(Default, Debug)]
@@ -39,9 +38,9 @@ impl ArrowScalarAdd<Date32ArrayGPU> for Date32ArrayGPU {
     }
 }
 
-impl Into<ArrowArrayGPU> for Date32ArrayGPU {
-    fn into(self) -> ArrowArrayGPU {
-        ArrowArrayGPU::Date32ArrayGPU(self)
+impl From<Date32ArrayGPU> for ArrowArrayGPU {
+    fn from(val: Date32ArrayGPU) -> Self {
+        ArrowArrayGPU::Date32ArrayGPU(val)
     }
 }
 

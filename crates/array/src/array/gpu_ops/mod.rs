@@ -67,7 +67,7 @@ pub(crate) fn reduction_op(
         .device
         .poll(Maintain::WaitForSubmissionIndex(submission_index));
 
-    return new_values_buffer;
+    new_values_buffer
 }
 
 /*pub fn get_alignment(len: u64, item_size: u64) -> u64 {
