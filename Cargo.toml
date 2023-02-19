@@ -1,29 +1,21 @@
-[package]
-name = "arrow-gpu"
-version = "0.1.0"
+[workspace]
+resolver = "2"
+members = [
+    "crates/test_macros",
+    "crates/trigonometry",
+    "crates/benchmarks",
+    "crates/arrow",
+    "crates/array"
+]
+
+[workspace.package]
 edition = "2021"
 
-[dependencies]
+[workspace.dependencies]
+async-trait = "0.1.64"
+tokio = { version = "1.22.0", features = ["macros", "rt-multi-thread"] }
 wgpu = "0.15.1"
 pollster = "0.3.0"
 bytemuck = "1.13.0"
 futures-intrusive = "0.5.0"
-async-trait = "0.1.64"
 log =  { version =  "0.4.17" }
-
-
-[dev-dependencies]
-tokio-test = "0.4.2"
-env_logger = "0.10.0"
-tokio = { version = "1.22.0", features = ["macros", "rt-multi-thread"] }
-criterion = "0.4"
-arrow = "33.0.0"
-
-
-[[bench]]
-name = "compare_gpu_arrow"
-harness = false
-
-[[bench]]
-name = "compare_sum"
-harness = false

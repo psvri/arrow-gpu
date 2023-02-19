@@ -1,0 +1,24 @@
+[package]
+name = "arrow_gpu_benchmarks"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+arrow_gpu_array = { path = "../array" }
+
+[dev-dependencies]
+env_logger = "0.10.0"
+criterion = "0.4"
+arrow = "33.0.0"
+pollster = {workspace = true}
+
+
+[[bench]]
+name = "compare_gpu_arrow"
+harness = false
+
+[[bench]]
+name = "compare_sum"
+harness = false
