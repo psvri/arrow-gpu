@@ -49,7 +49,6 @@ mod tests {
         UInt16ArrayGPU,
         UInt32ArrayGPU,
         vec![0, 1, 2, 3, 4],
-        cast,
         UInt32Type,
         vec![0, 1, 2, 3, 4]
     );

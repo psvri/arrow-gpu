@@ -36,6 +36,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Setup cargo sparse protocol
+        run: |
+          echo "CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse" >> $GITHUB_ENV
       - name: Setup Environment
         run: ${{ matrix.setup_env }}
         shell: bash

@@ -49,7 +49,6 @@ mod tests {
         Int16ArrayGPU,
         Int32ArrayGPU,
         vec![0, 1, 2, 3, -1, -2, -3],
-        cast,
         Int32Type,
         vec![0, 1, 2, 3, -1, -2, -3]
     );

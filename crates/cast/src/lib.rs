@@ -9,7 +9,8 @@ pub use i8_cast::*;
 pub use u16_cast::*;
 
 use arrow_gpu_array::array::{
-    i32_gpu::Int32ArrayGPU, u32_gpu::UInt32ArrayGPU, ArrowArrayGPU, ArrowType,
+    i16_gpu::Int16ArrayGPU, i32_gpu::Int32ArrayGPU, u16_gpu::UInt16ArrayGPU,
+    u32_gpu::UInt32ArrayGPU, u8_gpu::UInt8ArrayGPU, ArrowArrayGPU, ArrowType,
 };
 
 #[async_trait]
@@ -27,6 +28,18 @@ pub async fn cast_dyn(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
         (ArrowArrayGPU::Int8ArrayGPU(x), ArrowType::Int32Type) => {
             Cast::<Int32ArrayGPU>::cast(x).await.into()
         }
+        (ArrowArrayGPU::Int8ArrayGPU(x), ArrowType::UInt32Type) => {
+            Cast::<UInt32ArrayGPU>::cast(x).await.into()
+        }
+        (ArrowArrayGPU::Int8ArrayGPU(x), ArrowType::Int16Type) => {
+            Cast::<Int16ArrayGPU>::cast(x).await.into()
+        }
+        (ArrowArrayGPU::Int8ArrayGPU(x), ArrowType::UInt16Type) => {
+            Cast::<UInt16ArrayGPU>::cast(x).await.into()
+        }
+        (ArrowArrayGPU::Int8ArrayGPU(x), ArrowType::UInt8Type) => {
+            Cast::<UInt8ArrayGPU>::cast(x).await.into()
+        }
         (ArrowArrayGPU::UInt16ArrayGPU(x), ArrowType::UInt32Type) => {
             Cast::<UInt32ArrayGPU>::cast(x).await.into()
         }
@@ -37,13 +50,14 @@ pub async fn cast_dyn(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
 #[cfg(test)]
 mod tests {
     macro_rules! test_cast_op {
-        ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $cast_type: ident, $output: expr) => {
+        ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $cast_type: ident, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
                 let device = Arc::new(GpuDevice::new().await);
                 let data = $input;
                 let gpu_array = $input_ty::from_vec(&data, device);
-                let new_gpu_array = gpu_array.$unary_fn().await;
+                let new_gpu_array: $output_ty =
+                    <$input_ty as Cast<$output_ty>>::cast(&gpu_array).await;
                 let new_values = new_gpu_array.raw_values().await.unwrap();
                 assert_eq!(new_values, $output);
                 println!("{:?}", new_values);
