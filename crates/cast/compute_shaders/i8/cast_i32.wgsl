@@ -1,4 +1,5 @@
-// functions get_left_half and get_right_half are present in compute_shaders/u16/utils.wgsl
+// functions get_left_byte,get_mid_left_byte, get_right_byte and get_right_byte
+// are present in compute_shaders/i8/utils.wgsl
 // the rust code concacts them at compile time. This workaround is needed due to lack of import
 // support
 

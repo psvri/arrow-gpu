@@ -5,36 +5,27 @@ use async_trait::async_trait;
 
 use crate::Cast;
 
-const I8_CAST_I32_SHADER: &str = concat!(
-    include_str!("../../../compute_shaders/i8/utils.wgsl"),
-    include_str!("../compute_shaders/i8/cast_i32.wgsl")
+const U8_CAST_U16_SHADER: &str = concat!(
+    include_str!("../../../compute_shaders/u8/utils.wgsl"),
+    include_str!("../compute_shaders/u8/cast_u16.wgsl")
 );
-const I8_CAST_I16_SHADER: &str = concat!(
-    include_str!("../../../compute_shaders/i8/utils.wgsl"),
-    include_str!("../compute_shaders/i8/cast_i16.wgsl")
+const U8_CAST_U32_SHADER: &str = concat!(
+    include_str!("../../../compute_shaders/u8/utils.wgsl"),
+    include_str!("../compute_shaders/u8/cast_u32.wgsl")
 );
-const I8_CAST_F32_SHADER: &str = concat!(
-    include_str!("../../../compute_shaders/i8/utils.wgsl"),
-    include_str!("../compute_shaders/i8/cast_f32.wgsl")
+const U8_CAST_F32_SHADER: &str = concat!(
+    include_str!("../../../compute_shaders/u8/utils.wgsl"),
+    include_str!("../compute_shaders/u8/cast_f32.wgsl")
 );
 
 #[async_trait]
-impl Cast<Int32ArrayGPU> for Int8ArrayGPU {
-    type Output = Int32ArrayGPU;
+impl Cast<Int8ArrayGPU> for UInt8ArrayGPU {
+    type Output = Int8ArrayGPU;
 
     async fn cast(&self) -> Self::Output {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 4,
-                1,
-                I8_CAST_I32_SHADER,
-                "cast_i32",
-            )
-            .await;
+        let new_buffer = self.gpu_device.clone_buffer(&self.data);
 
-        Int32ArrayGPU {
+        Int8ArrayGPU {
             data: Arc::new(new_buffer),
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
@@ -45,33 +36,7 @@ impl Cast<Int32ArrayGPU> for Int8ArrayGPU {
 }
 
 #[async_trait]
-impl Cast<UInt32ArrayGPU> for Int8ArrayGPU {
-    type Output = UInt32ArrayGPU;
-
-    async fn cast(&self) -> Self::Output {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 4,
-                1,
-                I8_CAST_I32_SHADER,
-                "cast_i32",
-            )
-            .await;
-
-        UInt32ArrayGPU {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: self.null_buffer.clone(),
-        }
-    }
-}
-
-#[async_trait]
-impl Cast<Int16ArrayGPU> for Int8ArrayGPU {
+impl Cast<Int16ArrayGPU> for UInt8ArrayGPU {
     type Output = Int16ArrayGPU;
 
     async fn cast(&self) -> Self::Output {
@@ -81,8 +46,8 @@ impl Cast<Int16ArrayGPU> for Int8ArrayGPU {
                 &self.data,
                 self.data.size() * 2,
                 1,
-                I8_CAST_I16_SHADER,
-                "cast_i16",
+                U8_CAST_U16_SHADER,
+                "cast_u16",
             )
             .await;
 
@@ -97,7 +62,33 @@ impl Cast<Int16ArrayGPU> for Int8ArrayGPU {
 }
 
 #[async_trait]
-impl Cast<UInt16ArrayGPU> for Int8ArrayGPU {
+impl Cast<Int32ArrayGPU> for UInt8ArrayGPU {
+    type Output = Int32ArrayGPU;
+
+    async fn cast(&self) -> Self::Output {
+        let new_buffer = self
+            .gpu_device
+            .apply_unary_function(
+                &self.data,
+                self.data.size() * 4,
+                1,
+                U8_CAST_U32_SHADER,
+                "cast_u32",
+            )
+            .await;
+
+        Int32ArrayGPU {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: self.null_buffer.clone(),
+        }
+    }
+}
+
+#[async_trait]
+impl Cast<UInt16ArrayGPU> for UInt8ArrayGPU {
     type Output = UInt16ArrayGPU;
 
     async fn cast(&self) -> Self::Output {
@@ -107,8 +98,8 @@ impl Cast<UInt16ArrayGPU> for Int8ArrayGPU {
                 &self.data,
                 self.data.size() * 2,
                 1,
-                I8_CAST_I16_SHADER,
-                "cast_i16",
+                U8_CAST_U16_SHADER,
+                "cast_u16",
             )
             .await;
 
@@ -123,13 +114,22 @@ impl Cast<UInt16ArrayGPU> for Int8ArrayGPU {
 }
 
 #[async_trait]
-impl Cast<UInt8ArrayGPU> for Int8ArrayGPU {
-    type Output = UInt8ArrayGPU;
+impl Cast<UInt32ArrayGPU> for UInt8ArrayGPU {
+    type Output = UInt32ArrayGPU;
 
     async fn cast(&self) -> Self::Output {
-        let new_buffer = self.gpu_device.clone_buffer(&self.data);
+        let new_buffer = self
+            .gpu_device
+            .apply_unary_function(
+                &self.data,
+                self.data.size() * 4,
+                1,
+                U8_CAST_U32_SHADER,
+                "cast_u32",
+            )
+            .await;
 
-        UInt8ArrayGPU {
+        UInt32ArrayGPU {
             data: Arc::new(new_buffer),
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
@@ -140,7 +140,7 @@ impl Cast<UInt8ArrayGPU> for Int8ArrayGPU {
 }
 
 #[async_trait]
-impl Cast<Float32ArrayGPU> for Int8ArrayGPU {
+impl Cast<Float32ArrayGPU> for UInt8ArrayGPU {
     type Output = Float32ArrayGPU;
 
     async fn cast(&self) -> Self::Output {
@@ -150,7 +150,7 @@ impl Cast<Float32ArrayGPU> for Int8ArrayGPU {
                 &self.data,
                 self.data.size() * 4,
                 1,
-                I8_CAST_F32_SHADER,
+                U8_CAST_F32_SHADER,
                 "cast_f32",
             )
             .await;
@@ -172,67 +172,9 @@ mod tests {
     use crate::tests::test_cast_op;
 
     test_cast_op!(
-        test_cast_i8_to_i32,
-        Int8ArrayGPU,
-        Int32ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3, -7, 7],
-        Int32Type,
-        vec![0, 1, 2, 3, -1, -2, -3, -7, 7]
-    );
-
-    test_cast_op!(
-        test_cast_i8_to_u32,
-        Int8ArrayGPU,
-        UInt32ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3, -7, 7],
-        UInt32Type,
-        vec![
-            0,
-            1,
-            2,
-            3,
-            u32::MAX,
-            u32::MAX - 1,
-            u32::MAX - 2,
-            u32::MAX - 6,
-            7
-        ]
-    );
-
-    test_cast_op!(
-        test_cast_i8_to_i16,
-        Int8ArrayGPU,
-        Int16ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3, -7, 7],
-        Int16Type,
-        vec![0, 1, 2, 3, -1, -2, -3, -7, 7]
-    );
-
-    test_cast_op!(
-        test_cast_i8_to_u16,
-        Int8ArrayGPU,
-        UInt16ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3, -7, 7],
-        UInt16Type,
-        vec![
-            0,
-            1,
-            2,
-            3,
-            u16::MAX,
-            u16::MAX - 1,
-            u16::MAX - 2,
-            u16::MAX - 6,
-            7
-        ]
-    );
-
-    test_cast_op!(
-        test_cast_i8_to_u8,
-        Int8ArrayGPU,
+        test_cast_u8_to_i8,
         UInt8ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3, -7, 7],
-        UInt8Type,
+        Int8ArrayGPU,
         vec![
             0,
             1,
@@ -243,15 +185,53 @@ mod tests {
             u8::MAX - 2,
             u8::MAX - 6,
             7
-        ]
+        ],
+        Int8Type,
+        vec![0, 1, 2, 3, -1, -2, -3, -7, 7]
     );
 
     test_cast_op!(
-        test_cast_i8_to_f32,
-        Int8ArrayGPU,
+        test_cast_u8_to_i16,
+        UInt8ArrayGPU,
+        Int16ArrayGPU,
+        vec![0, 1, 2, 3, 255, 254, 253, 249, 7],
+        Int16Type,
+        vec![0, 1, 2, 3, 255, 254, 253, 249, 7]
+    );
+
+    test_cast_op!(
+        test_cast_u8_to_i32,
+        UInt8ArrayGPU,
+        Int32ArrayGPU,
+        vec![0, 1, 2, 3, 255, 254, 253, 249, 7],
+        Int32Type,
+        vec![0, 1, 2, 3, 255, 254, 253, 249, 7]
+    );
+
+    test_cast_op!(
+        test_cast_u8_to_u16,
+        UInt8ArrayGPU,
+        UInt16ArrayGPU,
+        vec![0, 1, 2, 3, 255, 250, 7],
+        UInt16Type,
+        vec![0, 1, 2, 3, 255, 250, 7]
+    );
+
+    test_cast_op!(
+        test_cast_u8_to_u32,
+        UInt8ArrayGPU,
+        UInt32ArrayGPU,
+        vec![0, 1, 2, 3, 255, 250, 7],
+        UInt32Type,
+        vec![0, 1, 2, 3, 255, 250, 7]
+    );
+
+    test_cast_op!(
+        test_cast_u8_to_f32,
+        UInt8ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3, -7, 7],
+        vec![0, 1, 2, 3, 255, 250, 7],
         Float32Type,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, -7.0, 7.0]
+        vec![0.0, 1.0, 2.0, 3.0, 255.0, 250.0, 7.0]
     );
 }

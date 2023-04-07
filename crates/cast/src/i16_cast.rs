@@ -9,6 +9,10 @@ const I16_CAST_I32_SHADER: &str = concat!(
     include_str!("../../../compute_shaders/i16/utils.wgsl"),
     include_str!("../compute_shaders/i16/cast_i32.wgsl")
 );
+const I16_CAST_F32_SHADER: &str = concat!(
+    include_str!("../../../compute_shaders/i16/utils.wgsl"),
+    include_str!("../compute_shaders/i16/cast_f32.wgsl")
+);
 
 #[async_trait]
 impl Cast<Int32ArrayGPU> for Int16ArrayGPU {
@@ -36,6 +40,73 @@ impl Cast<Int32ArrayGPU> for Int16ArrayGPU {
     }
 }
 
+#[async_trait]
+impl Cast<UInt32ArrayGPU> for Int16ArrayGPU {
+    type Output = UInt32ArrayGPU;
+
+    async fn cast(&self) -> Self::Output {
+        let new_buffer = self
+            .gpu_device
+            .apply_unary_function(
+                &self.data,
+                self.data.size() * 2,
+                2,
+                I16_CAST_I32_SHADER,
+                "cast_i32",
+            )
+            .await;
+
+        UInt32ArrayGPU {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: self.null_buffer.clone(),
+        }
+    }
+}
+
+#[async_trait]
+impl Cast<Float32ArrayGPU> for Int16ArrayGPU {
+    type Output = Float32ArrayGPU;
+
+    async fn cast(&self) -> Self::Output {
+        let new_buffer = self
+            .gpu_device
+            .apply_unary_function(
+                &self.data,
+                self.data.size() * 2,
+                2,
+                I16_CAST_F32_SHADER,
+                "cast_f32",
+            )
+            .await;
+
+        Float32ArrayGPU {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: self.null_buffer.clone(),
+        }
+    }
+}
+
+#[async_trait]
+impl Cast<UInt16ArrayGPU> for Int16ArrayGPU {
+    type Output = UInt16ArrayGPU;
+
+    async fn cast(&self) -> Self::Output {
+        UInt16ArrayGPU {
+            data: Arc::new(self.gpu_device.clone_buffer(&self.data)),
+            gpu_device: self.gpu_device.clone(),
+            phantom: Default::default(),
+            len: self.len,
+            null_buffer: self.null_buffer.clone(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -49,5 +120,32 @@ mod tests {
         vec![0, 1, 2, 3, -1, -2, -3],
         Int32Type,
         vec![0, 1, 2, 3, -1, -2, -3]
+    );
+
+    test_cast_op!(
+        test_cast_i16_to_u16,
+        Int16ArrayGPU,
+        UInt16ArrayGPU,
+        vec![0, 1, 2, 3, -1, -2, -3],
+        UInt16Type,
+        vec![0, 1, 2, 3, u16::MAX, u16::MAX - 1, u16::MAX - 2]
+    );
+
+    test_cast_op!(
+        test_cast_i16_to_u32,
+        Int16ArrayGPU,
+        UInt32ArrayGPU,
+        vec![0, 1, 2, 3, -1, -2, -3],
+        UInt32Type,
+        vec![0, 1, 2, 3, u32::MAX, u32::MAX - 1, u32::MAX - 2]
+    );
+
+    test_cast_op!(
+        test_cast_i16_to_f32,
+        Int16ArrayGPU,
+        Float32ArrayGPU,
+        vec![0, 1, 2, 3, -1, -2, -3],
+        Float32Type,
+        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0]
     );
 }
