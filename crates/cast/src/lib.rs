@@ -8,10 +8,7 @@ pub use i16_cast::*;
 pub use i8_cast::*;
 pub use u16_cast::*;
 
-use arrow_gpu_array::array::{
-    i16_gpu::Int16ArrayGPU, i32_gpu::Int32ArrayGPU, u16_gpu::UInt16ArrayGPU,
-    u32_gpu::UInt32ArrayGPU, u8_gpu::UInt8ArrayGPU, ArrowArrayGPU, ArrowType,
-};
+use arrow_gpu_array::array::*;
 
 #[async_trait]
 pub trait Cast<T> {

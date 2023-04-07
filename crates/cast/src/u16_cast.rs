@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use arrow_gpu_array::array::{u16_gpu::UInt16ArrayGPU, u32_gpu::UInt32ArrayGPU};
+use arrow_gpu_array::array::*;
 use async_trait::async_trait;
 
 use crate::Cast;
@@ -41,8 +41,6 @@ mod tests {
     use super::*;
     use crate::cast_dyn;
     use crate::tests::test_cast_op;
-    use arrow_gpu_array::array::gpu_device::GpuDevice;
-    use arrow_gpu_array::array::ArrowType;
 
     test_cast_op!(
         test_cast_u16_to_u32,

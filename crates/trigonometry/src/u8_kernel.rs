@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
-use arrow_gpu_array::array::{
-    f32_gpu::Float32ArrayGPU, gpu_device::GpuDevice, null_bit_buffer::NullBitBufferGpu,
-};
+use arrow_gpu_array::array::*;
 use wgpu::Buffer;
 
 use crate::{HyperbolicType, TrigonometricType};
@@ -63,8 +61,7 @@ impl TrigonometricType for u8 {
 
 #[cfg(test)]
 mod tests {
-    use arrow_gpu_array::array::u8_gpu::UInt8ArrayGPU;
-    use arrow_gpu_array::array::{f32_gpu::Float32ArrayGPU, gpu_device::GpuDevice};
+    use arrow_gpu_array::array::*;
     use arrow_gpu_test_macros::*;
     use std::sync::Arc;
 

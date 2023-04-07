@@ -1,32 +1,32 @@
 use bytemuck::Pod;
 use std::{any::Any, fmt::Debug};
-pub mod date32_gpu;
-pub mod f32_gpu;
-pub mod gpu_device;
-pub(crate) mod gpu_ops;
-pub mod i16_gpu;
-pub mod i32_gpu;
-pub mod i8_gpu;
-pub mod null_bit_buffer;
-pub mod primitive_array_gpu;
-pub mod u16_gpu;
-pub mod u32_gpu;
-pub mod u8_gpu;
-
-use null_bit_buffer::*;
 use wgpu::Buffer;
 
-use date32_gpu::Date32ArrayGPU;
-use date32_gpu::Date32Type;
-use f32_gpu::Float32ArrayGPU;
-use i16_gpu::Int16ArrayGPU;
-use i32_gpu::Int32ArrayGPU;
-use i8_gpu::Int8ArrayGPU;
-use u16_gpu::UInt16ArrayGPU;
-use u32_gpu::UInt32ArrayGPU;
-use u8_gpu::UInt8ArrayGPU;
+pub(crate) mod date32_gpu;
+pub(crate) mod f32_gpu;
+pub(crate) mod gpu_device;
+pub(crate) mod gpu_ops;
+pub(crate) mod i16_gpu;
+pub(crate) mod i32_gpu;
+pub(crate) mod i8_gpu;
+pub(crate) mod null_bit_buffer;
+pub(crate) mod primitive_array_gpu;
+pub(crate) mod u16_gpu;
+pub(crate) mod u32_gpu;
+pub(crate) mod u8_gpu;
 
-use self::gpu_device::GpuDevice;
+pub use self::gpu_device::GpuDevice;
+pub use date32_gpu::Date32ArrayGPU;
+pub use date32_gpu::Date32Type;
+pub use f32_gpu::Float32ArrayGPU;
+pub use i16_gpu::Int16ArrayGPU;
+pub use i32_gpu::Int32ArrayGPU;
+pub use i8_gpu::Int8ArrayGPU;
+pub use null_bit_buffer::*;
+pub use primitive_array_gpu::PrimitiveArrayGpu;
+pub use u16_gpu::UInt16ArrayGPU;
+pub use u32_gpu::UInt32ArrayGPU;
+pub use u8_gpu::UInt8ArrayGPU;
 
 #[derive(Debug)]
 #[non_exhaustive]

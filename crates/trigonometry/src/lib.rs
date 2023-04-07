@@ -7,10 +7,7 @@ use async_trait::async_trait;
 use std::sync::Arc;
 use wgpu::Buffer;
 
-use arrow_gpu_array::array::{
-    gpu_device::GpuDevice, null_bit_buffer::NullBitBufferGpu,
-    primitive_array_gpu::PrimitiveArrayGpu, ArrowArrayGPU, ArrowPrimitiveType,
-};
+use arrow_gpu_array::array::*;
 
 pub use self::f32_kernel::*;
 

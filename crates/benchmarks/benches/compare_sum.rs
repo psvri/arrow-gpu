@@ -2,10 +2,7 @@ use std::sync::Arc;
 
 use arrow::array::Float32Array;
 use arrow::compute::kernels::aggregate::sum;
-use arrow_gpu_array::{
-    array::{f32_gpu::Float32ArrayGPU, gpu_device::GpuDevice},
-    kernels::aggregate::ArrowSum,
-};
+use arrow_gpu_array::{array::*, kernels::aggregate::ArrowSum};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use pollster::FutureExt;
 
