@@ -21,24 +21,29 @@ jobs:
               sudo apt-get install -f -y libegl1-mesa-dev
               sudo apt-get install -f -y mesa-vulkan-drivers
               rustup update
+            setup_sparse_protocol: |
+              echo "CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse" >> $GITHUB_ENV
           - os: macos-latest
             name: Darwin
             run_test: false # macos vm doesn't have software metal api
             run_build: true
             setup_env: |
               rustup update
+            setup_sparse_protocol: |
+              echo "CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse" >> $GITHUB_ENV
           - os: windows-latest
             name: Windows
             run_test: true
             setup_env: |
               rustup update
+            setup_sparse_protocol: |
+              echo "CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse" >> $env:GITHUB_ENV
     
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup cargo sparse protocol
-        run: |
-          echo "CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse" >> $GITHUB_ENV
+        run: ${{ matrix.setup_sparse_protocol }}
       - name: Setup Environment
         run: ${{ matrix.setup_env }}
         shell: bash
