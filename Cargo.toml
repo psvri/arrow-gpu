@@ -6,7 +6,8 @@ members = [
     "crates/benchmarks",
     "crates/arrow",
     "crates/array",
-    "crates/cast"
+    "crates/cast",
+    "crates/arithmetic"
 ]
 
 [workspace.package]

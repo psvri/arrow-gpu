@@ -11,6 +11,7 @@ pub(crate) mod i32_gpu;
 pub(crate) mod i8_gpu;
 pub(crate) mod null_bit_buffer;
 pub(crate) mod primitive_array_gpu;
+pub mod types;
 pub(crate) mod u16_gpu;
 pub(crate) mod u32_gpu;
 pub(crate) mod u8_gpu;
@@ -40,11 +41,6 @@ pub enum ArrowType {
     Int8Type,
 }
 
-pub trait ArrowPrimitiveType: Send + Sync {
-    type NativeType: RustNativeType;
-    const ITEM_SIZE: usize;
-}
-
 pub trait RustNativeType: Pod + Debug + Default {}
 
 impl RustNativeType for i32 {}
@@ -54,6 +50,11 @@ impl RustNativeType for f32 {}
 impl RustNativeType for u32 {}
 impl RustNativeType for u16 {}
 impl RustNativeType for u8 {}
+
+pub trait ArrowPrimitiveType: Send + Sync {
+    type NativeType: RustNativeType;
+    const ITEM_SIZE: usize;
+}
 
 macro_rules! impl_primitive_type {
     ($primitive_type: ident, $t: ident, $size: expr) => {

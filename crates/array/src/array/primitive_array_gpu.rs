@@ -129,98 +129,6 @@ impl<T: ArrowPrimitiveType> Debug for PrimitiveArrayGpu<T> {
     }
 }
 
-macro_rules! impl_scalar_ops {
-    ($trait_name: ident, $trait_function: ident, $ty: ident, $op: ident) => {
-        #[async_trait]
-        impl $trait_name<PrimitiveArrayGpu<$ty>> for PrimitiveArrayGpu<$ty> {
-            type Output = Self;
-
-            async fn $trait_function(&self, value: &PrimitiveArrayGpu<$ty>) -> Self::Output {
-                let new_buffer = $op(&self.gpu_device, &self.data, &value.data).await;
-
-                Self {
-                    data: Arc::new(new_buffer),
-                    gpu_device: self.gpu_device.clone(),
-                    phantom: Default::default(),
-                    len: self.len,
-                    null_buffer: self.null_buffer.clone(),
-                }
-            }
-        }
-    };
-}
-
-pub(crate) use impl_scalar_ops;
-
-macro_rules! impl_add_scalar_trait {
-    ($ty: ident, $op: ident) => {
-        impl_scalar_ops!(ArrowScalarAdd, add_scalar, $ty, $op);
-    };
-}
-
-pub(crate) use impl_add_scalar_trait;
-
-macro_rules! impl_sub_scalar_trait {
-    ($ty: ident, $op: ident) => {
-        impl_scalar_ops!(ArrowScalarSub, sub_scalar, $ty, $op);
-    };
-}
-
-pub(crate) use impl_sub_scalar_trait;
-
-macro_rules! impl_mul_scalar_trait {
-    ($ty: ident, $op: ident) => {
-        impl_scalar_ops!(ArrowScalarMul, mul_scalar, $ty, $op);
-    };
-}
-
-pub(crate) use impl_mul_scalar_trait;
-
-macro_rules! impl_div_scalar_trait {
-    ($ty: ident, $op: ident) => {
-        impl_scalar_ops!(ArrowScalarDiv, div_scalar, $ty, $op);
-    };
-}
-
-pub(crate) use impl_div_scalar_trait;
-
-macro_rules! impl_array_ops {
-    ($trait_name: ident, $trait_function: ident, $for_ty: ident, $rhs_ty: ident, $op: ident) => {
-        #[async_trait]
-        impl $trait_name<$rhs_ty> for $for_ty {
-            type Output = Self;
-
-            async fn $trait_function(&self, value: &$rhs_ty) -> Self::Output {
-                assert!(Arc::ptr_eq(&self.gpu_device, &value.gpu_device));
-                let new_data_buffer = $op(&self.gpu_device, &self.data, &value.data).await;
-                let new_null_buffer =
-                    NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &value.null_buffer)
-                        .await;
-
-                let result = Self {
-                    data: Arc::new(new_data_buffer),
-                    gpu_device: self.gpu_device.clone(),
-                    phantom: Default::default(),
-                    len: self.len,
-                    null_buffer: new_null_buffer,
-                };
-
-                result
-            }
-        }
-    };
-}
-
-pub(crate) use impl_array_ops;
-
-macro_rules! impl_array_add_trait {
-    ($for_ty: ident, $rhs_ty: ident, $op: ident) => {
-        impl_array_ops!(ArrowAdd, add, $for_ty, $rhs_ty, $op);
-    };
-}
-
-pub(crate) use impl_array_add_trait;
-
 macro_rules! impl_unary_ops {
     ($trait_name: ident, $trait_function: ident, $for_ty: ident, $out_ty: ident, $op: ident) => {
         #[async_trait]
@@ -272,20 +180,6 @@ pub mod test {
     }
     pub(crate) use test_scalar_op;
 
-    macro_rules! test_add_array {
-        ($fn_name: ident, $ty: ident, $input_1: expr, $input_2: expr, $output: expr) => {
-            #[tokio::test]
-            async fn $fn_name() {
-                let device = Arc::new(GpuDevice::new().await);
-                let gpu_array_1 = $ty::from_optional_vec(&$input_1, device.clone());
-                let gpu_array_2 = $ty::from_optional_vec(&$input_2, device);
-                let new_gpu_array = gpu_array_1.add(&gpu_array_2).await;
-                assert_eq!(new_gpu_array.values().await, $output);
-            }
-        };
-    }
-    pub(crate) use test_add_array;
-
     macro_rules! test_binary_op {
         ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input_1: expr, $input_2: expr, $op: ident, $op_dyn: ident, $output: expr) => {
             #[tokio::test]
@@ -307,22 +201,6 @@ pub mod test {
         };
     }
     pub(crate) use test_binary_op;
-
-    pub fn float_eq_in_error(left: f32, right: f32) -> bool {
-        if (left == f32::INFINITY && right != f32::INFINITY)
-            || (right == f32::INFINITY && left != f32::INFINITY)
-            || (right == f32::NEG_INFINITY && left != f32::NEG_INFINITY)
-            || (left == f32::NEG_INFINITY && right != f32::NEG_INFINITY)
-            || (left.is_nan() && !right.is_nan())
-            || (right.is_nan() && !left.is_nan())
-            || (left - right) > 0.0001
-            || (left - right) < -0.0001
-        {
-            false
-        } else {
-            true
-        }
-    }
 
     macro_rules! test_unary_op_float {
         ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $unary_fn_dyn: ident, $output: expr) => {

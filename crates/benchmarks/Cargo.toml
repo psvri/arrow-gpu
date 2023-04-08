@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 arrow_gpu_array = { path = "../array" }
+arrow_gpu_arithmetic = { path = "../arithmetic" }
 
 [dev-dependencies]
 env_logger = "0.10.0"

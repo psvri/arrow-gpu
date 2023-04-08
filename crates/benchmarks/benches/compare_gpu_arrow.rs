@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use arrow::array::Float32Array;
 use arrow::compute::kernels::arithmetic::add_scalar;
-use arrow_gpu_array::{array::*, kernels::arithmetic::*};
+use arrow_gpu_arithmetic::*;
+use arrow_gpu_array::array::*;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use pollster::FutureExt;
 
