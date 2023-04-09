@@ -5,4 +5,5 @@
     - [Trigonometry](./kernels/trigonometry.md)
     - [Cast](./kernels/cast.md)
     - [Arithmetic](./kernels/arithmetic.md)
+    - [Logical](./kernels/logical.md)
 - [Blank Tables](./blank_tables.md)
