@@ -82,3 +82,41 @@ macro_rules! test_array_op {
         }
     };
 }
+
+#[macro_export]
+macro_rules! test_float_scalar_op {
+    ($fn_name: ident, $input_ty: ident, $scalar_ty: ident, $output_ty: ident, $input: expr, $scalar_fn: ident, $scalar_fn_dyn: ident, $scalar: expr, $output: expr) => {
+        #[tokio::test]
+        async fn $fn_name() {
+            let device = Arc::new(GpuDevice::new().await);
+            let data = $input;
+            let array = $input_ty::from_vec(&data, device.clone());
+            let value_array = $scalar_ty::from_vec(&vec![$scalar], device);
+            let new_gpu_array = array.$scalar_fn(&value_array).await;
+            let new_values = new_gpu_array.raw_values().await.unwrap();
+            for (index, new_value) in new_values.iter().enumerate() {
+                if !float_eq_in_error($output[index], *new_value) {
+                    panic!(
+                        "assertion failed: `(left == right) \n left: `{:?}` \n right: `{:?}`",
+                        $output, new_values
+                    );
+                }
+            }
+
+            let new_gpu_array = $scalar_fn_dyn(&array.into(), &value_array.into()).await;
+            let new_values = $output_ty::try_from(new_gpu_array)
+                .unwrap()
+                .raw_values()
+                .await
+                .unwrap();
+            for (index, new_value) in new_values.iter().enumerate() {
+                if !float_eq_in_error($output[index], *new_value) {
+                    panic!(
+                        "assertion dyn failed: `(left == right) \n left: `{:?}` \n right: `{:?}`",
+                        $output, new_values
+                    );
+                }
+            }
+        }
+    };
+}

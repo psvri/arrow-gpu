@@ -104,9 +104,9 @@ mod tests {
     use crate::rem_scalar_dyn;
 
     use super::*;
-    use arrow_gpu_test_macros::{test_array_op, test_scalar_op};
+    use arrow_gpu_test_macros::*;
 
-    test_scalar_op!(
+    test_float_scalar_op!(
         test_rem_f32_scalar_f32,
         Float32ArrayGPU,
         Float32ArrayGPU,
