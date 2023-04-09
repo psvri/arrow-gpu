@@ -1,7 +1,4 @@
-use crate::{
-    kernels::{broadcast::Broadcast, logical::Logical},
-    ArrowErrorGPU,
-};
+use crate::{kernels::broadcast::Broadcast, ArrowErrorGPU};
 use async_trait::async_trait;
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
@@ -11,59 +8,9 @@ use super::{
     ArrowType, NullBitBufferGpu,
 };
 
-const I32_ARRAY_SHADER: &str = include_str!("../../compute_shaders/i32/array.wgsl");
 const I32_BROADCAST_SHADER: &str = include_str!("../../compute_shaders/i32/broadcast.wgsl");
 
 pub type Int32ArrayGPU = PrimitiveArrayGpu<i32>;
-
-#[async_trait]
-impl Logical<Int32ArrayGPU> for Int32ArrayGPU {
-    type Output = Self;
-
-    async fn bitwise_and(&self, value: &Int32ArrayGPU) -> Self::Output {
-        let new_buffer = self
-            .gpu_device
-            .apply_scalar_function(
-                &self.data,
-                &value.data,
-                self.data.size(),
-                4,
-                I32_ARRAY_SHADER,
-                "bitwise_and",
-            )
-            .await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: self.null_buffer.clone(),
-        }
-    }
-
-    async fn bitwise_or(&self, value: &Int32ArrayGPU) -> Self::Output {
-        let new_buffer = self
-            .gpu_device
-            .apply_scalar_function(
-                &self.data,
-                &value.data,
-                self.data.size(),
-                4,
-                I32_ARRAY_SHADER,
-                "bitwise_or",
-            )
-            .await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: self.null_buffer.clone(),
-        }
-    }
-}
 
 impl From<Int32ArrayGPU> for ArrowArrayGPU {
     fn from(val: Int32ArrayGPU) -> Self {
@@ -142,32 +89,7 @@ impl ArrowArray for Int32ArrayGPU {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        array::primitive_array_gpu::test::*,
-        kernels::logical::{bitwise_and_dyn, bitwise_or_dyn},
-    };
+    use crate::array::primitive_array_gpu::test::*;
 
     test_broadcast!(test_broadcast_i32, Int32ArrayGPU, 1);
-
-    test_binary_op!(
-        test_bitwise_and_i32_array_i32,
-        Int32ArrayGPU,
-        Int32ArrayGPU,
-        vec![0, 1, 100, 260, 450, 0, 1, 100, 260, 450],
-        vec![0, 1, 100, 260, 450, !0, !1, !100, !260, !450],
-        bitwise_and,
-        bitwise_and_dyn,
-        vec![0, 1, 100, 260, 450, 0, 0, 0, 0, 0]
-    );
-
-    test_binary_op!(
-        test_bitwise_and_i32_or_i32,
-        Int32ArrayGPU,
-        Int32ArrayGPU,
-        vec![0, 1, 100, 260, 450, 0, 1, 100, 260, 450],
-        vec![0, 1, 100, 260, 450, !0, !1, !100, !260, !450],
-        bitwise_or,
-        bitwise_or_dyn,
-        vec![0, 1, 100, 260, 450, -1, -1, -1, -1, -1]
-    );
 }

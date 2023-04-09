@@ -8,8 +8,8 @@ edition = "2021"
 [dependencies]
 arrow_gpu_array = { path = "../array" }
 async-trait = { workspace = true }
-tokio = { workspace = true }
 wgpu = { workspace = true }
 
 [dev-dependencies]
 arrow_gpu_test_macros = {path = "../test_macros"}
+tokio = { workspace = true }

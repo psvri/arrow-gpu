@@ -247,6 +247,7 @@ mod tests {
         test_add_i32_array_i32,
         Int32ArrayGPU,
         Int32ArrayGPU,
+        Int32ArrayGPU,
         add,
         vec![Some(0i32), Some(1), None, None, Some(4)],
         vec![Some(1i32), Some(2), None, Some(4), None],
@@ -256,6 +257,7 @@ mod tests {
     test_array_op!(
         test_add_i32_array_date32,
         Int32ArrayGPU,
+        Date32ArrayGPU,
         Date32ArrayGPU,
         add,
         vec![Some(0i32), Some(1), None, None, Some(4)],

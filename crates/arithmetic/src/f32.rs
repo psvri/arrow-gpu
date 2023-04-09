@@ -197,6 +197,7 @@ mod tests {
         test_add_f32_array_f32,
         Float32ArrayGPU,
         Float32ArrayGPU,
+        Float32ArrayGPU,
         add,
         vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
         vec![Some(1.0), Some(2.0), None, Some(4.0), None],
@@ -205,6 +206,7 @@ mod tests {
 
     test_array_op!(
         test_sub_f32_array_f32,
+        Float32ArrayGPU,
         Float32ArrayGPU,
         Float32ArrayGPU,
         sub,
@@ -217,6 +219,7 @@ mod tests {
         test_mul_f32_array_f32,
         Float32ArrayGPU,
         Float32ArrayGPU,
+        Float32ArrayGPU,
         mul,
         vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
         vec![Some(1.0), Some(2.0), None, Some(4.0), None],
@@ -225,6 +228,7 @@ mod tests {
 
     test_array_op!(
         test_div_f32_array_f32,
+        Float32ArrayGPU,
         Float32ArrayGPU,
         Float32ArrayGPU,
         div,

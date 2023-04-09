@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use wgpu::{util::align_to, Buffer};
 
-use crate::array::u32_gpu::U32_ARRAY_SHADER;
+const LOGICAL_AND_SHADER: &str = include_str!("../../../logical/compute_shaders/u32/logical.wgsl");
 
 use super::gpu_device::GpuDevice;
 
@@ -123,6 +123,24 @@ impl NullBitBufferGpu {
         result[0..self.buffer_len].to_vec()
     }
 
+    pub async fn clone_null_bit_buffer(data: &Option<Self>) -> Option<Self> {
+        match data {
+            None => None,
+            Some(null_bit_buffer) => Some({
+                NullBitBufferGpu {
+                    bit_buffer: Arc::new(null_bit_buffer.clone_buffer().await),
+                    len: null_bit_buffer.len,
+                    buffer_len: null_bit_buffer.buffer_len,
+                    gpu_device: null_bit_buffer.gpu_device.clone(),
+                }
+            }),
+        }
+    }
+
+    async fn clone_buffer(&self) -> Buffer {
+        self.gpu_device.clone_buffer(&self.bit_buffer).await
+    }
+
     pub async fn merge_null_bit_buffer(
         left: &Option<NullBitBufferGpu>,
         right: &Option<NullBitBufferGpu>,
@@ -141,7 +159,7 @@ impl NullBitBufferGpu {
                         &right.bit_buffer,
                         left.bit_buffer.size(),
                         4,
-                        U32_ARRAY_SHADER,
+                        LOGICAL_AND_SHADER,
                         "bitwise_and",
                     )
                     .await;

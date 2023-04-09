@@ -20,7 +20,7 @@ impl Float32ArrayGPU {
         let scalar_buffer = &gpu_device.create_scalar_buffer(&value);
         let gpu_buffer = gpu_device
             .apply_broadcast_function(
-                &scalar_buffer,
+                scalar_buffer,
                 4 * len as u64,
                 4,
                 F32_BROADCAST_SHADER,

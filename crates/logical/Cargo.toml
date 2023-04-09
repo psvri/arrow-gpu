@@ -1,5 +1,5 @@
 [package]
-name = "arrow_gpu_trigonometry"
+name = "arrow_gpu_logical"
 version = "0.1.0"
 edition = "2021"
 

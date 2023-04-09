@@ -24,6 +24,6 @@ fn bitwise_or(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
 @compute
 @workgroup_size(256)
-fn add_u32(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    new_values[global_id.x] = left_values[global_id.x] + right_values[global_id.x];
+fn bitwise_xor(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    new_values[global_id.x] = left_values[global_id.x] ^ right_values[global_id.x];
 }

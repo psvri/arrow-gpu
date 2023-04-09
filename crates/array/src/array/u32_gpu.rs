@@ -1,5 +1,4 @@
-use crate::{kernels::logical::Logical, ArrowErrorGPU};
-use async_trait::async_trait;
+use crate::ArrowErrorGPU;
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
 
@@ -10,57 +9,7 @@ use super::{
 
 pub type UInt32ArrayGPU = PrimitiveArrayGpu<u32>;
 
-pub const U32_ARRAY_SHADER: &str = include_str!("../../compute_shaders/u32/array.wgsl");
 pub const U32_BROADCAST_SHADER: &str = include_str!("../../compute_shaders/u32/broadcast.wgsl");
-
-#[async_trait]
-impl Logical<UInt32ArrayGPU> for UInt32ArrayGPU {
-    type Output = Self;
-
-    async fn bitwise_and(&self, value: &UInt32ArrayGPU) -> Self::Output {
-        let new_buffer = self
-            .gpu_device
-            .apply_scalar_function(
-                &self.data,
-                &value.data,
-                self.data.size(),
-                4,
-                U32_ARRAY_SHADER,
-                "bitwise_and",
-            )
-            .await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: self.null_buffer.clone(),
-        }
-    }
-
-    async fn bitwise_or(&self, value: &UInt32ArrayGPU) -> Self::Output {
-        let new_buffer = self
-            .gpu_device
-            .apply_scalar_function(
-                &self.data,
-                &value.data,
-                self.data.size(),
-                4,
-                U32_ARRAY_SHADER,
-                "bitwise_or",
-            )
-            .await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: self.null_buffer.clone(),
-        }
-    }
-}
 
 impl From<UInt32ArrayGPU> for ArrowArrayGPU {
     fn from(val: UInt32ArrayGPU) -> Self {
@@ -86,13 +35,7 @@ impl UInt32ArrayGPU {
     pub async fn create_broadcast_buffer(value: u32, len: u64, gpu_device: &GpuDevice) -> Buffer {
         let scalar_buffer = &gpu_device.create_scalar_buffer(&value);
         gpu_device
-            .apply_broadcast_function(
-                &scalar_buffer,
-                4 * len,
-                4,
-                U32_BROADCAST_SHADER,
-                "broadcast",
-            )
+            .apply_broadcast_function(scalar_buffer, 4 * len, 4, U32_BROADCAST_SHADER, "broadcast")
             .await
     }
 
@@ -139,43 +82,7 @@ impl ArrowArray for UInt32ArrayGPU {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        array::primitive_array_gpu::test::*,
-        kernels::logical::{bitwise_and_dyn, bitwise_or_dyn},
-    };
+    use crate::array::primitive_array_gpu::test::*;
 
     test_broadcast!(test_broadcast_u32, UInt32ArrayGPU, 1);
-
-    test_binary_op!(
-        test_bitwise_and_u32_array_u32,
-        UInt32ArrayGPU,
-        UInt32ArrayGPU,
-        vec![0, 1, 100, 260, 450, 0, 1, 100, 260, 450],
-        vec![0, 1, 100, 260, 450, !0, !1, !100, !260, !450],
-        bitwise_and,
-        bitwise_and_dyn,
-        vec![0, 1, 100, 260, 450, 0, 0, 0, 0, 0]
-    );
-
-    test_binary_op!(
-        test_bitwise_and_u32_or_u32,
-        UInt32ArrayGPU,
-        UInt32ArrayGPU,
-        vec![0, 1, 100, 260, 450, 0, 1, 100, 260, 450],
-        vec![0, 1, 100, 260, 450, !0, !1, !100, !260, !450],
-        bitwise_or,
-        bitwise_or_dyn,
-        vec![
-            0,
-            1,
-            100,
-            260,
-            450,
-            u32::MAX,
-            u32::MAX,
-            u32::MAX,
-            u32::MAX,
-            u32::MAX,
-        ]
-    );
 }

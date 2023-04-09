@@ -23,14 +23,14 @@ impl Cast<Int8ArrayGPU> for UInt8ArrayGPU {
     type Output = Int8ArrayGPU;
 
     async fn cast(&self) -> Self::Output {
-        let new_buffer = self.gpu_device.clone_buffer(&self.data);
+        let new_buffer = self.gpu_device.clone_buffer(&self.data).await;
 
         Int8ArrayGPU {
             data: Arc::new(new_buffer),
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: self.null_buffer.clone(),
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
         }
     }
 }
@@ -56,7 +56,7 @@ impl Cast<Int16ArrayGPU> for UInt8ArrayGPU {
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: self.null_buffer.clone(),
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
         }
     }
 }
@@ -82,7 +82,7 @@ impl Cast<Int32ArrayGPU> for UInt8ArrayGPU {
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: self.null_buffer.clone(),
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
         }
     }
 }
@@ -108,7 +108,7 @@ impl Cast<UInt16ArrayGPU> for UInt8ArrayGPU {
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: self.null_buffer.clone(),
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
         }
     }
 }
@@ -134,7 +134,7 @@ impl Cast<UInt32ArrayGPU> for UInt8ArrayGPU {
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: self.null_buffer.clone(),
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
         }
     }
 }
@@ -160,7 +160,7 @@ impl Cast<Float32ArrayGPU> for UInt8ArrayGPU {
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: self.null_buffer.clone(),
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
         }
     }
 }

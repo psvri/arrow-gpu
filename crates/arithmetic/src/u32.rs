@@ -172,6 +172,7 @@ mod test {
         test_add_u32_array_u32,
         UInt32ArrayGPU,
         UInt32ArrayGPU,
+        UInt32ArrayGPU,
         add,
         vec![Some(0u32), Some(1), None, None, Some(4)],
         vec![Some(1u32), Some(2), None, Some(4), None],

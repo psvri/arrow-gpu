@@ -180,28 +180,6 @@ pub mod test {
     }
     pub(crate) use test_scalar_op;
 
-    macro_rules! test_binary_op {
-        ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input_1: expr, $input_2: expr, $op: ident, $op_dyn: ident, $output: expr) => {
-            #[tokio::test]
-            async fn $fn_name() {
-                let device = Arc::new(GpuDevice::new().await);
-                let gpu_array_1 = $input_ty::from_vec(&$input_1, device.clone());
-                let gpu_array_2 = $input_ty::from_vec(&$input_2, device);
-                let new_gpu_array = gpu_array_1.$op(&gpu_array_2).await;
-                assert_eq!(new_gpu_array.raw_values().await.unwrap(), $output);
-
-                let new_gpu_array = $op_dyn(&gpu_array_1.into(), &gpu_array_2.into()).await;
-                let new_values = $output_ty::try_from(new_gpu_array)
-                    .unwrap()
-                    .raw_values()
-                    .await
-                    .unwrap();
-                assert_eq!(new_values, $output);
-            }
-        };
-    }
-    pub(crate) use test_binary_op;
-
     macro_rules! test_unary_op_float {
         ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $unary_fn_dyn: ident, $output: expr) => {
             #[tokio::test]

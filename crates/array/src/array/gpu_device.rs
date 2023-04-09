@@ -125,7 +125,7 @@ impl GpuDevice {
             })
     }
 
-    pub fn clone_buffer(&self, buffer: &Buffer) -> Buffer {
+    pub async fn clone_buffer(&self, buffer: &Buffer) -> Buffer {
         let staging_buffer = self.create_empty_buffer(buffer.size());
 
         let mut encoder = self
