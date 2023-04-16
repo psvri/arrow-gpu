@@ -1,30 +1,30 @@
 // the value is in little endian . 
 // So bytes abcd is represented as dcba
-//
+// 2 numbers 'ab' 'cd' would be represented as 'ba' 'dc'
+// Hence in little endian i32 it becomes cdab
+
 const MAX_I16: i32 = 0x0000ffff;
-const LEFT_VALUE_EXTRACTOR: i32 = 0x0000ff7f;
-const LEFT_EXTRACTOR_SIGN: i32 = 0x00000080;
-//const RIGHT_VALUE_EXTRACTOR: u32 = 0xff7f0000;
-const RIGHT_EXTRACTOR_SIGN: i32 = 0x00800000;
+// Awaiting https://github.com/gfx-rs/naga/issues/1829 to be fixed
+//const SHIFTED_MAX_I16: i32 = MAX_I16 << 16u;
+const LEFT_SIGN_EXTRACTOR: i32 = 0x00008000;
+const RIGHT_SIGN_EXTRACTOR: i32 = -0x80000000;
 
 
 fn get_left_half(data: i32) -> i32 {
-    let sign = data & LEFT_EXTRACTOR_SIGN;
-    let value = (data & LEFT_VALUE_EXTRACTOR);
+    let sign = data & LEFT_SIGN_EXTRACTOR;
     if sign == 0 {
-        return value;
+        return (data & MAX_I16);
     } else {
-        return value | sign | (MAX_I16 << 16u);
+        return (data & MAX_I16) | (MAX_I16 << 16u);
     }
 }
 
 fn get_right_half(data: i32) -> i32 {
-
-    let sign = (data & RIGHT_EXTRACTOR_SIGN) >> 16u;
-    let value = ((data & (LEFT_VALUE_EXTRACTOR << 16u)) >> 16u);
+    let sign = (data & RIGHT_SIGN_EXTRACTOR) >> 16u;
+    let shifted_max_i16 = MAX_I16 << 16u;
     if sign == 0 {
-        return value;
+        return (data & shifted_max_i16) >> 16u;
     } else {
-        return value | sign | (MAX_I16 << 16u);
+        return ((data & shifted_max_i16) >> 16u) | shifted_max_i16;
     }
 }

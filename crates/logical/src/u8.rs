@@ -1,0 +1,136 @@
+use std::sync::Arc;
+
+use arrow_gpu_array::array::{GpuDevice, NullBitBufferGpu, UInt8ArrayGPU};
+
+use crate::{
+    u32::{U32_LOGICAL_SHADER, U32_NOT_SHADER},
+    LogicalType,
+};
+
+const U8_SHIFT_SHADER: &str = concat!(
+    include_str!("../../../compute_shaders/u8/utils.wgsl"),
+    include_str!("../compute_shaders/u8/shift.wgsl")
+);
+
+impl LogicalType for u8 {
+    type OutputType = UInt8ArrayGPU;
+
+    const SHADER: &'static str = U32_LOGICAL_SHADER;
+    const SHIFT_SHADER: &'static str = U8_SHIFT_SHADER;
+    const NOT_SHADER: &'static str = U32_NOT_SHADER;
+
+    fn create_new(
+        data: Arc<wgpu::Buffer>,
+        gpu_device: Arc<GpuDevice>,
+        len: usize,
+        null_buffer: Option<NullBitBufferGpu>,
+    ) -> Self::OutputType {
+        UInt8ArrayGPU {
+            data,
+            gpu_device,
+            phantom: std::marker::PhantomData,
+            len,
+            null_buffer,
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::*;
+
+    use super::*;
+    use arrow_gpu_array::array::UInt32ArrayGPU;
+    use arrow_gpu_test_macros::*;
+
+    test_array_op!(
+        test_bitwise_and_u8_array_u8,
+        UInt8ArrayGPU,
+        UInt8ArrayGPU,
+        UInt8ArrayGPU,
+        bitwise_and,
+        bitwise_and_dyn,
+        vec![Some(0), Some(1), Some(100), Some(100), Some(150), None],
+        vec![Some(0), Some(1), Some(100), Some(!100), None, Some(!50)],
+        vec![Some(0), Some(1), Some(100), Some(0), None, None]
+    );
+
+    test_array_op!(
+        test_bitwise_or_u8_array_u8,
+        UInt8ArrayGPU,
+        UInt8ArrayGPU,
+        UInt8ArrayGPU,
+        bitwise_or,
+        bitwise_or_dyn,
+        vec![Some(0), Some(1), Some(100), Some(100), Some(150), None],
+        vec![Some(0), Some(1), Some(100), Some(!100), None, Some(!50)],
+        vec![Some(0), Some(1), Some(100), Some(100 | !100), None, None]
+    );
+
+    test_array_op!(
+        test_bitwise_xor_u8_array_u8,
+        UInt8ArrayGPU,
+        UInt8ArrayGPU,
+        UInt8ArrayGPU,
+        bitwise_xor,
+        bitwise_xor_dyn,
+        vec![Some(0), Some(1), Some(100), Some(100), Some(150), None],
+        vec![Some(0), Some(0), Some(100), Some(!100), None, Some(!50)],
+        vec![
+            Some(0),
+            Some(1),
+            Some(100 ^ 100),
+            Some(100 ^ !100),
+            None,
+            None
+        ]
+    );
+
+    test_array_op!(
+        test_bitwise_shl_u8_array_u8,
+        UInt8ArrayGPU,
+        UInt32ArrayGPU,
+        UInt8ArrayGPU,
+        bitwise_shl,
+        bitwise_shl_dyn,
+        vec![Some(0), Some(1), Some(100), Some(u8::MAX), Some(150), None],
+        vec![Some(0), Some(1), Some(3), Some(5), None, Some(!50)],
+        vec![
+            Some(0),
+            Some(1 << 1),
+            Some(100 << 3),
+            Some(u8::MAX << 5),
+            None,
+            None
+        ]
+    );
+
+    test_array_op!(
+        test_bitwise_shr_u8_array_u8,
+        UInt8ArrayGPU,
+        UInt32ArrayGPU,
+        UInt8ArrayGPU,
+        bitwise_shr,
+        bitwise_shr_dyn,
+        vec![Some(0), Some(1), Some(100), Some(u8::MAX), Some(150), None],
+        vec![Some(0), Some(1), Some(3), Some(5), None, Some(!50)],
+        vec![
+            Some(0),
+            Some(1 >> 1),
+            Some(100 >> 3),
+            Some(u8::MAX >> 5),
+            None,
+            None
+        ]
+    );
+
+    test_unary_op!(
+        test_bitwise_not_u8,
+        UInt8ArrayGPU,
+        UInt8ArrayGPU,
+        vec![0, 1, 2, 3, 4],
+        bitwise_not,
+        bitwise_not_dyn,
+        vec![!0, !1, !2, !3, !4]
+    );
+}

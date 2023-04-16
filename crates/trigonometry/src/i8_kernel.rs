@@ -90,27 +90,35 @@ mod tests {
         test_i8_cos,
         Int8ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3],
+        vec![0, 1, -1, 56, -56, i8::MIN, i8::MAX],
         cos,
         cos_dyn,
-        vec![0.0f32.cos(), 1.0f32.cos(), 2.0f32.cos(), 3.0f32.cos()]
+        vec![
+            0.0f32.cos(),
+            1.0f32.cos(),
+            -1.0f32.cos(),
+            56.0f32.cos(),
+            -56.0f32.cos(),
+            (i8::MIN as f32).cos(),
+            (i8::MAX as f32).cos(),
+        ]
     );
 
     test_unary_op_float!(
         test_i8_sin,
         Int8ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, 5, -7, -8],
+        vec![0, 1, -1, 56, -56, i8::MIN, i8::MAX],
         sin,
         sin_dyn,
         vec![
             0.0f32.sin(),
             1.0f32.sin(),
-            2.0f32.sin(),
-            3.0f32.sin(),
-            5.0f32.sin(),
-            -7.0f32.sin(),
-            -8.0f32.sin(),
+            -1.0f32.sin(),
+            56.0f32.sin(),
+            -56.0f32.sin(),
+            (i8::MIN as f32).sin(),
+            (i8::MAX as f32).sin(),
         ]
     );
 }

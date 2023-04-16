@@ -44,9 +44,14 @@ macro_rules! test_unary_op {
             let data = $input;
             let gpu_array = $input_ty::from_vec(&data, device);
             let new_gpu_array = gpu_array.$unary_fn().await;
-            assert_eq!(new_array.raw_values().await.unwrap(), $output);
-            let new_gpu_array = $unary_fn_dyn(&(gpu_array.into())).await;
-            assert_eq!(new_array.raw_values().await.unwrap(), $output);
+            assert_eq!(new_gpu_array.raw_values().await.unwrap(), $output);
+            let new_gpu_array = $unary_fn_dyn(&gpu_array.into()).await;
+            let new_values = $output_ty::try_from(new_gpu_array)
+                .unwrap()
+                .raw_values()
+                .await
+                .unwrap();
+            assert_eq!(new_values, $output);
         }
     };
     ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $output: expr) => {

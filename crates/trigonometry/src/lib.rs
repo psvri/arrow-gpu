@@ -1,8 +1,8 @@
-pub mod f32_kernel;
-pub mod i16_kernel;
-pub mod i8_kernel;
-pub mod u16_kernel;
-pub mod u8_kernel;
+pub(crate) mod f32_kernel;
+pub(crate) mod i16_kernel;
+pub(crate) mod i8_kernel;
+pub(crate) mod u16_kernel;
+pub(crate) mod u8_kernel;
 use async_trait::async_trait;
 use std::sync::Arc;
 use wgpu::Buffer;

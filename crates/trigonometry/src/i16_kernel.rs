@@ -92,15 +92,17 @@ mod tests {
         test_i16_cos,
         Int16ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, 4],
+        vec![0, 1, -1, 4096, -4096, i16::MIN, i16::MAX],
         cos,
         cos_dyn,
         vec![
-            0.0f32.cos(),
-            1.0f32.cos(),
-            2.0f32.cos(),
-            3.0f32.cos(),
-            4.0f32.cos()
+            0f32.cos(),
+            1f32.cos(),
+            -1f32.cos(),
+            4096f32.cos(),
+            -4096f32.cos(),
+            (i16::MIN as f32).cos(),
+            (i16::MAX as f32).cos()
         ]
     );
 
@@ -108,17 +110,17 @@ mod tests {
         test_i16_sin,
         Int16ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3],
+        vec![0, 1, -1, 4096, -4096, i16::MIN, i16::MAX],
         sin,
         sin_dyn,
         vec![
-            0.0f32.sin(),
-            1.0f32.sin(),
-            2.0f32.sin(),
-            3.0f32.sin(),
-            -1.0f32.sin(),
-            -2.0f32.sin(),
-            -3.0f32.sin()
+            0f32.sin(),
+            1f32.sin(),
+            -1f32.sin(),
+            4096f32.sin(),
+            -4096f32.sin(),
+            (i16::MIN as f32).sin(),
+            (i16::MAX as f32).sin()
         ]
     );
 }

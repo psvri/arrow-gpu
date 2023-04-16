@@ -4,6 +4,7 @@
 const FLIP_OTHERS: i32 = 0x00ffffff;
 const VALUE_EXTRACTOR: i32 = 0x0000007f;
 const SIGN_EXTRACTOR: i32 = 0x00000080;
+const MAX_I8: i32 = 0x000000ff;
 
 fn get_left_byte(data: i32) -> i32 {
     let sign = data & SIGN_EXTRACTOR;

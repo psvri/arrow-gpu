@@ -84,10 +84,17 @@ mod tests {
         test_f32_cos,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0],
+        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0],
         cos,
         cos_dyn,
-        vec![0.0f32.cos(), 1.0f32.cos(), 2.0f32.cos(), 3.0f32.cos()]
+        vec![
+            0.0f32.cos(),
+            1.0f32.cos(),
+            2.0f32.cos(),
+            3.0f32.cos(),
+            -1.0f32.cos(),
+            -2.0f32.cos()
+        ]
     );
 
     test_unary_op_float!(
