@@ -8,7 +8,8 @@ members = [
     "crates/array",
     "crates/cast",
     "crates/arithmetic",
-    "crates/logical"
+    "crates/logical",
+    "crates/routines"
 ]
 
 [workspace.package]

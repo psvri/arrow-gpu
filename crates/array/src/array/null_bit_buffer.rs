@@ -6,13 +6,13 @@ const LOGICAL_AND_SHADER: &str = include_str!("../../../logical/compute_shaders/
 
 use super::gpu_device::GpuDevice;
 
-pub struct NullBitBufferBuilder {
-    data: Vec<u8>,
+pub struct BooleanBufferBuilder {
+    pub(crate) data: Vec<u8>,
     len: usize,
     contains_nulls: bool,
 }
 
-impl NullBitBufferBuilder {
+impl BooleanBufferBuilder {
     pub fn new() -> Self {
         Self::new_with_capacity(1024)
     }
@@ -54,6 +54,10 @@ impl NullBitBufferBuilder {
     pub fn is_set(&self, pos: usize) -> bool {
         self.data[pos / 8] & 1 << (pos % 8) == 1 << (pos % 8)
     }
+
+    pub fn is_set_in_slice(data: &[u8], pos: usize) -> bool {
+        data[pos / 8] & 1 << (pos % 8) == 1 << (pos % 8)
+    }
 }
 
 #[cfg(test)]
@@ -62,7 +66,7 @@ mod tests {
 
     #[test]
     fn test_set_bit() {
-        let mut buffer = NullBitBufferBuilder::new_with_capacity(10);
+        let mut buffer = BooleanBufferBuilder::new_with_capacity(10);
         assert_eq!(buffer.data.len(), 2);
         buffer.set_bit(0);
         assert_eq!(buffer.data[0], 0b00000001);
@@ -75,7 +79,7 @@ mod tests {
 
     #[test]
     fn test_new_set_with_capacity() {
-        let buffer = NullBitBufferBuilder::new_set_with_capacity(10);
+        let buffer = BooleanBufferBuilder::new_set_with_capacity(10);
 
         assert_eq!(buffer.data[0], u8::MAX);
         assert_eq!(buffer.data[1], 0b00000011);
@@ -84,14 +88,14 @@ mod tests {
 
 #[derive(Debug, Clone)]
 pub struct NullBitBufferGpu {
-    bit_buffer: Arc<Buffer>,
-    len: usize,
-    buffer_len: usize,
-    gpu_device: Arc<GpuDevice>,
+    pub bit_buffer: Arc<Buffer>,
+    pub len: usize,
+    pub buffer_len: usize,
+    pub gpu_device: Arc<GpuDevice>,
 }
 
 impl NullBitBufferGpu {
-    pub fn new(gpu_device: Arc<GpuDevice>, buffer_builder: &NullBitBufferBuilder) -> Option<Self> {
+    pub fn new(gpu_device: Arc<GpuDevice>, buffer_builder: &BooleanBufferBuilder) -> Option<Self> {
         if buffer_builder.contains_nulls {
             let data = gpu_device.create_gpu_buffer_with_data(&buffer_builder.data);
 
@@ -107,7 +111,7 @@ impl NullBitBufferGpu {
     }
 
     pub fn new_set_with_capacity(gpu_device: Arc<GpuDevice>, size: usize) -> Self {
-        let buffer_builder = NullBitBufferBuilder::new_set_with_capacity(size);
+        let buffer_builder = BooleanBufferBuilder::new_set_with_capacity(size);
         let data = gpu_device.create_gpu_buffer_with_data(&buffer_builder.data);
 
         Self {
@@ -147,7 +151,15 @@ impl NullBitBufferGpu {
     ) -> Option<NullBitBufferGpu> {
         match (left, right) {
             (None, None) => None,
-            (Some(x), None) | (None, Some(x)) => Some(x.clone()),
+            (Some(x), None) | (None, Some(x)) => Some({
+                let buffer = x.clone_buffer().await;
+                Self {
+                    bit_buffer: buffer.into(),
+                    len: x.len,
+                    buffer_len: x.buffer_len,
+                    gpu_device: x.gpu_device.clone(),
+                }
+            }),
             (Some(left), Some(right)) => {
                 assert_eq!(left.bit_buffer.size(), right.bit_buffer.size());
                 assert_eq!(left.len, right.len);

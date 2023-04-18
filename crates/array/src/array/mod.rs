@@ -2,10 +2,11 @@ use bytemuck::Pod;
 use std::{any::Any, fmt::Debug};
 use wgpu::Buffer;
 
+pub(crate) mod boolean_gpu;
 pub(crate) mod date32_gpu;
 pub(crate) mod f32_gpu;
 pub(crate) mod gpu_device;
-pub(crate) mod gpu_ops;
+pub mod gpu_ops;
 pub(crate) mod i16_gpu;
 pub(crate) mod i32_gpu;
 pub(crate) mod i8_gpu;
@@ -17,6 +18,7 @@ pub(crate) mod u32_gpu;
 pub(crate) mod u8_gpu;
 
 pub use self::gpu_device::GpuDevice;
+pub use boolean_gpu::BooleanArrayGPU;
 pub use date32_gpu::Date32ArrayGPU;
 pub use date32_gpu::Date32Type;
 pub use f32_gpu::Float32ArrayGPU;
@@ -53,14 +55,14 @@ impl RustNativeType for u8 {}
 
 pub trait ArrowPrimitiveType: Send + Sync {
     type NativeType: RustNativeType;
-    const ITEM_SIZE: usize;
+    const ITEM_SIZE: u64;
 }
 
 macro_rules! impl_primitive_type {
     ($primitive_type: ident, $t: ident, $size: expr) => {
         impl ArrowPrimitiveType for $primitive_type {
             type NativeType = $t;
-            const ITEM_SIZE: usize = $size;
+            const ITEM_SIZE: u64 = $size;
         }
     };
 }

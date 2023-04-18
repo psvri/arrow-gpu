@@ -3,7 +3,7 @@ pub mod f32_ops;
 use super::gpu_device::GpuDevice;
 use wgpu::{util::align_to, Buffer, Maintain};
 
-pub(crate) fn div_ceil(x: u64, y: u64) -> u64 {
+pub fn div_ceil(x: u64, y: u64) -> u64 {
     x / y + ((x % y > 0) as u64)
 }
 

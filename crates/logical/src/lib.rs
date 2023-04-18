@@ -9,7 +9,6 @@ use std::sync::Arc;
 
 use arrow_gpu_array::array::*;
 use async_trait::async_trait;
-use wgpu::Buffer;
 
 const AND_ENTRY_POINT: &str = "bitwise_and";
 const OR_ENTRY_POINT: &str = "bitwise_or";
@@ -19,43 +18,30 @@ const SHIFT_LEFT_ENTRY_POINT: &str = "bitwise_shl";
 const SHIFT_RIGHT_ENTRY_POINT: &str = "bitwise_shr";
 
 pub trait LogicalType {
-    type OutputType;
-
     const SHADER: &'static str;
     const SHIFT_SHADER: &'static str;
     const NOT_SHADER: &'static str;
-
-    fn create_new(
-        data: Arc<Buffer>,
-        device: Arc<GpuDevice>,
-        len: usize,
-        null_buffer: Option<NullBitBufferGpu>,
-    ) -> Self::OutputType;
 }
 
 #[async_trait]
 pub trait Logical {
-    type Output;
-
-    async fn bitwise_and(&self, operand: &Self) -> Self::Output;
-    async fn bitwise_or(&self, operand: &Self) -> Self::Output;
-    async fn bitwise_xor(&self, operand: &Self) -> Self::Output;
-    async fn bitwise_not(&self) -> Self::Output;
-    async fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self::Output;
-    async fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self::Output;
+    async fn bitwise_and(&self, operand: &Self) -> Self;
+    async fn bitwise_or(&self, operand: &Self) -> Self;
+    async fn bitwise_xor(&self, operand: &Self) -> Self;
+    async fn bitwise_not(&self) -> Self;
+    async fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self;
+    async fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self;
 }
 
 #[async_trait]
 impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
-    type Output = T::OutputType;
-
-    async fn bitwise_and(&self, operand: &Self) -> Self::Output {
+    async fn bitwise_and(&self, operand: &Self) -> Self {
         let new_buffer = self
             .gpu_device
             .apply_binary_function(
                 &self.data,
                 &operand.data,
-                self.data.size(),
+                T::ITEM_SIZE,
                 T::SHADER,
                 AND_ENTRY_POINT,
             )
@@ -63,21 +49,22 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
         let new_null_buffer =
             NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
 
-        <T as LogicalType>::create_new(
-            Arc::new(new_buffer),
-            self.gpu_device.clone(),
-            self.len,
-            new_null_buffer,
-        )
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: std::marker::PhantomData,
+            len: self.len,
+            null_buffer: new_null_buffer,
+        }
     }
 
-    async fn bitwise_or(&self, operand: &Self) -> Self::Output {
+    async fn bitwise_or(&self, operand: &Self) -> Self {
         let new_buffer = self
             .gpu_device
             .apply_binary_function(
                 &self.data,
                 &operand.data,
-                self.data.size(),
+                T::ITEM_SIZE,
                 T::SHADER,
                 OR_ENTRY_POINT,
             )
@@ -85,21 +72,22 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
         let new_null_buffer =
             NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
 
-        <T as LogicalType>::create_new(
-            Arc::new(new_buffer),
-            self.gpu_device.clone(),
-            self.len,
-            new_null_buffer,
-        )
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: std::marker::PhantomData,
+            len: self.len,
+            null_buffer: new_null_buffer,
+        }
     }
 
-    async fn bitwise_xor(&self, operand: &Self) -> Self::Output {
+    async fn bitwise_xor(&self, operand: &Self) -> Self {
         let new_buffer = self
             .gpu_device
             .apply_binary_function(
                 &self.data,
                 &operand.data,
-                self.data.size(),
+                T::ITEM_SIZE,
                 T::SHADER,
                 XOR_ENTRY_POINT,
             )
@@ -107,41 +95,43 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
         let new_null_buffer =
             NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
 
-        <T as LogicalType>::create_new(
-            Arc::new(new_buffer),
-            self.gpu_device.clone(),
-            self.len,
-            new_null_buffer,
-        )
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: std::marker::PhantomData,
+            len: self.len,
+            null_buffer: new_null_buffer,
+        }
     }
 
-    async fn bitwise_not(&self) -> Self::Output {
+    async fn bitwise_not(&self) -> Self {
         let new_buffer = self
             .gpu_device
             .apply_unary_function(
                 &self.data,
                 self.data.size(),
-                T::ITEM_SIZE.try_into().unwrap(),
+                T::ITEM_SIZE,
                 T::NOT_SHADER,
                 NOT_ENTRY_POINT,
             )
             .await;
 
-        <T as LogicalType>::create_new(
-            Arc::new(new_buffer),
-            self.gpu_device.clone(),
-            self.len,
-            NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
-        )
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: std::marker::PhantomData,
+            len: self.len,
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+        }
     }
 
-    async fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self::Output {
+    async fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self {
         let new_buffer = self
             .gpu_device
             .apply_binary_function(
                 &self.data,
                 &operand.data,
-                self.data.size(),
+                T::ITEM_SIZE,
                 T::SHIFT_SHADER,
                 SHIFT_LEFT_ENTRY_POINT,
             )
@@ -149,21 +139,22 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
         let new_null_buffer =
             NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
 
-        <T as LogicalType>::create_new(
-            Arc::new(new_buffer),
-            self.gpu_device.clone(),
-            self.len,
-            new_null_buffer,
-        )
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: std::marker::PhantomData,
+            len: self.len,
+            null_buffer: new_null_buffer,
+        }
     }
 
-    async fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self::Output {
+    async fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self {
         let new_buffer = self
             .gpu_device
             .apply_binary_function(
                 &self.data,
                 &operand.data,
-                self.data.size(),
+                T::ITEM_SIZE,
                 T::SHIFT_SHADER,
                 SHIFT_RIGHT_ENTRY_POINT,
             )
@@ -171,12 +162,13 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
         let new_null_buffer =
             NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
 
-        <T as LogicalType>::create_new(
-            Arc::new(new_buffer),
-            self.gpu_device.clone(),
-            self.len,
-            new_null_buffer,
-        )
+        Self {
+            data: Arc::new(new_buffer),
+            gpu_device: self.gpu_device.clone(),
+            phantom: std::marker::PhantomData,
+            len: self.len,
+            null_buffer: new_null_buffer,
+        }
     }
 }
 

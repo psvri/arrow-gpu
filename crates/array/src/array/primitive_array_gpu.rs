@@ -1,5 +1,5 @@
 use super::{gpu_device::GpuDevice, NullBitBufferGpu};
-use crate::array::{ArrowPrimitiveType, NullBitBufferBuilder};
+use crate::array::{ArrowPrimitiveType, BooleanBufferBuilder};
 
 use pollster::FutureExt;
 use std::fmt::{Debug, Formatter};
@@ -24,9 +24,10 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
     ) -> Self {
         let element_size = T::ITEM_SIZE;
 
-        let aligned_size = align_to(value.len() * element_size, 4);
-        let mut new_vec = Vec::<T::NativeType>::with_capacity(aligned_size / element_size);
-        let mut null_buffer_builder = NullBitBufferBuilder::new_with_capacity(value.len());
+        let aligned_size = align_to(value.len() as u64 * element_size, 4);
+        let mut new_vec =
+            Vec::<T::NativeType>::with_capacity((aligned_size / element_size) as usize);
+        let mut null_buffer_builder = BooleanBufferBuilder::new_with_capacity(value.len());
 
         for (index, val) in value.iter().enumerate() {
             match val {

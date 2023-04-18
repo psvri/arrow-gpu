@@ -1,7 +1,3 @@
-use std::sync::Arc;
-
-use arrow_gpu_array::array::{GpuDevice, Int16ArrayGPU, NullBitBufferGpu};
-
 use crate::{
     i32::{I32_LOGICAL_SHADER, I32_NOT_SHADER},
     LogicalType,
@@ -13,33 +9,14 @@ const I16_SHIFT_SHADER: &str = concat!(
 );
 
 impl LogicalType for i16 {
-    type OutputType = Int16ArrayGPU;
-
     const SHADER: &'static str = I32_LOGICAL_SHADER;
     const SHIFT_SHADER: &'static str = I16_SHIFT_SHADER;
     const NOT_SHADER: &'static str = I32_NOT_SHADER;
-
-    fn create_new(
-        data: Arc<wgpu::Buffer>,
-        gpu_device: Arc<GpuDevice>,
-        len: usize,
-        null_buffer: Option<NullBitBufferGpu>,
-    ) -> Self::OutputType {
-        Int16ArrayGPU {
-            data,
-            gpu_device,
-            phantom: std::marker::PhantomData,
-            len,
-            null_buffer,
-        }
-    }
 }
 
 #[cfg(test)]
 mod test {
     use crate::*;
-
-    use super::*;
     use arrow_gpu_array::array::UInt32ArrayGPU;
     use arrow_gpu_test_macros::*;
 

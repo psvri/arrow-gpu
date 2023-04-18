@@ -338,6 +338,67 @@ impl GpuDevice {
         new_values_buffer
     }
 
+    pub async fn apply_ternary_function(
+        &self,
+        operand_1: &Buffer,
+        operand_2: &Buffer,
+        operand_3: &Buffer,
+        item_size: u64,
+        shader: &str,
+        entry_point: &str,
+    ) -> Buffer {
+        let compute_pipeline = self.create_compute_pipeline(shader, entry_point);
+
+        let new_values_buffer = self.create_empty_buffer(operand_1.size());
+
+        let bind_group_layout = compute_pipeline.get_bind_group_layout(0);
+        let bind_group_array = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: None,
+            layout: &bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: operand_1.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: operand_2.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: operand_3.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: new_values_buffer.as_entire_binding(),
+                },
+            ],
+        });
+
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some(entry_point),
+            });
+        {
+            let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: Some(entry_point),
+            });
+            cpass.set_pipeline(&compute_pipeline);
+            cpass.set_bind_group(0, &bind_group_array, &[]);
+            cpass.insert_debug_marker(entry_point);
+            let dispatch_size = operand_1.size() / item_size;
+            println!("{}", dispatch_size);
+            cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
+        }
+
+        let submission_index = self.queue.submit(Some(encoder.finish()));
+        self.device
+            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+
+        new_values_buffer
+    }
+
     pub async fn apply_broadcast_function(
         &self,
         scalar_value: &Buffer,

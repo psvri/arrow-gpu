@@ -64,7 +64,7 @@ impl<T: HyperbolicType + ArrowPrimitiveType> Hyperbolic for PrimitiveArrayGpu<T>
             .apply_unary_function(
                 &self.data,
                 self.data.size() * <T as HyperbolicType>::BUFFER_SIZE_MULTIPLIER,
-                <T as ArrowPrimitiveType>::ITEM_SIZE as u64,
+                <T as ArrowPrimitiveType>::ITEM_SIZE,
                 T::SHADER,
                 format!("sinh_{}", T::TYPE_STR).as_str(),
             )
@@ -89,7 +89,7 @@ impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArray
             .apply_unary_function(
                 &self.data,
                 self.data.size() * <T as TrigonometricType>::BUFFER_SIZE_MULTIPLIER,
-                <T as ArrowPrimitiveType>::ITEM_SIZE as u64,
+                <T as ArrowPrimitiveType>::ITEM_SIZE,
                 T::SHADER,
                 format!("cos_{}", T::TYPE_STR).as_str(),
             )
@@ -109,7 +109,7 @@ impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArray
             .apply_unary_function(
                 &self.data,
                 self.data.size() * <T as TrigonometricType>::BUFFER_SIZE_MULTIPLIER,
-                <T as ArrowPrimitiveType>::ITEM_SIZE as u64,
+                <T as ArrowPrimitiveType>::ITEM_SIZE,
                 T::SHADER,
                 format!("sin_{}", T::TYPE_STR).as_str(),
             )
