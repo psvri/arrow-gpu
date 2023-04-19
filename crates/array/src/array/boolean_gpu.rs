@@ -1,8 +1,12 @@
+use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
+use pollster::FutureExt;
 use wgpu::Buffer;
 
-use super::{BooleanBufferBuilder, GpuDevice, NullBitBufferGpu};
+use crate::ArrowErrorGPU;
+
+use super::{ArrowArrayGPU, BooleanBufferBuilder, GpuDevice, NullBitBufferGpu};
 
 pub struct BooleanArrayGPU {
     pub data: Arc<Buffer>,
@@ -95,6 +99,42 @@ impl BooleanArrayGPU {
         }
 
         result_vec
+    }
+}
+
+impl Debug for BooleanArrayGPU {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{{")?;
+        writeln!(f, "{:?}", self.data)?;
+        writeln!(f, "{:?}", self.gpu_device.device)?;
+        writeln!(f, "{:?}", self.gpu_device.queue)?;
+        writeln!(
+            f,
+            "Array of length {} contains {:?}",
+            self.len,
+            self.values().block_on()
+        )?;
+        write!(f, "}}")
+    }
+}
+
+impl From<BooleanArrayGPU> for ArrowArrayGPU {
+    fn from(val: BooleanArrayGPU) -> Self {
+        ArrowArrayGPU::BooleanArrayGPU(val)
+    }
+}
+
+impl TryFrom<ArrowArrayGPU> for BooleanArrayGPU {
+    type Error = ArrowErrorGPU;
+
+    fn try_from(value: ArrowArrayGPU) -> Result<Self, Self::Error> {
+        match value {
+            ArrowArrayGPU::BooleanArrayGPU(x) => Ok(x),
+            x => Err(ArrowErrorGPU::CastingNotSupported(format!(
+                "could not cast {:?} into Date32ArrayGPU",
+                x
+            ))),
+        }
     }
 }
 

@@ -1,3 +1,4 @@
+pub mod boolean;
 pub mod i16;
 pub mod i32;
 pub mod i8;
@@ -10,12 +11,12 @@ use std::sync::Arc;
 use arrow_gpu_array::array::*;
 use async_trait::async_trait;
 
-const AND_ENTRY_POINT: &str = "bitwise_and";
-const OR_ENTRY_POINT: &str = "bitwise_or";
-const XOR_ENTRY_POINT: &str = "bitwise_xor";
-const NOT_ENTRY_POINT: &str = "bitwise_not";
-const SHIFT_LEFT_ENTRY_POINT: &str = "bitwise_shl";
-const SHIFT_RIGHT_ENTRY_POINT: &str = "bitwise_shr";
+pub(crate) const AND_ENTRY_POINT: &str = "bitwise_and";
+pub(crate) const OR_ENTRY_POINT: &str = "bitwise_or";
+pub(crate) const XOR_ENTRY_POINT: &str = "bitwise_xor";
+pub(crate) const NOT_ENTRY_POINT: &str = "bitwise_not";
+pub(crate) const SHIFT_LEFT_ENTRY_POINT: &str = "bitwise_shl";
+pub(crate) const SHIFT_RIGHT_ENTRY_POINT: &str = "bitwise_shr";
 
 pub trait LogicalType {
     const SHADER: &'static str;
@@ -192,6 +193,9 @@ pub async fn bitwise_and_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> 
         (ArrowArrayGPU::Int8ArrayGPU(arr_1), ArrowArrayGPU::Int8ArrayGPU(arr_2)) => {
             arr_1.bitwise_and(arr_2).await.into()
         }
+        (ArrowArrayGPU::BooleanArrayGPU(arr_1), ArrowArrayGPU::BooleanArrayGPU(arr_2)) => {
+            arr_1.bitwise_and(arr_2).await.into()
+        }
         _ => panic!("Operation not supported"),
     }
 }
@@ -216,6 +220,9 @@ pub async fn bitwise_or_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> A
         (ArrowArrayGPU::Int8ArrayGPU(arr_1), ArrowArrayGPU::Int8ArrayGPU(arr_2)) => {
             arr_1.bitwise_or(arr_2).await.into()
         }
+        (ArrowArrayGPU::BooleanArrayGPU(arr_1), ArrowArrayGPU::BooleanArrayGPU(arr_2)) => {
+            arr_1.bitwise_or(arr_2).await.into()
+        }
         _ => panic!("Operation not supported"),
     }
 }
@@ -238,6 +245,9 @@ pub async fn bitwise_xor_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> 
             arr_1.bitwise_xor(arr_2).await.into()
         }
         (ArrowArrayGPU::Int8ArrayGPU(arr_1), ArrowArrayGPU::Int8ArrayGPU(arr_2)) => {
+            arr_1.bitwise_xor(arr_2).await.into()
+        }
+        (ArrowArrayGPU::BooleanArrayGPU(arr_1), ArrowArrayGPU::BooleanArrayGPU(arr_2)) => {
             arr_1.bitwise_xor(arr_2).await.into()
         }
         _ => panic!("Operation not supported"),

@@ -9,7 +9,8 @@ members = [
     "crates/cast",
     "crates/arithmetic",
     "crates/logical",
-    "crates/routines"
+    "crates/routines",
+    "crates/compare"
 ]
 
 [workspace.package]

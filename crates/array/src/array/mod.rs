@@ -34,6 +34,7 @@ pub use u8_gpu::UInt8ArrayGPU;
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum ArrowType {
+    BooleanType,
     Float32Type,
     UInt32Type,
     UInt16Type,
@@ -96,4 +97,5 @@ pub enum ArrowArrayGPU {
     Int16ArrayGPU(Int16ArrayGPU),
     Int8ArrayGPU(Int8ArrayGPU),
     Date32ArrayGPU(Date32ArrayGPU),
+    BooleanArrayGPU(BooleanArrayGPU),
 }
