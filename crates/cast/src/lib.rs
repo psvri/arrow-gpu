@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 
-pub mod i16_cast;
-pub mod i8_cast;
-pub mod u16_cast;
-pub mod u8_cast;
+pub(crate) mod i16_cast;
+pub(crate) mod i8_cast;
+pub(crate) mod u16_cast;
+pub(crate) mod u8_cast;
 
 pub use i16_cast::*;
 pub use i8_cast::*;

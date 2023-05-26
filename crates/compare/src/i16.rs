@@ -5,8 +5,15 @@ const I16_COMPARE_SHADER: &str = concat!(
     include_str!("../compute_shaders/i16/cmp.wgsl")
 );
 
+//TODO
+const I16_MIN_MAX_SHADER: &str = concat!(
+    include_str!("../../../compute_shaders/i16/utils.wgsl"),
+    include_str!("../compute_shaders/i16/cmp.wgsl")
+);
+
 impl CompareType for i16 {
     const COMPARE_SHADER: &'static str = I16_COMPARE_SHADER;
+    const MIN_MAX_SHADER: &'static str = I16_MIN_MAX_SHADER;
 }
 
 #[cfg(test)]

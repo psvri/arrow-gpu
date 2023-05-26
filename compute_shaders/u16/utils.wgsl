@@ -12,3 +12,7 @@ fn get_left_half(data: u32) -> u32 {
 fn get_right_half(data: u32) -> u32 {
     return  (data & RIGHT_EXTRACTOR) >> 16u;
 }
+
+fn merge(left: u32, right: u32) -> u32 {
+    return  (left & LEFT_EXTRACTOR) | (right & LEFT_EXTRACTOR) << 16u;
+}

@@ -1,4 +1,5 @@
 use bytemuck::Pod;
+use std::sync::Arc;
 use std::{any::Any, fmt::Debug};
 use wgpu::Buffer;
 
@@ -16,6 +17,9 @@ pub mod types;
 pub(crate) mod u16_gpu;
 pub(crate) mod u32_gpu;
 pub(crate) mod u8_gpu;
+
+use crate::kernels::broadcast::Broadcast;
+use crate::kernels::ScalarValue;
 
 pub use self::gpu_device::GpuDevice;
 pub use boolean_gpu::BooleanArrayGPU;
@@ -98,4 +102,21 @@ pub enum ArrowArrayGPU {
     Int8ArrayGPU(Int8ArrayGPU),
     Date32ArrayGPU(Date32ArrayGPU),
     BooleanArrayGPU(BooleanArrayGPU),
+}
+
+pub async fn broadcast_dyn(
+    value: ScalarValue,
+    len: usize,
+    device: Arc<GpuDevice>,
+) -> ArrowArrayGPU {
+    match value {
+        ScalarValue::F32(x) => Float32ArrayGPU::broadcast(x, len, device).await.into(),
+        ScalarValue::U32(x) => UInt32ArrayGPU::broadcast(x, len, device).await.into(),
+        ScalarValue::U16(x) => UInt16ArrayGPU::broadcast(x, len, device).await.into(),
+        ScalarValue::U8(x) => UInt8ArrayGPU::broadcast(x, len, device).await.into(),
+        ScalarValue::I32(x) => Int32ArrayGPU::broadcast(x, len, device).await.into(),
+        ScalarValue::I16(x) => Int16ArrayGPU::broadcast(x, len, device).await.into(),
+        ScalarValue::I8(x) => Int8ArrayGPU::broadcast(x, len, device).await.into(),
+        ScalarValue::BOOL(x) => BooleanArrayGPU::broadcast(x, len, device).await.into(),
+    }
 }

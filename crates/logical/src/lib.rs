@@ -1,10 +1,10 @@
-pub mod boolean;
-pub mod i16;
-pub mod i32;
-pub mod i8;
-pub mod u16;
-pub mod u32;
-pub mod u8;
+pub(crate) mod boolean;
+pub(crate) mod i16;
+pub(crate) mod i32;
+pub(crate) mod i8;
+pub(crate) mod u16;
+pub(crate) mod u32;
+pub(crate) mod u8;
 
 use std::sync::Arc;
 

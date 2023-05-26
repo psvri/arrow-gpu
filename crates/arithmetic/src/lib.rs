@@ -1,8 +1,8 @@
-pub mod f32;
-pub mod i32;
+pub(crate) mod f32;
+pub(crate) mod i32;
 pub(crate) mod kernels;
-pub mod u16;
-pub mod u32;
+pub(crate) mod u16;
+pub(crate) mod u32;
 
 pub use kernels::*;
 

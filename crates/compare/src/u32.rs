@@ -1,9 +1,11 @@
 use crate::*;
 
 const U32_COMPARE_SHADER: &str = include_str!("../compute_shaders/u32/cmp.wgsl");
+const U32_MIN_MAX_SHADER: &str = include_str!("../compute_shaders/u32/min_max.wgsl");
 
 impl CompareType for u32 {
     const COMPARE_SHADER: &'static str = U32_COMPARE_SHADER;
+    const MIN_MAX_SHADER: &'static str = U32_MIN_MAX_SHADER;
 }
 
 #[cfg(test)]
@@ -242,5 +244,27 @@ mod test {
             Some(false),
             Some(true)
         ]
+    );
+
+    test_array_op!(
+        test_min_u32_array_u32,
+        UInt32ArrayGPU,
+        UInt32ArrayGPU,
+        UInt32ArrayGPU,
+        min,
+        vec![Some(0u32), Some(3), Some(3), Some(0), None, None],
+        vec![Some(1u32), Some(2), Some(3), None, Some(4), None],
+        vec![Some(0u32), Some(2), Some(3), None, None, None]
+    );
+
+    test_array_op!(
+        test_max_u32_array_u32,
+        UInt32ArrayGPU,
+        UInt32ArrayGPU,
+        UInt32ArrayGPU,
+        max,
+        vec![Some(0u32), Some(3), Some(3), Some(0), None, None],
+        vec![Some(1u32), Some(2), Some(3), None, Some(4), None],
+        vec![Some(1u32), Some(3), Some(3), None, None, None]
     );
 }

@@ -6,6 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arrow_gpu_array = { path = "../array" }
-arrow_gpu_trigonometry = { path = "../trigonometry" }
 arrow_gpu_arithmetic = { path = "../arithmetic" }
+arrow_gpu_array = { path = "../array" }
+arrow_gpu_cast = { path = "../cast" }
+arrow_gpu_compare = { path = "../compare" }
+arrow_gpu_logical = { path = "../logical" }
+arrow_gpu_routines = { path = "../routines" }
+arrow_gpu_trigonometry = { path = "../trigonometry" }

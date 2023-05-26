@@ -1,9 +1,11 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use pollster::FutureExt;
 use wgpu::Buffer;
 
+use crate::kernels::broadcast::Broadcast;
 use crate::ArrowErrorGPU;
 
 use super::{ArrowArrayGPU, BooleanBufferBuilder, GpuDevice, NullBitBufferGpu};
@@ -65,18 +67,18 @@ impl BooleanArrayGPU {
         Self::from_bytes_slice(&value[..], gpu_device)
     }
 
-    pub async fn raw_values(&self) -> Vec<bool> {
+    pub async fn raw_values(&self) -> Option<Vec<bool>> {
         let result = self.gpu_device.retrive_data(&self.data).await;
         let result: Vec<u8> = bytemuck::cast_slice(&result).to_vec();
         let mut bool_result = Vec::<bool>::with_capacity(self.len);
         for i in 0..self.len {
             bool_result.push(BooleanBufferBuilder::is_set_in_slice(&result, i))
         }
-        bool_result
+        Some(bool_result)
     }
 
     pub async fn values(&self) -> Vec<Option<bool>> {
-        let primitive_values = self.raw_values().await;
+        let primitive_values = self.raw_values().await.unwrap();
         let mut result_vec = Vec::with_capacity(self.len);
 
         // TODO rework this
@@ -138,8 +140,35 @@ impl TryFrom<ArrowArrayGPU> for BooleanArrayGPU {
     }
 }
 
+#[async_trait]
+impl Broadcast<bool> for BooleanArrayGPU {
+    type Output = BooleanArrayGPU;
+
+    async fn broadcast(value: bool, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
+        let null_buffer_builder = BooleanBufferBuilder::new_set_with_capacity(len);
+
+        let buffer = if value {
+            BooleanBufferBuilder::new_set_with_capacity(len)
+        } else {
+            BooleanBufferBuilder::new_with_capacity(len)
+        };
+
+        let data = gpu_device.create_gpu_buffer_with_data(&buffer.data);
+        let null_buffer = NullBitBufferGpu::new(gpu_device.clone(), &null_buffer_builder);
+
+        Self {
+            data: Arc::new(data),
+            gpu_device,
+            len,
+            null_buffer,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::array::primitive_array_gpu::test::test_broadcast;
+
     use super::*;
 
     #[tokio::test]
@@ -148,10 +177,12 @@ mod tests {
         let values = vec![Some(true), Some(true), Some(false), None];
         let array = BooleanArrayGPU::from_optional_slice(&values, Arc::new(gpu_device));
 
-        let raw_values = array.raw_values().await;
+        let raw_values = array.raw_values().await.unwrap();
         assert_eq!(raw_values, vec![true, true, false, false]);
 
         let gpu_values = array.values().await;
         assert_eq!(gpu_values, values);
     }
+
+    test_broadcast!(test_broadcast_bool, BooleanArrayGPU, true);
 }

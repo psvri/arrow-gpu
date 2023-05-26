@@ -36,7 +36,7 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
                 &mask.data,
                 T::ITEM_SIZE,
                 T::MERGE_SHADER,
-                "merge",
+                "merge_array",
             )
             .await;
 

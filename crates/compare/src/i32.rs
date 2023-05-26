@@ -3,13 +3,16 @@ use arrow_gpu_array::array::Date32Type;
 use crate::*;
 
 const I32_COMPARE_SHADER: &str = include_str!("../compute_shaders/i32/cmp.wgsl");
+const I32_MIN_MAX_SHADER: &str = include_str!("../compute_shaders/i32/min_max.wgsl");
 
 impl CompareType for i32 {
     const COMPARE_SHADER: &'static str = I32_COMPARE_SHADER;
+    const MIN_MAX_SHADER: &'static str = I32_MIN_MAX_SHADER;
 }
 
 impl CompareType for Date32Type {
     const COMPARE_SHADER: &'static str = I32_COMPARE_SHADER;
+    const MIN_MAX_SHADER: &'static str = I32_MIN_MAX_SHADER;
 }
 
 #[cfg(test)]
@@ -281,5 +284,27 @@ mod test {
             Some(false),
             Some(true)
         ]
+    );
+
+    test_array_op!(
+        test_min_i32_array_i32,
+        Int32ArrayGPU,
+        Int32ArrayGPU,
+        Int32ArrayGPU,
+        min,
+        vec![Some(0i32), Some(3), Some(3), Some(0), None, None],
+        vec![Some(1i32), Some(2), Some(3), None, Some(4), None],
+        vec![Some(0i32), Some(2), Some(3), None, None, None]
+    );
+
+    test_array_op!(
+        test_max_i32_array_i32,
+        Int32ArrayGPU,
+        Int32ArrayGPU,
+        Int32ArrayGPU,
+        max,
+        vec![Some(0i32), Some(3), Some(3), Some(0), None, None],
+        vec![Some(1i32), Some(2), Some(3), None, Some(4), None],
+        vec![Some(1i32), Some(3), Some(3), None, None, None]
     );
 }

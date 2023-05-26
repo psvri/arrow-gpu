@@ -21,7 +21,7 @@ fn is_set(index: u32) -> bool {
 
 @compute
 @workgroup_size(256)
-fn merge(@builtin(global_invocation_id) global_id: vec3<u32>) {
+fn merge_array(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let index_pos = global_id.x * 2u;
     if is_set(index_pos) {
         new_values[global_id.x] = get_left_half(left_values[global_id.x]);

@@ -1,5 +1,5 @@
 [package]
-name = "arrow_gpu_cast"
+name = "arrow_gpu_math"
 version = "0.1.0"
 edition = "2021"
 

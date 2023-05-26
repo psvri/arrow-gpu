@@ -5,8 +5,15 @@ const U8_COMPARE_SHADER: &str = concat!(
     include_str!("../compute_shaders/u8/cmp.wgsl")
 );
 
+//TODO
+const U8_MIN_MAX_SHADER: &str = concat!(
+    include_str!("../../../compute_shaders/u8/utils.wgsl"),
+    include_str!("../compute_shaders/u8/cmp.wgsl")
+);
+
 impl CompareType for u8 {
     const COMPARE_SHADER: &'static str = U8_COMPARE_SHADER;
+    const MIN_MAX_SHADER: &'static str = U8_MIN_MAX_SHADER;
 }
 
 #[cfg(test)]
