@@ -54,7 +54,8 @@ macro_rules! test_scalar_op {
 
 #[macro_export]
 macro_rules! test_array_op {
-    ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $output: expr) => {
+    ($(#[$m:meta])* $fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $output: expr) => {
+        $(#[$m])*
         #[tokio::test]
         async fn $fn_name() {
             let device = Arc::new(GpuDevice::new().await);
@@ -64,7 +65,8 @@ macro_rules! test_array_op {
             assert_eq!(new_gpu_array.values().await, $output);
         }
     };
-    ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr, $output: expr) => {
+    ($(#[$m:meta])* $fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr, $output: expr) => {
+        $(#[$m])*
         #[tokio::test]
         async fn $fn_name() {
             let device = Arc::new(GpuDevice::new().await);
@@ -154,7 +156,8 @@ macro_rules! test_float_scalar_op {
 
 #[macro_export]
 macro_rules! test_unary_op_float {
-    ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $unary_fn_dyn: ident, $output: expr) => {
+    ($(#[$m:meta])* $fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $unary_fn_dyn: ident, $output: expr) => {
+        $(#[$m])*
         #[tokio::test]
         async fn $fn_name() {
             let device = Arc::new(GpuDevice::new().await);
