@@ -90,7 +90,6 @@ mod tests {
 pub struct NullBitBufferGpu {
     pub bit_buffer: Arc<Buffer>,
     pub len: usize,
-    pub buffer_len: usize,
     pub gpu_device: Arc<GpuDevice>,
 }
 
@@ -102,7 +101,6 @@ impl NullBitBufferGpu {
             Some(Self {
                 bit_buffer: Arc::new(data),
                 len: buffer_builder.len,
-                buffer_len: buffer_builder.data.len(),
                 gpu_device,
             })
         } else {
@@ -117,14 +115,14 @@ impl NullBitBufferGpu {
         Self {
             bit_buffer: Arc::new(data),
             len: buffer_builder.len,
-            buffer_len: buffer_builder.data.len(),
             gpu_device,
         }
     }
 
     pub async fn raw_values(&self) -> Vec<u8> {
         let result = &self.gpu_device.retrive_data(&self.bit_buffer).await;
-        result[0..self.buffer_len].to_vec()
+        let buffer_size = align_to(self.len, 8) / 8;
+        result[0..buffer_size].to_vec()
     }
 
     pub async fn clone_null_bit_buffer(data: &Option<Self>) -> Option<Self> {
@@ -134,7 +132,6 @@ impl NullBitBufferGpu {
                 NullBitBufferGpu {
                     bit_buffer: Arc::new(null_bit_buffer.clone_buffer().await),
                     len: null_bit_buffer.len,
-                    buffer_len: null_bit_buffer.buffer_len,
                     gpu_device: null_bit_buffer.gpu_device.clone(),
                 }
             }),
@@ -156,7 +153,6 @@ impl NullBitBufferGpu {
                 Self {
                     bit_buffer: buffer.into(),
                     len: x.len,
-                    buffer_len: x.buffer_len,
                     gpu_device: x.gpu_device.clone(),
                 }
             }),
@@ -181,7 +177,6 @@ impl NullBitBufferGpu {
                 Some(Self {
                     bit_buffer: Arc::new(new_bit_buffer),
                     len,
-                    buffer_len: left.buffer_len,
                     gpu_device,
                 })
             }

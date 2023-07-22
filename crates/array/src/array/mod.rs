@@ -104,6 +104,22 @@ pub enum ArrowArrayGPU {
     BooleanArrayGPU(BooleanArrayGPU),
 }
 
+impl ArrowArrayGPU {
+    pub fn get_gpu_device(&self) -> Arc<GpuDevice> {
+        match self {
+            ArrowArrayGPU::Float32ArrayGPU(x) => x.gpu_device.clone(),
+            ArrowArrayGPU::UInt32ArrayGPU(x) => x.gpu_device.clone(),
+            ArrowArrayGPU::UInt16ArrayGPU(x) => x.gpu_device.clone(),
+            ArrowArrayGPU::UInt8ArrayGPU(x) => x.gpu_device.clone(),
+            ArrowArrayGPU::Int32ArrayGPU(x) => x.gpu_device.clone(),
+            ArrowArrayGPU::Int16ArrayGPU(x) => x.gpu_device.clone(),
+            ArrowArrayGPU::Int8ArrayGPU(x) => x.gpu_device.clone(),
+            ArrowArrayGPU::Date32ArrayGPU(x) => x.gpu_device.clone(),
+            ArrowArrayGPU::BooleanArrayGPU(x) => x.gpu_device.clone(),
+        }
+    }
+}
+
 pub async fn broadcast_dyn(
     value: ScalarValue,
     len: usize,

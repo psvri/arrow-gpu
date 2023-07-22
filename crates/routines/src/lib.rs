@@ -52,7 +52,6 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
         let new_null_buffer = NullBitBufferGpu {
             bit_buffer: Arc::new(bit_buffer),
             len: self.len,
-            buffer_len: self.null_buffer.as_ref().unwrap().buffer_len,
             gpu_device: self.gpu_device.clone(),
         };
 
