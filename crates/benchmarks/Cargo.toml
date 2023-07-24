@@ -12,7 +12,7 @@ arrow_gpu_arithmetic = { path = "../arithmetic" }
 [dev-dependencies]
 env_logger = "0.10.0"
 criterion = "0.5"
-arrow = "33.0.0"
+arrow = "44.0.0"
 pollster = {workspace = true}
 
 
