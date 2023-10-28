@@ -1,9 +1,4 @@
-use crate::SwizzleType;
-
-const U8_MERGE_SHADER: &str = concat!(
-    include_str!("../../../compute_shaders/u8/utils.wgsl"),
-    include_str!("../compute_shaders/8bit/merge.wgsl")
-);
+use crate::{merge::U8_MERGE_SHADER, SwizzleType};
 
 impl SwizzleType for u8 {
     const MERGE_SHADER: &'static str = U8_MERGE_SHADER;

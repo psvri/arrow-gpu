@@ -18,10 +18,10 @@ members = [
 edition = "2021"
 
 [workspace.dependencies]
-async-trait = "0.1.72"
-tokio = { version = "1.29.1", features = ["macros", "rt-multi-thread"] }
-wgpu = "0.17.0"
+async-trait = "0.1.74"
+tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
+wgpu = "0.18.0"
 pollster = "0.3.0"
-bytemuck = "1.13.1"
+bytemuck = "1.14.0"
 futures-intrusive = "0.5.0"
-log =  { version =  "0.4.19" }
+log =  { version =  "0.4.20" }

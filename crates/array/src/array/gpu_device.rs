@@ -3,10 +3,83 @@ use std::borrow::Cow;
 use bytemuck::Pod;
 use log::info;
 use wgpu::{
-    util::DeviceExt, Adapter, Buffer, ComputePipeline, Device, Maintain, Queue, ShaderModule,
+    util::DeviceExt, Adapter, BindGroup, Buffer, ComputePipeline, Device, Maintain, Queue,
+    ShaderModule,
 };
 
 use super::{gpu_ops::div_ceil, RustNativeType};
+
+const NUM_QUERIES: u64 = 2;
+
+pub struct CmpQuery {
+    set: wgpu::QuerySet,
+    resolve_buffer: wgpu::Buffer,
+    destination_buffer: wgpu::Buffer,
+}
+
+impl CmpQuery {
+    pub fn new(device: &wgpu::Device) -> Self {
+        CmpQuery {
+            set: device.create_query_set(&wgpu::QuerySetDescriptor {
+                label: Some("Timestamp query set"),
+                count: NUM_QUERIES as _,
+                ty: wgpu::QueryType::Timestamp,
+            }),
+            resolve_buffer: device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("query resolve buffer"),
+                size: std::mem::size_of::<u64>() as u64 * NUM_QUERIES,
+                usage: wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::QUERY_RESOLVE,
+                mapped_at_creation: false,
+            }),
+            destination_buffer: device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("query dest buffer"),
+                size: std::mem::size_of::<u64>() as u64 * NUM_QUERIES,
+                usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+                mapped_at_creation: false,
+            }),
+        }
+    }
+
+    pub fn resolve(&self, encoder: &mut wgpu::CommandEncoder) {
+        encoder.resolve_query_set(
+            &self.set,
+            // TODO(https://github.com/gfx-rs/wgpu/issues/3993): Musn't be larger than the number valid queries in the set.
+            0..2,
+            &self.resolve_buffer,
+            0,
+        );
+        encoder.copy_buffer_to_buffer(
+            &self.resolve_buffer,
+            0,
+            &self.destination_buffer,
+            0,
+            self.resolve_buffer.size(),
+        );
+    }
+
+    pub async fn wait_for_results(&self, device: &wgpu::Device, queue: &wgpu::Queue) {
+        self.destination_buffer
+            .slice(..)
+            .map_async(wgpu::MapMode::Read, |_| ());
+        device.poll(wgpu::Maintain::Wait);
+
+        let period = queue.get_timestamp_period();
+        let timestamps: Vec<u64> = {
+            let timestamp_view = self
+                .destination_buffer
+                .slice(..(std::mem::size_of::<u64>() as wgpu::BufferAddress * NUM_QUERIES))
+                .get_mapped_range();
+            bytemuck::cast_slice(&timestamp_view).to_vec()
+        };
+
+        self.destination_buffer.unmap();
+
+        log::info!(
+            "Time taken for compute pass is : {:?}",
+            timestamps[1].wrapping_sub(timestamps[0]) as f64 * period as f64 / 1000.0
+        );
+    }
+}
 
 #[derive(Debug)]
 pub struct GpuDevice {
@@ -31,7 +104,7 @@ impl GpuDevice {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
-                    features: wgpu::Features::empty(),
+                    features: wgpu::Features::TIMESTAMP_QUERY,
                     limits: wgpu::Limits::downlevel_defaults(),
                 },
                 None,
@@ -58,6 +131,49 @@ impl GpuDevice {
             .unwrap();
 
         Self { device, queue }
+    }
+
+    pub fn create_command_encoder(&self, label: Option<&str>) -> wgpu::CommandEncoder {
+        self.device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label })
+    }
+
+    pub fn create_query_set(&self) -> CmpQuery {
+        CmpQuery::new(&self.device)
+    }
+
+    pub fn create_compute_pass_descriptor<'a>(
+        &'a self,
+        label: Option<&'a str>,
+        query_set: &'a wgpu::QuerySet,
+    ) -> wgpu::ComputePassDescriptor<'a> {
+        wgpu::ComputePassDescriptor {
+            label,
+            timestamp_writes: Some(wgpu::ComputePassTimestampWrites {
+                query_set,
+                beginning_of_pass_write_index: Some(0),
+                end_of_pass_write_index: Some(1),
+            }),
+        }
+    }
+
+    pub fn compute_pass(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+        label: Option<&str>,
+        compute_pipeline: &ComputePipeline,
+        bind_group_array: &BindGroup,
+        entry_point: &str,
+        dispatch_size: u32,
+    ) -> CmpQuery {
+        let query = self.create_query_set();
+        let compute_pass_descriptor = self.create_compute_pass_descriptor(label, &query.set);
+        let mut cpass = encoder.begin_compute_pass(&compute_pass_descriptor);
+        cpass.set_pipeline(&compute_pipeline);
+        cpass.set_bind_group(0, &bind_group_array, &[]);
+        cpass.insert_debug_marker(entry_point);
+        cpass.dispatch_workgroups(dispatch_size, 1, 1);
+        query
     }
 
     #[inline]
@@ -93,7 +209,6 @@ impl GpuDevice {
             })
     }
 
-    #[inline]
     pub fn create_empty_buffer(&self, size: u64) -> Buffer {
         self.device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
@@ -105,7 +220,6 @@ impl GpuDevice {
         })
     }
 
-    #[inline]
     pub fn create_retrive_buffer(&self, size: u64) -> Buffer {
         self.device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
@@ -115,7 +229,6 @@ impl GpuDevice {
         })
     }
 
-    #[inline]
     pub fn create_scalar_buffer(&self, value: &impl Pod) -> Buffer {
         self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -128,9 +241,7 @@ impl GpuDevice {
     pub async fn clone_buffer(&self, buffer: &Buffer) -> Buffer {
         let staging_buffer = self.create_empty_buffer(buffer.size());
 
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+        let mut encoder = self.create_command_encoder(None);
 
         encoder.copy_buffer_to_buffer(buffer, 0, &staging_buffer, 0, buffer.size());
 
@@ -146,9 +257,7 @@ impl GpuDevice {
         let size = data.size() as wgpu::BufferAddress;
 
         let staging_buffer = self.create_retrive_buffer(size);
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+        let mut encoder = self.create_command_encoder(None);
 
         encoder.copy_buffer_to_buffer(data, 0, &staging_buffer, 0, size);
 
@@ -207,23 +316,23 @@ impl GpuDevice {
             ],
         });
 
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-        {
-            let mut cpass =
-                encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
-            cpass.set_pipeline(&compute_pipeline);
-            cpass.set_bind_group(0, &bind_group_array, &[]);
-            cpass.insert_debug_marker(entry_point);
-            let dispatch_size = original_values.size() / item_size;
-            cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
-        }
+        let mut encoder = self.create_command_encoder(None);
+        let dispatch_size = original_values.size() / item_size;
 
+        let query = self.compute_pass(
+            &mut encoder,
+            None,
+            &compute_pipeline,
+            &bind_group_array,
+            entry_point,
+            div_ceil(dispatch_size, 256) as u32,
+        );
+
+        query.resolve(&mut encoder);
         let submission_index = self.queue.submit(Some(encoder.finish()));
         self.device
             .poll(Maintain::WaitForSubmissionIndex(submission_index));
-
+        query.wait_for_results(&self.device, &self.queue).await;
         new_values_buffer
     }
 
@@ -260,21 +369,17 @@ impl GpuDevice {
             ],
         });
 
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some(entry_point),
-            });
-        {
-            let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some(entry_point),
-            });
-            cpass.set_pipeline(&compute_pipeline);
-            cpass.set_bind_group(0, &bind_group_array, &[]);
-            cpass.insert_debug_marker(entry_point);
-            let dispatch_size = original_values.size() / item_size;
-            cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
-        }
+        let mut encoder = self.create_command_encoder(Some(entry_point));
+        let dispatch_size = original_values.size() / item_size;
+
+        self.compute_pass(
+            &mut encoder,
+            Some(entry_point),
+            &compute_pipeline,
+            &bind_group_array,
+            entry_point,
+            div_ceil(dispatch_size, 256) as u32,
+        );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
         self.device
@@ -315,21 +420,17 @@ impl GpuDevice {
             ],
         });
 
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some(entry_point),
-            });
-        {
-            let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some(entry_point),
-            });
-            cpass.set_pipeline(&compute_pipeline);
-            cpass.set_bind_group(0, &bind_group_array, &[]);
-            cpass.insert_debug_marker(entry_point);
-            let dispatch_size = operand_1.size() / item_size;
-            cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
-        }
+        let mut encoder = self.create_command_encoder(Some(entry_point));
+        let dispatch_size = operand_1.size() / item_size;
+
+        self.compute_pass(
+            &mut encoder,
+            Some(entry_point),
+            &compute_pipeline,
+            &bind_group_array,
+            entry_point,
+            div_ceil(dispatch_size, 256) as u32,
+        );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
         self.device
@@ -375,22 +476,17 @@ impl GpuDevice {
             ],
         });
 
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some(entry_point),
-            });
-        {
-            let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some(entry_point),
-            });
-            cpass.set_pipeline(&compute_pipeline);
-            cpass.set_bind_group(0, &bind_group_array, &[]);
-            cpass.insert_debug_marker(entry_point);
-            let dispatch_size = operand_1.size() / item_size;
-            println!("{}", dispatch_size);
-            cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
-        }
+        let mut encoder = self.create_command_encoder(Some(entry_point));
+        let dispatch_size = operand_1.size() / item_size;
+
+        self.compute_pass(
+            &mut encoder,
+            Some(entry_point),
+            &compute_pipeline,
+            &bind_group_array,
+            entry_point,
+            div_ceil(dispatch_size, 256) as u32,
+        );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
         self.device
@@ -427,21 +523,17 @@ impl GpuDevice {
             ],
         });
 
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some(entry_point),
-            });
-        {
-            let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some(entry_point),
-            });
-            cpass.set_pipeline(&compute_pipeline);
-            cpass.set_bind_group(0, &bind_group_array, &[]);
-            cpass.insert_debug_marker(entry_point);
-            let dispatch_size = output_buffer_size / item_size;
-            cpass.dispatch_workgroups(div_ceil(dispatch_size, 256) as u32, 1, 1);
-        }
+        let mut encoder = self.create_command_encoder(Some(entry_point));
+        let dispatch_size = output_buffer_size / item_size;
+
+        self.compute_pass(
+            &mut encoder,
+            Some(entry_point),
+            &compute_pipeline,
+            &bind_group_array,
+            entry_point,
+            div_ceil(dispatch_size, 256) as u32,
+        );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
         self.device

@@ -20,6 +20,7 @@ pub(crate) mod u8_gpu;
 
 use crate::kernels::broadcast::Broadcast;
 use crate::kernels::ScalarValue;
+use crate::utils::ScalarArray;
 
 pub use self::gpu_device::GpuDevice;
 pub use boolean_gpu::BooleanArrayGPU;
@@ -46,6 +47,7 @@ pub enum ArrowType {
     Int32Type,
     Int16Type,
     Int8Type,
+    Date32Type,
 }
 
 pub trait RustNativeType: Pod + Debug + Default {}
@@ -116,6 +118,34 @@ impl ArrowArrayGPU {
             ArrowArrayGPU::Int8ArrayGPU(x) => x.gpu_device.clone(),
             ArrowArrayGPU::Date32ArrayGPU(x) => x.gpu_device.clone(),
             ArrowArrayGPU::BooleanArrayGPU(x) => x.gpu_device.clone(),
+        }
+    }
+
+    pub fn get_dtype(&self) -> ArrowType {
+        match self {
+            ArrowArrayGPU::Float32ArrayGPU(_) => ArrowType::Float32Type,
+            ArrowArrayGPU::UInt32ArrayGPU(_) => ArrowType::UInt32Type,
+            ArrowArrayGPU::UInt16ArrayGPU(_) => ArrowType::UInt16Type,
+            ArrowArrayGPU::UInt8ArrayGPU(_) => ArrowType::UInt8Type,
+            ArrowArrayGPU::Int32ArrayGPU(_) => ArrowType::Int32Type,
+            ArrowArrayGPU::Int16ArrayGPU(_) => ArrowType::Int16Type,
+            ArrowArrayGPU::Int8ArrayGPU(_) => ArrowType::Int8Type,
+            ArrowArrayGPU::Date32ArrayGPU(_) => ArrowType::Date32Type,
+            ArrowArrayGPU::BooleanArrayGPU(_) => ArrowType::BooleanType,
+        }
+    }
+
+    pub async fn get_raw_values(&self) -> ScalarArray {
+        match self {
+            ArrowArrayGPU::Float32ArrayGPU(x) => x.raw_values().await.unwrap().into(),
+            ArrowArrayGPU::UInt16ArrayGPU(x) => x.raw_values().await.unwrap().into(),
+            ArrowArrayGPU::UInt32ArrayGPU(x) => x.raw_values().await.unwrap().into(),
+            ArrowArrayGPU::UInt8ArrayGPU(x) => x.raw_values().await.unwrap().into(),
+            ArrowArrayGPU::Int32ArrayGPU(x) => x.raw_values().await.unwrap().into(),
+            ArrowArrayGPU::Int16ArrayGPU(x) => x.raw_values().await.unwrap().into(),
+            ArrowArrayGPU::Int8ArrayGPU(x) => x.raw_values().await.unwrap().into(),
+            ArrowArrayGPU::Date32ArrayGPU(x) => x.raw_values().await.unwrap().into(),
+            ArrowArrayGPU::BooleanArrayGPU(x) => x.raw_values().await.unwrap().into(),
         }
     }
 }

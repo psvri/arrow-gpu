@@ -1,12 +1,7 @@
-use crate::SwizzleType;
-
-const I16_MERGE_SHADER: &str = concat!(
-    include_str!("../../../compute_shaders/u16/utils.wgsl"),
-    include_str!("../compute_shaders/16bit/merge.wgsl")
-);
+use crate::{merge::U16_MERGE_SHADER, SwizzleType};
 
 impl SwizzleType for i16 {
-    const MERGE_SHADER: &'static str = I16_MERGE_SHADER;
+    const MERGE_SHADER: &'static str = U16_MERGE_SHADER;
 }
 
 #[cfg(test)]

@@ -8,7 +8,7 @@ var<storage, read> original_values: array<u32>;
 
 @group(0)
 @binding(1)
-var<storage, write> new_values: array<f32>;
+var<storage, read_write> new_values: array<f32>;
 
 @compute
 @workgroup_size(256)

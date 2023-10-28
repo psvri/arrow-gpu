@@ -26,7 +26,6 @@ pub(crate) fn reduction_op(
         new_values_buffer.size(),
         div_ceil(size as u64, 256)
     );*/
-
     let bind_group_layout = compute_pipeline.get_bind_group_layout(0);
     let bind_group_array = gpu_device
         .device
@@ -53,7 +52,10 @@ pub(crate) fn reduction_op(
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
     {
-        let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
+        let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+            label: None,
+            timestamp_writes: None,
+        });
         cpass.set_pipeline(&compute_pipeline);
         cpass.set_bind_group(0, &bind_group_array, &[]);
         cpass.insert_debug_marker("add array");

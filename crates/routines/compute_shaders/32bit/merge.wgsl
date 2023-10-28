@@ -12,7 +12,7 @@ var<storage, read> mask: array<u32>;
 
 @group(0)
 @binding(3)
-var<storage, write> new_values: array<u32>;
+var<storage, read_write> new_values: array<u32>;
 
 fn is_set(index: u32) -> bool {
     let index_by_32 = index / 32u;

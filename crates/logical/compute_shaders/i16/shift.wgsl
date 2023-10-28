@@ -8,7 +8,7 @@ var<storage, read> right_values: array<u32>;
 
 @group(0)
 @binding(2)
-var<storage, write> new_values: array<i32>;
+var<storage, read_write> new_values: array<i32>;
 
 @compute
 @workgroup_size(256)

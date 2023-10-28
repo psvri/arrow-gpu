@@ -1,15 +1,15 @@
 use arrow_gpu_array::array::Date32Type;
 
-use crate::SwizzleType;
-
-const I32_MERGE_SHADER: &str = include_str!("../compute_shaders/32bit/merge.wgsl");
+use crate::{merge::U32_MERGE_SHADER, take::U32_TAKE_SHADER, SwizzleType};
 
 impl SwizzleType for i32 {
-    const MERGE_SHADER: &'static str = I32_MERGE_SHADER;
+    const MERGE_SHADER: &'static str = U32_MERGE_SHADER;
+    const TAKE_SHADER: &'static str = U32_TAKE_SHADER;
 }
 
 impl SwizzleType for Date32Type {
-    const MERGE_SHADER: &'static str = I32_MERGE_SHADER;
+    const MERGE_SHADER: &'static str = U32_MERGE_SHADER;
+    const TAKE_SHADER: &'static str = U32_TAKE_SHADER;
 }
 
 #[cfg(test)]
@@ -121,5 +121,17 @@ mod test {
             None,
             None
         ]
+    );
+
+    // TODO test for cases with null
+    test_take_op!(
+        test_take_i32,
+        Int32ArrayGPU,
+        UInt32ArrayGPU,
+        Int32ArrayGPU,
+        take,
+        vec![0, 1, 2, 3],
+        vec![0, 1, 2, 3, 0, 1, 2, 3],
+        vec![0, 1, 2, 3, 0, 1, 2, 3]
     );
 }
