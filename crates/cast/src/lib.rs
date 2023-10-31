@@ -87,11 +87,23 @@ pub async fn cast_dyn(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
 
 #[cfg(test)]
 mod tests {
+    use arrow_gpu_array::array;
+
+    use once_cell::sync::Lazy;
+    use pollster::FutureExt;
+    use std::sync::Arc;
+
+    use array::GpuDevice;
+
+    pub static GPU_DEVICE: Lazy<Arc<GpuDevice>> =
+        Lazy::new(|| Arc::new(GpuDevice::new().block_on()));
+
     macro_rules! test_cast_op {
         ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $cast_type: ident, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
-                let device = Arc::new(GpuDevice::new().await);
+                use crate::tests::GPU_DEVICE;
+                let device = GPU_DEVICE.clone();
                 let data = $input;
                 let gpu_array = $input_ty::from_vec(&data, device);
                 let new_gpu_array: $output_ty =

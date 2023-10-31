@@ -127,3 +127,17 @@ impl<T: CompareType + ArrowPrimitiveType> MinMax for PrimitiveArrayGpu<T> {
         apply_function_min_max!(self, operand, MAX_ENTRY_POINT);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use arrow_gpu_array::array;
+
+    use once_cell::sync::Lazy;
+    use pollster::FutureExt;
+    use std::sync::Arc;
+
+    use array::GpuDevice;
+
+    pub static GPU_DEVICE: Lazy<Arc<GpuDevice>> =
+        Lazy::new(|| Arc::new(GpuDevice::new().block_on()));
+}

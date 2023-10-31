@@ -31,9 +31,7 @@ impl TryFrom<ArrowArrayGPU> for Date32ArrayGPU {
 mod test {
     use super::*;
     use crate::array::primitive_array_gpu::test::test_broadcast;
-    use crate::array::*;
     use crate::kernels::broadcast::*;
-    use std::sync::Arc;
 
     test_broadcast!(test_broadcast_date32, Date32ArrayGPU, 1);
 }

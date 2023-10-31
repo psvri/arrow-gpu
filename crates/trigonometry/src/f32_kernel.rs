@@ -57,7 +57,6 @@ impl TrigonometricType for f32 {
 mod tests {
     use arrow_gpu_array::array::*;
     use arrow_gpu_test_macros::*;
-    use std::sync::Arc;
 
     use crate::*;
 

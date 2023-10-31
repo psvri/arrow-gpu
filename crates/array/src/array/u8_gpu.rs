@@ -54,7 +54,6 @@ impl TryFrom<ArrowArrayGPU> for UInt8ArrayGPU {
 mod tests {
     use super::*;
     use crate::array::primitive_array_gpu::test::*;
-    use std::sync::Arc;
 
     test_broadcast!(test_broadcast_u8, UInt8ArrayGPU, 1);
 }
