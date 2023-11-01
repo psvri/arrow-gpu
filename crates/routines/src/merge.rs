@@ -109,7 +109,8 @@ mod test {
         ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $mask: expr, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
-                let device = Arc::new(GpuDevice::new().await);
+                use crate::tests::GPU_DEVICE;
+                let device = GPU_DEVICE.clone();
                 let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device.clone());
                 let mask = BooleanArrayGPU::from_optional_vec(&$mask, device);
@@ -120,7 +121,8 @@ mod test {
         ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr,  $mask: expr, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
-                let device = Arc::new(GpuDevice::new().await);
+                use crate::tests::GPU_DEVICE;
+                let device = GPU_DEVICE.clone();
                 let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device.clone());
                 let mask = BooleanArrayGPU::from_optional_vec(&$mask, device);

@@ -16,7 +16,6 @@ impl SwizzleType for Date32Type {
 mod test {
     use crate::*;
     use arrow_gpu_array::array::*;
-    use std::sync::Arc;
 
     test_merge_op!(
         test_merge_i32_array_i32,

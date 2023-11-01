@@ -80,7 +80,8 @@ mod tests {
         $(#[$m])*
         #[tokio::test]
         async fn $fn_name() {
-            let device = Arc::new(GpuDevice::new().await);
+            use crate::tests::GPU_DEVICE;
+            let device = GPU_DEVICE.clone();
             let gpu_array_1 = $operand1_type::from_vec(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_vec(&$input_2, device);
             let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
@@ -91,7 +92,8 @@ mod tests {
         $(#[$m])*
         #[tokio::test]
         async fn $fn_name() {
-            let device = Arc::new(GpuDevice::new().await);
+            use crate::tests::GPU_DEVICE;
+            let device = GPU_DEVICE.clone();
             let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
             let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;

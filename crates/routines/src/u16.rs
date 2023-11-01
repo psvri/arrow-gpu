@@ -8,7 +8,6 @@ impl SwizzleType for u16 {
 mod test {
     use crate::*;
     use arrow_gpu_array::array::*;
-    use std::sync::Arc;
 
     test_merge_op!(
         test_merge_u16_array_u16,

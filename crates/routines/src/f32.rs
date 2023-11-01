@@ -9,7 +9,6 @@ impl SwizzleType for f32 {
 mod test {
     use crate::*;
     use arrow_gpu_array::array::*;
-    use std::sync::Arc;
 
     test_merge_op!(
         test_merge_f32_array_f32,

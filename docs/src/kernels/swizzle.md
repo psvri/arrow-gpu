@@ -16,3 +16,19 @@ Merge 2 arrays of same type based on a mask
 | UInt32 | ✓ |
 | Float32 | ✓ |
 | Date32 | ✓ |
+
+# Take
+
+Pick elements from an array using an index array
+ - TODO null support
+
+| | Merge |
+|-|-|
+| Int8 | |
+| Int16 | |
+| Int32 | ✓ |
+| UInt8 | |
+| UInt16 | |
+| UInt32 | ✓ |
+| Float32 | ✓ |
+| Date32 | |
