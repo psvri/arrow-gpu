@@ -1,14 +1,15 @@
 use std::sync::Arc;
 
-use arrow::array::Float32Array;
-use arrow::compute::kernels::arithmetic::add_scalar;
-use arrow_gpu_arithmetic::*;
-use arrow_gpu_array::array::*;
+use arrow::{
+    array::{ArrayRef, Datum, Float32Array},
+    compute::kernels::numeric::add,
+};
+use arrow_gpu::{array::*, kernels::ArrowAdd};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use pollster::FutureExt;
 
-fn bench_cpu_f32_add(data: &mut Float32Array, value: f32) -> Float32Array {
-    add_scalar(data, value).unwrap()
+fn bench_cpu_f32_add(data: &mut Float32Array, value: &dyn Datum) -> ArrayRef {
+    add(data, value).unwrap()
 }
 
 fn bench_gpu_f32_add(data: &Float32ArrayGPU, value: &Float32ArrayGPU) -> Float32ArrayGPU {
@@ -31,11 +32,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             .map(|x| x as f32)
             .collect::<Vec<f32>>(),
     );
+    let cpu_value = Float32Array::new_scalar(100.0);
     c.bench_function("gpu f32", |b| {
         b.iter(|| bench_gpu_f32_add(black_box(&mut gpu_data), black_box(&value_data)))
     });
     c.bench_function("cpu f32", |b| {
-        b.iter(|| bench_cpu_f32_add(black_box(&mut cpu_data), black_box(100.0)))
+        b.iter(|| bench_cpu_f32_add(black_box(&mut cpu_data), black_box(&cpu_value)))
     });
 }
 
