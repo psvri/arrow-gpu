@@ -55,7 +55,7 @@ pub async fn merge_null_buffers(
     match (merged_buffer, mask_null_buffer) {
         (Some(mb1), Some(mb2)) => Some(
             device
-                .apply_binary_function(&mb1, &mb2, 4, SHADER, "merge_nulls")
+                .apply_binary_function(&mb1, mb2, 4, SHADER, "merge_nulls")
                 .await,
         ),
         (None, Some(mb)) => Some(device.clone_buffer(mb).await),

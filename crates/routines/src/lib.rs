@@ -58,14 +58,11 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
         let bit_buffer =
             merge_null_buffers(&self.gpu_device, op1, op2, &mask.data, mask_null).await;
 
-        let new_null_buffer = match bit_buffer {
-            Some(buffer) => Some(NullBitBufferGpu {
+        let new_null_buffer = bit_buffer.map(|buffer| NullBitBufferGpu {
                 bit_buffer: Arc::new(buffer),
                 len: self.len,
                 gpu_device: self.gpu_device.clone(),
-            }),
-            None => None,
-        };
+            });
 
         Self {
             data: Arc::new(new_buffer),

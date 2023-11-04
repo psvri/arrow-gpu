@@ -169,8 +169,8 @@ impl GpuDevice {
         let query = self.create_query_set();
         let compute_pass_descriptor = self.create_compute_pass_descriptor(label, &query.set);
         let mut cpass = encoder.begin_compute_pass(&compute_pass_descriptor);
-        cpass.set_pipeline(&compute_pipeline);
-        cpass.set_bind_group(0, &bind_group_array, &[]);
+        cpass.set_pipeline(compute_pipeline);
+        cpass.set_bind_group(0, bind_group_array, &[]);
         cpass.insert_debug_marker(entry_point);
         cpass.dispatch_workgroups(dispatch_size, 1, 1);
         query
