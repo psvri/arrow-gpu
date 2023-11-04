@@ -102,17 +102,3 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use arrow_gpu_array::array;
-
-    use once_cell::sync::Lazy;
-    use pollster::FutureExt;
-    use std::sync::Arc;
-
-    use array::GpuDevice;
-
-    pub static GPU_DEVICE: Lazy<Arc<GpuDevice>> =
-        Lazy::new(|| Arc::new(GpuDevice::new().block_on()));
-}

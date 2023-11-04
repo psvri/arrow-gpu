@@ -19,10 +19,10 @@ Merge 2 arrays of same type based on a mask
 
 # Take
 
-Pick elements from an array using an index array
+Pick elements from an array using indexes
  - TODO null support
 
-| | Merge |
+| | Take |
 |-|-|
 | Int8 | |
 | Int16 | |
@@ -31,4 +31,4 @@ Pick elements from an array using an index array
 | UInt16 | |
 | UInt32 | ✓ |
 | Float32 | ✓ |
-| Date32 | |
+| Date32 | ✓ |

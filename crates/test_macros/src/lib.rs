@@ -3,7 +3,7 @@ macro_rules! test_unary_op {
     ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $unary_fn_dyn: ident, $output: expr) => {
         #[tokio::test]
         async fn $fn_name() {
-            use crate::tests::GPU_DEVICE;
+            use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let data = $input;
             let gpu_array = $input_ty::from_vec(&data, device);
@@ -21,7 +21,7 @@ macro_rules! test_unary_op {
     ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $output: expr) => {
         #[tokio::test]
         async fn $fn_name() {
-            use crate::tests::GPU_DEVICE;
+            use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let data = $input;
             let gpu_array = $input_ty::from_vec(&data, device);
@@ -36,7 +36,7 @@ macro_rules! test_scalar_op {
     ($fn_name: ident, $input_ty: ident, $scalar_ty: ident, $output_ty: ident, $input: expr, $scalar_fn: ident, $scalar_fn_dyn: ident, $scalar: expr, $output: expr) => {
         #[tokio::test]
         async fn $fn_name() {
-            use crate::tests::GPU_DEVICE;
+            use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let data = $input;
             let array = $input_ty::from_vec(&data, device.clone());
@@ -61,7 +61,7 @@ macro_rules! test_array_op {
         $(#[$m])*
         #[tokio::test]
         async fn $fn_name() {
-            use crate::tests::GPU_DEVICE;
+            use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
@@ -73,7 +73,7 @@ macro_rules! test_array_op {
         $(#[$m])*
         #[tokio::test]
         async fn $fn_name() {
-            use crate::tests::GPU_DEVICE;
+            use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
@@ -126,7 +126,7 @@ macro_rules! test_float_scalar_op {
     ($fn_name: ident, $input_ty: ident, $scalar_ty: ident, $output_ty: ident, $input: expr, $scalar_fn: ident, $scalar_fn_dyn: ident, $scalar: expr, $output: expr) => {
         #[tokio::test]
         async fn $fn_name() {
-            use crate::tests::GPU_DEVICE;
+            use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let data = $input;
             let array = $input_ty::from_vec(&data, device.clone());
@@ -166,7 +166,7 @@ macro_rules! test_unary_op_float {
         $(#[$m])*
         #[tokio::test]
         async fn $fn_name() {
-            use crate::tests::GPU_DEVICE;
+            use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let data = $input;
             let gpu_array = $input_ty::from_vec(&data, device);
@@ -204,7 +204,7 @@ macro_rules! test_float_array_op {
     ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $output: expr) => {
         #[tokio::test]
         async fn $fn_name() {
-            use crate::tests::GPU_DEVICE;
+            use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
@@ -223,7 +223,7 @@ macro_rules! test_float_array_op {
     ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr, $output: expr) => {
         #[tokio::test]
         async fn $fn_name() {
-            use crate::tests::GPU_DEVICE;
+            use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);

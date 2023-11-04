@@ -151,7 +151,7 @@ pub mod test {
         ($fn_name: ident, $ty: ident, $input: expr) => {
             #[tokio::test]
             async fn $fn_name() {
-                use crate::test::GPU_DEVICE;
+                use crate::GPU_DEVICE;
                 let device = GPU_DEVICE.clone();
                 let length = 100;
                 let new_gpu_array = $ty::broadcast($input, length, device).await;
