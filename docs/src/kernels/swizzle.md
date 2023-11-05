@@ -32,3 +32,19 @@ Pick elements from an array using indexes
 | UInt32 | ✓ |
 | Float32 | ✓ |
 | Date32 | ✓ |
+
+# Put
+
+Pick elements from an src array and put in destination array
+ - TODO null support
+
+| | PUT |
+|-|-|
+| Int8 | |
+| Int16 | |
+| Int32 | ✓ |
+| UInt8 | |
+| UInt16 | |
+| UInt32 | ✓ |
+| Float32 | ✓ |
+| Date32 | ✓ |

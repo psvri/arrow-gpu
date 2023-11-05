@@ -1,10 +1,12 @@
 use async_trait::async_trait;
 
+pub(crate) mod f32_cast;
 pub(crate) mod i16_cast;
 pub(crate) mod i8_cast;
 pub(crate) mod u16_cast;
 pub(crate) mod u8_cast;
 
+pub use f32_cast::*;
 pub use i16_cast::*;
 pub use i8_cast::*;
 pub use u16_cast::*;
@@ -14,9 +16,7 @@ use arrow_gpu_array::array::*;
 
 #[async_trait]
 pub trait Cast<T> {
-    type Output;
-
-    async fn cast(&self) -> Self::Output;
+    async fn cast(&self) -> T;
 }
 
 pub async fn cast_dyn(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
@@ -81,6 +81,9 @@ pub async fn cast_dyn(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
         (ArrowArrayGPU::UInt16ArrayGPU(x), ArrowType::Float32Type) => {
             Cast::<Float32ArrayGPU>::cast(x).await.into()
         }
+        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowType::UInt8Type) => {
+            Cast::<UInt8ArrayGPU>::cast(x).await.into()
+        }
         (x, y) => panic!("Casting between {x:?} into {y:?} is not possible"),
     }
 }
@@ -88,7 +91,8 @@ pub async fn cast_dyn(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
 #[cfg(test)]
 mod tests {
     macro_rules! test_cast_op {
-        ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $cast_type: ident, $output: expr) => {
+        ($(#[$m:meta])* $fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $cast_type: ident, $output: expr) => {
+            $(#[$m])*
             #[tokio::test]
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
@@ -99,7 +103,6 @@ mod tests {
                     <$input_ty as Cast<$output_ty>>::cast(&gpu_array).await;
                 let new_values = new_gpu_array.raw_values().await.unwrap();
                 assert_eq!(new_values, $output);
-                println!("{:?}", new_values);
 
                 let new_gpu_array = cast_dyn(&gpu_array.into(), &ArrowType::$cast_type).await;
                 let new_values = $output_ty::try_from(new_gpu_array)

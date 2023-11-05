@@ -5,7 +5,7 @@ use crate::Swizzle;
 
 pub(crate) const U32_TAKE_SHADER: &str = include_str!("../compute_shaders/32bit/take.wgsl");
 
-pub async fn apply_take_function(
+pub(crate) async fn apply_take_function(
     device: &GpuDevice,
     operand_1: &Buffer,
     operand_2: &Buffer,
@@ -76,36 +76,36 @@ pub async fn take_dyn(operand_1: &ArrowArrayGPU, indexes: &UInt32ArrayGPU) -> Ar
 mod tests {
     #[macro_export]
     macro_rules! test_take_op {
-    ($(#[$m:meta])* $fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $output: expr) => {
-        $(#[$m])*
-        #[tokio::test]
-        async fn $fn_name() {
-            use arrow_gpu_array::GPU_DEVICE;
-            let device = GPU_DEVICE.clone();
-            let gpu_array_1 = $operand1_type::from_vec(&$input_1, device.clone());
-            let gpu_array_2 = $operand2_type::from_vec(&$input_2, device);
-            let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
-            assert_eq!(new_gpu_array.raw_values().await.unwrap(), $output);
-        }
-    };
-    ($(#[$m:meta])* $fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr, $output: expr) => {
-        $(#[$m])*
-        #[tokio::test]
-        async fn $fn_name() {
-            use arrow_gpu_array::GPU_DEVICE;
-            let device = GPU_DEVICE.clone();
-            let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
-            let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
-            let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
-            assert_eq!(new_gpu_array.values().await, $output);
+        ($(#[$m:meta])* $fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $output: expr) => {
+            $(#[$m])*
+            #[tokio::test]
+            async fn $fn_name() {
+                use arrow_gpu_array::GPU_DEVICE;
+                let device = GPU_DEVICE.clone();
+                let gpu_array_1 = $operand1_type::from_vec(&$input_1, device.clone());
+                let gpu_array_2 = $operand2_type::from_vec(&$input_2, device);
+                let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
+                assert_eq!(new_gpu_array.raw_values().await.unwrap(), $output);
+            }
+        };
+        ($(#[$m:meta])* $fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr, $output: expr) => {
+            $(#[$m])*
+            #[tokio::test]
+            async fn $fn_name() {
+                use arrow_gpu_array::GPU_DEVICE;
+                let device = GPU_DEVICE.clone();
+                let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
+                let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
+                let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
+                assert_eq!(new_gpu_array.values().await, $output);
 
-            let new_gpu_array = $operation_dyn(&gpu_array_1.into(), &gpu_array_2.into()).await;
-            let new_values = $output_type::try_from(new_gpu_array)
-                .unwrap()
-                .values()
-                .await;
-            assert_eq!(new_values, $output);
-        }
-    };
-}
+                let new_gpu_array = $operation_dyn(&gpu_array_1.into(), &gpu_array_2.into()).await;
+                let new_values = $output_type::try_from(new_gpu_array)
+                    .unwrap()
+                    .values()
+                    .await;
+                assert_eq!(new_values, $output);
+            }
+        };
+    }
 }
