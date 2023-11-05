@@ -148,6 +148,20 @@ impl ArrowArrayGPU {
             ArrowArrayGPU::BooleanArrayGPU(x) => x.raw_values().await.unwrap().into(),
         }
     }
+
+    pub async fn clone_array(&self) -> ArrowArrayGPU {
+        match self {
+            ArrowArrayGPU::Float32ArrayGPU(x) => x.clone_array().await.into(),
+            ArrowArrayGPU::UInt32ArrayGPU(x) => x.clone_array().await.into(),
+            ArrowArrayGPU::UInt16ArrayGPU(x) => x.clone_array().await.into(),
+            ArrowArrayGPU::UInt8ArrayGPU(x) => x.clone_array().await.into(),
+            ArrowArrayGPU::Int32ArrayGPU(x) => x.clone_array().await.into(),
+            ArrowArrayGPU::Int16ArrayGPU(x) => x.clone_array().await.into(),
+            ArrowArrayGPU::Int8ArrayGPU(x) => x.clone_array().await.into(),
+            ArrowArrayGPU::Date32ArrayGPU(x) => x.clone_array().await.into(),
+            ArrowArrayGPU::BooleanArrayGPU(_) => todo!(),
+        }
+    }
 }
 
 pub async fn broadcast_dyn(

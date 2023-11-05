@@ -1,4 +1,4 @@
-use crate::{merge::U32_MERGE_SHADER, take::U32_TAKE_SHADER, SwizzleType, put::U32_PUT_SHADER};
+use crate::{merge::U32_MERGE_SHADER, put::U32_PUT_SHADER, take::U32_TAKE_SHADER, SwizzleType};
 
 impl SwizzleType for u32 {
     const MERGE_SHADER: &'static str = U32_MERGE_SHADER;
@@ -82,9 +82,9 @@ mod test {
         put,
         put_dyn,
         vec![0, 1, 2, 3],
-        vec![0, 0, 1, 0, 2, 0, 3, 0],
+        vec![100, 0, 101, 0, 102, 0, 103, 0],
         vec![0, 1, 2, 3],
         vec![1, 3, 5, 7],
-        vec![0, 0, 1, 1, 2, 2, 3, 3]
+        vec![100, 0, 101, 1, 102, 2, 103, 3]
     );
 }

@@ -75,7 +75,7 @@ impl CmpQuery {
         self.destination_buffer.unmap();
 
         log::info!(
-            "Time taken for compute pass is : {:?}",
+            "Time taken for compute pass is : {:?} ms",
             timestamps[1].wrapping_sub(timestamps[0]) as f64 * period as f64 / 1000.0
         );
     }

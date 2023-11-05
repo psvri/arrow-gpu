@@ -112,6 +112,18 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
             None => vec![],
         }
     }
+
+    pub async fn clone_array(&self) -> Self {
+        let data = self.gpu_device.clone_buffer(&self.data);
+        let null_buffer = NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer);
+        Self {
+            data: Arc::new(data.await),
+            gpu_device: self.gpu_device.clone(),
+            phantom: PhantomData,
+            len: self.len,
+            null_buffer: null_buffer.await,
+        }
+    }
 }
 
 impl<T: ArrowPrimitiveType> Debug for PrimitiveArrayGpu<T> {
