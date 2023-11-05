@@ -92,6 +92,7 @@ pub async fn cast_dyn(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
 mod tests {
     macro_rules! test_cast_op {
         ($(#[$m:meta])* $fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $cast_type: ident, $output: expr) => {
+            $(#[$m])*
             #[tokio::test]
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
@@ -102,7 +103,6 @@ mod tests {
                     <$input_ty as Cast<$output_ty>>::cast(&gpu_array).await;
                 let new_values = new_gpu_array.raw_values().await.unwrap();
                 assert_eq!(new_values, $output);
-                println!("{:?}", new_values);
 
                 let new_gpu_array = cast_dyn(&gpu_array.into(), &ArrowType::$cast_type).await;
                 let new_values = $output_ty::try_from(new_gpu_array)
