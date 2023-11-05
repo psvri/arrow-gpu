@@ -91,7 +91,7 @@ pub async fn cast_dyn(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
 #[cfg(test)]
 mod tests {
     macro_rules! test_cast_op {
-        ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $cast_type: ident, $output: expr) => {
+        ($(#[$m:meta])* $fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $cast_type: ident, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
