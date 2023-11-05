@@ -5,6 +5,7 @@ use arrow_gpu_array::array::{
 };
 use async_trait::async_trait;
 use merge::merge_null_buffers;
+use put::apply_put_function;
 use take::apply_take_function;
 
 pub(crate) mod f32;
@@ -12,6 +13,7 @@ pub(crate) mod i16;
 pub(crate) mod i32;
 pub(crate) mod i8;
 pub(crate) mod merge;
+pub(crate) mod put;
 pub(crate) mod take;
 pub(crate) mod u16;
 pub(crate) mod u32;
@@ -19,6 +21,7 @@ pub(crate) mod u8;
 
 pub use merge::merge_dyn;
 pub use take::take_dyn;
+pub use put::put_dyn;
 
 #[async_trait]
 pub trait Swizzle {
@@ -29,11 +32,16 @@ pub trait Swizzle {
     /// Take values from array by index.
     /// None values in mask results in None
     async fn take(&self, indexes: &UInt32ArrayGPU) -> Self;
+
+    /// Put values from src array to dst array.
+    /// None values in mask results in None
+    async fn put(&self, src_indexes: &UInt32ArrayGPU, dst: &mut Self, dst_indexes: &UInt32ArrayGPU);
 }
 
 pub trait SwizzleType {
     const MERGE_SHADER: &'static str;
-    const TAKE_SHADER: &'static str = "";
+    const TAKE_SHADER: &'static str = todo!();
+    const PUT_SHADER: &'static str = todo!();
 }
 
 #[async_trait]
@@ -59,10 +67,10 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
             merge_null_buffers(&self.gpu_device, op1, op2, &mask.data, mask_null).await;
 
         let new_null_buffer = bit_buffer.map(|buffer| NullBitBufferGpu {
-                bit_buffer: Arc::new(buffer),
-                len: self.len,
-                gpu_device: self.gpu_device.clone(),
-            });
+            bit_buffer: Arc::new(buffer),
+            len: self.len,
+            gpu_device: self.gpu_device.clone(),
+        });
 
         Self {
             data: Arc::new(new_buffer),
@@ -96,6 +104,32 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
             phantom: std::marker::PhantomData,
             len: indexes.len,
             null_buffer: new_null_buffer,
+        }
+    }
+
+    async fn put(
+        &self,
+        src_indexes: &UInt32ArrayGPU,
+        dst: &mut Self,
+        dst_indexes: &UInt32ArrayGPU,
+    ) {
+        apply_put_function(
+            &self.gpu_device,
+            &self.data,
+            &dst.data,
+            &src_indexes.data,
+            &dst_indexes.data,
+            src_indexes.len as u64,
+            T::PUT_SHADER,
+            "put",
+        )
+        .await;
+
+        match (&self.null_buffer, &dst.null_buffer) {
+            (None, None) => {},
+            (None, Some(_)) => todo!(),
+            (Some(_), None) => todo!(),
+            (Some(_), Some(_)) => todo!(),
         }
     }
 }

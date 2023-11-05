@@ -1,10 +1,12 @@
 use async_trait::async_trait;
 
+pub(crate) mod f32_cast;
 pub(crate) mod i16_cast;
 pub(crate) mod i8_cast;
 pub(crate) mod u16_cast;
 pub(crate) mod u8_cast;
 
+pub use f32_cast::*;
 pub use i16_cast::*;
 pub use i8_cast::*;
 pub use u16_cast::*;
@@ -14,9 +16,7 @@ use arrow_gpu_array::array::*;
 
 #[async_trait]
 pub trait Cast<T> {
-    type Output;
-
-    async fn cast(&self) -> Self::Output;
+    async fn cast(&self) -> T;
 }
 
 pub async fn cast_dyn(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
@@ -80,6 +80,9 @@ pub async fn cast_dyn(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
         }
         (ArrowArrayGPU::UInt16ArrayGPU(x), ArrowType::Float32Type) => {
             Cast::<Float32ArrayGPU>::cast(x).await.into()
+        }
+        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowType::UInt8Type) => {
+            Cast::<UInt8ArrayGPU>::cast(x).await.into()
         }
         (x, y) => panic!("Casting between {x:?} into {y:?} is not possible"),
     }

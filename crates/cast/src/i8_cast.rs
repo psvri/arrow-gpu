@@ -20,9 +20,8 @@ const I8_CAST_F32_SHADER: &str = concat!(
 
 #[async_trait]
 impl Cast<Int32ArrayGPU> for Int8ArrayGPU {
-    type Output = Int32ArrayGPU;
 
-    async fn cast(&self) -> Self::Output {
+    async fn cast(&self) -> Int32ArrayGPU {
         let new_buffer = self
             .gpu_device
             .apply_unary_function(
@@ -46,9 +45,8 @@ impl Cast<Int32ArrayGPU> for Int8ArrayGPU {
 
 #[async_trait]
 impl Cast<UInt32ArrayGPU> for Int8ArrayGPU {
-    type Output = UInt32ArrayGPU;
 
-    async fn cast(&self) -> Self::Output {
+    async fn cast(&self) -> UInt32ArrayGPU {
         let new_buffer = self
             .gpu_device
             .apply_unary_function(
@@ -72,9 +70,8 @@ impl Cast<UInt32ArrayGPU> for Int8ArrayGPU {
 
 #[async_trait]
 impl Cast<Int16ArrayGPU> for Int8ArrayGPU {
-    type Output = Int16ArrayGPU;
 
-    async fn cast(&self) -> Self::Output {
+    async fn cast(&self) -> Int16ArrayGPU {
         let new_buffer = self
             .gpu_device
             .apply_unary_function(
@@ -98,9 +95,8 @@ impl Cast<Int16ArrayGPU> for Int8ArrayGPU {
 
 #[async_trait]
 impl Cast<UInt16ArrayGPU> for Int8ArrayGPU {
-    type Output = UInt16ArrayGPU;
 
-    async fn cast(&self) -> Self::Output {
+    async fn cast(&self) -> UInt16ArrayGPU {
         let new_buffer = self
             .gpu_device
             .apply_unary_function(
@@ -124,9 +120,8 @@ impl Cast<UInt16ArrayGPU> for Int8ArrayGPU {
 
 #[async_trait]
 impl Cast<UInt8ArrayGPU> for Int8ArrayGPU {
-    type Output = UInt8ArrayGPU;
 
-    async fn cast(&self) -> Self::Output {
+    async fn cast(&self) -> UInt8ArrayGPU {
         let new_buffer = self.gpu_device.clone_buffer(&self.data).await;
 
         UInt8ArrayGPU {
@@ -141,9 +136,8 @@ impl Cast<UInt8ArrayGPU> for Int8ArrayGPU {
 
 #[async_trait]
 impl Cast<Float32ArrayGPU> for Int8ArrayGPU {
-    type Output = Float32ArrayGPU;
 
-    async fn cast(&self) -> Self::Output {
+    async fn cast(&self) -> Float32ArrayGPU {
         let new_buffer = self
             .gpu_device
             .apply_unary_function(
