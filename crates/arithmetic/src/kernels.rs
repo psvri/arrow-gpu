@@ -156,3 +156,54 @@ pub trait ArrowSub<Rhs> {
 
     async fn sub(&self, value: &Rhs) -> Self::Output;
 }
+
+pub async fn add_array_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (input1, input2) {
+        (ArrowArrayGPU::Float32ArrayGPU(arr1), ArrowArrayGPU::Float32ArrayGPU(arr2)) => {
+            arr1.add(arr2).await.into()
+        }
+        (ArrowArrayGPU::UInt32ArrayGPU(arr1), ArrowArrayGPU::UInt32ArrayGPU(arr2)) => {
+            arr1.add(arr2).await.into()
+        }
+        (ArrowArrayGPU::Int32ArrayGPU(arr1), ArrowArrayGPU::Int32ArrayGPU(arr2)) => {
+            arr1.add(arr2).await.into()
+        }
+        (ArrowArrayGPU::Int32ArrayGPU(arr1), ArrowArrayGPU::Date32ArrayGPU(arr2)) => {
+            arr1.add(arr2).await.into()
+        }
+        (ArrowArrayGPU::Date32ArrayGPU(arr1), ArrowArrayGPU::Date32ArrayGPU(arr2)) => {
+            arr1.add(arr2).await.into()
+        }
+        (ArrowArrayGPU::Date32ArrayGPU(arr1), ArrowArrayGPU::Int32ArrayGPU(arr2)) => {
+            arr1.add(arr2).await.into()
+        }
+        _ => panic!("Operation not supported"),
+    }
+}
+
+pub async fn mul_array_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (input1, input2) {
+        (ArrowArrayGPU::Float32ArrayGPU(arr1), ArrowArrayGPU::Float32ArrayGPU(arr2)) => {
+            arr1.mul(arr2).await.into()
+        }
+        _ => panic!("Operation not supported"),
+    }
+}
+
+pub async fn add_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (input1.len(), input2.len()) {
+        (x, y) if (x == 1 && y == 1) || (x != 1 && y != 1) => add_array_dyn(input1, input2).await,
+        (_, 1) => add_scalar_dyn(input1, input2).await,
+        (1, _) => add_scalar_dyn(input2, input1).await,
+        _ => unreachable!(),
+    }
+}
+
+pub async fn mul_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (input1.len(), input2.len()) {
+        (x, y) if (x == 1 && y == 1) || (x != 1 && y != 1) => mul_array_dyn(input1, input2).await,
+        (_, 1) => mul_scalar_dyn(input1, input2).await,
+        (1, _) => mul_scalar_dyn(input2, input1).await,
+        _ => unreachable!(),
+    }
+}

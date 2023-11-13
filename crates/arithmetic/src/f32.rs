@@ -125,7 +125,7 @@ mod tests {
         Float32ArrayGPU,
         vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
         add_scalar,
-        add_scalar_dyn,
+        add_dyn,
         100.0,
         vec![100.0, 101.0, 102.0, 103.0, 104.0]
     );
@@ -149,7 +149,7 @@ mod tests {
         Float32ArrayGPU,
         vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
         mul_scalar,
-        mul_scalar_dyn,
+        mul_dyn,
         100.0,
         vec![0.0, 100.0, 200.0, 300.0, 400.0]
     );
@@ -199,6 +199,7 @@ mod tests {
         Float32ArrayGPU,
         Float32ArrayGPU,
         add,
+        add_dyn,
         vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
         vec![Some(1.0), Some(2.0), None, Some(4.0), None],
         vec![Some(1.0), Some(3.0), None, None, None]
@@ -221,6 +222,7 @@ mod tests {
         Float32ArrayGPU,
         Float32ArrayGPU,
         mul,
+        mul_dyn,
         vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
         vec![Some(1.0), Some(2.0), None, Some(4.0), None],
         vec![Some(0.0), Some(2.0), None, None, None]

@@ -162,6 +162,20 @@ impl ArrowArrayGPU {
             ArrowArrayGPU::BooleanArrayGPU(_) => todo!(),
         }
     }
+
+    pub fn len(&self) -> usize {
+        match self {
+            ArrowArrayGPU::Float32ArrayGPU(x) => x.len,
+            ArrowArrayGPU::UInt32ArrayGPU(x) => x.len,
+            ArrowArrayGPU::UInt16ArrayGPU(x) => x.len,
+            ArrowArrayGPU::UInt8ArrayGPU(x) => x.len,
+            ArrowArrayGPU::Int32ArrayGPU(x) => x.len,
+            ArrowArrayGPU::Int16ArrayGPU(x) => x.len,
+            ArrowArrayGPU::Int8ArrayGPU(x) => x.len,
+            ArrowArrayGPU::Date32ArrayGPU(x) => x.len,
+            ArrowArrayGPU::BooleanArrayGPU(x) => x.len,
+        }
+    }
 }
 
 pub async fn broadcast_dyn(
