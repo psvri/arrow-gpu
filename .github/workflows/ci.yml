@@ -42,21 +42,19 @@ jobs:
       - name: Set up cargo nexttest
         uses: taiki-e/install-action@v2
         with:
-          tool: nextest
-      - name: Set up cargo cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
+          tool: nextest,cargo-llvm-cov
+      - uses: Swatinem/rust-cache@v2
       - name: rust cargo tests
         if: matrix.run_test
         run: |
-          cargo nextest run --status-level all --no-fail-fast 
+          cargo llvm-cov clean --workspace
+          cargo llvm-cov nextest  --lcov --output-path lcov.info --status-level all --no-fail-fast
+      - name: Upload coverage reports to Codecov
+        if: matrix.run_test
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
       - name: rust cargo build
         if: matrix.run_build
         run: |
