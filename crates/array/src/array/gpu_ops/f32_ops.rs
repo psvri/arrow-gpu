@@ -10,13 +10,13 @@ pub async fn sum(gpu_device: &GpuDevice, left: &Buffer, mut len: usize) -> f32 {
     //get_f32_array(gpu_device, &left);
     let mut buffer = reduction_op(gpu_device, 4, left, F32_REDUCTION_SHADER, "sum", len);
     //get_f32_array(gpu_device, &buffer);
-    len = div_ceil(len as u64, 256) as usize;
+    len = len.div_ceil(256) as usize;
     //get_f32_array(gpu_device, &buffer);
     while len > 1 {
         //println!("in loop {:?}", len);
         buffer = reduction_op(gpu_device, 4, &buffer, F32_REDUCTION_SHADER, "sum", len);
         //get_f32_array(gpu_device, &buffer);
-        len = div_ceil(len as u64, 256) as usize;
+        len = len.div_ceil(256) as usize;
     }
 
     get_f32_array(gpu_device, &buffer)[0]

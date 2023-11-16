@@ -1,4 +1,4 @@
-use arrow_gpu_array::array::{gpu_ops::div_ceil, ArrowArrayGPU, GpuDevice, UInt32ArrayGPU};
+use arrow_gpu_array::array::{ArrowArrayGPU, GpuDevice, UInt32ArrayGPU};
 use wgpu::{Buffer, Maintain};
 
 use crate::Swizzle;
@@ -47,7 +47,7 @@ pub(crate) async fn apply_take_function(
         &compute_pipeline,
         &bind_group_array,
         entry_point,
-        div_ceil(dispatch_size, 256) as u32,
+        dispatch_size.div_ceil(256) as u32,
     );
 
     query.resolve(&mut encoder);

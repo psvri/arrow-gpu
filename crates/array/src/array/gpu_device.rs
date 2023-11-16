@@ -7,7 +7,7 @@ use wgpu::{
     ShaderModule,
 };
 
-use super::{gpu_ops::div_ceil, RustNativeType};
+use super::RustNativeType;
 
 const NUM_QUERIES: u64 = 2;
 
@@ -317,15 +317,15 @@ impl GpuDevice {
         });
 
         let mut encoder = self.create_command_encoder(None);
-        let dispatch_size = original_values.size() / item_size;
-        dbg!(dispatch_size);
+        let dispatch_size = original_values.size().div_ceil(item_size);
+
         let query = self.compute_pass(
             &mut encoder,
             None,
             &compute_pipeline,
             &bind_group_array,
             entry_point,
-            div_ceil(dispatch_size, 256) as u32,
+            dispatch_size.div_ceil(256) as u32,
         );
 
         query.resolve(&mut encoder);
@@ -378,7 +378,7 @@ impl GpuDevice {
             &compute_pipeline,
             &bind_group_array,
             entry_point,
-            div_ceil(dispatch_size, 256) as u32,
+            dispatch_size.div_ceil(256) as u32,
         );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
@@ -429,7 +429,7 @@ impl GpuDevice {
             &compute_pipeline,
             &bind_group_array,
             entry_point,
-            div_ceil(dispatch_size, 256) as u32,
+            dispatch_size.div_ceil(256) as u32,
         );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
@@ -485,7 +485,7 @@ impl GpuDevice {
             &compute_pipeline,
             &bind_group_array,
             entry_point,
-            div_ceil(dispatch_size, 256) as u32,
+            dispatch_size.div_ceil(256) as u32,
         );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
@@ -532,7 +532,7 @@ impl GpuDevice {
             &compute_pipeline,
             &bind_group_array,
             entry_point,
-            div_ceil(dispatch_size, 256) as u32,
+            dispatch_size.div_ceil(256) as u32,
         );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
