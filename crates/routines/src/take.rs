@@ -82,8 +82,8 @@ mod tests {
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
                 let device = GPU_DEVICE.clone();
-                let gpu_array_1 = $operand1_type::from_vec(&$input_1, device.clone());
-                let gpu_array_2 = $operand2_type::from_vec(&$input_2, device);
+                let gpu_array_1 = $operand1_type::from_slice(&$input_1, device.clone());
+                let gpu_array_2 = $operand2_type::from_slice(&$input_2, device);
                 let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
                 assert_eq!(new_gpu_array.raw_values().await.unwrap(), $output);
             }

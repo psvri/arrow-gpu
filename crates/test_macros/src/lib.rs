@@ -6,7 +6,7 @@ macro_rules! test_unary_op {
             use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let data = $input;
-            let gpu_array = $input_ty::from_vec(&data, device);
+            let gpu_array = $input_ty::from_slice(&data, device);
             let new_gpu_array = gpu_array.$unary_fn().await;
             assert_eq!(new_gpu_array.raw_values().await.unwrap(), $output);
             let new_gpu_array = $unary_fn_dyn(&gpu_array.into()).await;
@@ -24,7 +24,7 @@ macro_rules! test_unary_op {
             use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let data = $input;
-            let gpu_array = $input_ty::from_vec(&data, device);
+            let gpu_array = $input_ty::from_slice(&data, device);
             let new_gpu_array = gpu_array.$unary_fn().await;
             assert_eq!(new_gpu_array.raw_values().await.unwrap(), $output);
         }
@@ -39,8 +39,8 @@ macro_rules! test_scalar_op {
             use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let data = $input;
-            let array = $input_ty::from_vec(&data, device.clone());
-            let value_array = $scalar_ty::from_vec(&vec![$scalar], device);
+            let array = $input_ty::from_slice(&data, device.clone());
+            let value_array = $scalar_ty::from_slice(&vec![$scalar], device);
             let new_array = array.$scalar_fn(&value_array).await;
             assert_eq!(new_array.raw_values().await.unwrap(), $output);
 
@@ -63,8 +63,8 @@ macro_rules! test_array_op {
         async fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
-            let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
-            let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
+            let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
+            let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device);
             let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
             assert_eq!(new_gpu_array.values().await, $output);
         }
@@ -75,8 +75,8 @@ macro_rules! test_array_op {
         async fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
-            let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
-            let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
+            let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
+            let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device);
             let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
             assert_eq!(new_gpu_array.values().await, $output);
 
@@ -129,8 +129,8 @@ macro_rules! test_float_scalar_op {
             use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let data = $input;
-            let array = $input_ty::from_vec(&data, device.clone());
-            let value_array = $scalar_ty::from_vec(&vec![$scalar], device);
+            let array = $input_ty::from_slice(&data, device.clone());
+            let value_array = $scalar_ty::from_slice(&vec![$scalar], device);
             let new_gpu_array = array.$scalar_fn(&value_array).await;
             let new_values = new_gpu_array.raw_values().await.unwrap();
             for (index, new_value) in new_values.iter().enumerate() {
@@ -169,7 +169,7 @@ macro_rules! test_unary_op_float {
             use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
             let data = $input;
-            let gpu_array = $input_ty::from_vec(&data, device);
+            let gpu_array = $input_ty::from_slice(&data, device);
             let new_gpu_array = gpu_array.$unary_fn().await;
             let new_values = new_gpu_array.raw_values().await.unwrap();
             for (index, new_value) in new_values.iter().enumerate() {
@@ -206,8 +206,8 @@ macro_rules! test_float_array_op {
         async fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
-            let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
-            let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
+            let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
+            let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device);
             let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
             let new_values = new_gpu_array.values().await;
             for (index, new_value) in new_values.iter().enumerate() {

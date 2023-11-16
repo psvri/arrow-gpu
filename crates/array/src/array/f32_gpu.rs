@@ -95,7 +95,7 @@ mod tests {
     #[tokio::test]
     async fn test_f32_sum() {
         let device = Arc::new(GpuDevice::new().await);
-        let gpu_array = Float32ArrayGPU::from_vec(
+        let gpu_array = Float32ArrayGPU::from_slice(
             &(0..256 * 256)
                 .into_iter()
                 .map(|_| 1.0)
@@ -111,14 +111,14 @@ mod tests {
             .map(|x| x as f32)
             .collect::<Vec<f32>>();
         let total = (0..9_999u32).into_iter().sum::<u32>() as f32;
-        let gpu_array = Float32ArrayGPU::from_vec(&cvec, device);
+        let gpu_array = Float32ArrayGPU::from_slice(&cvec, device);
         assert_eq!(gpu_array.sum().await, total);
     }
 
     #[tokio::test]
     async fn test_f32_array_from_optinal_vec() {
         let device = Arc::new(GpuDevice::new().await);
-        let gpu_array_1 = Float32ArrayGPU::from_optional_vec(
+        let gpu_array_1 = Float32ArrayGPU::from_optional_slice(
             &vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
             device.clone(),
         );
@@ -130,7 +130,7 @@ mod tests {
             gpu_array_1.null_buffer.as_ref().unwrap().raw_values().await,
             vec![0b00010011]
         );
-        let gpu_array_2 = Float32ArrayGPU::from_optional_vec(
+        let gpu_array_2 = Float32ArrayGPU::from_optional_slice(
             &vec![Some(1.0), Some(2.0), None, Some(4.0), None],
             device,
         );

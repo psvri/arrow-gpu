@@ -47,10 +47,6 @@ impl BooleanArrayGPU {
         }
     }
 
-    pub fn from_optional_vec(value: &Vec<Option<bool>>, gpu_device: Arc<GpuDevice>) -> Self {
-        Self::from_optional_slice(&value[..], gpu_device)
-    }
-
     //TODO write test case
     pub fn from_slice(value: &[bool], gpu_device: Arc<GpuDevice>) -> Self {
         let mut buffer = BooleanBufferBuilder::new_with_capacity(value.len());
@@ -89,10 +85,6 @@ impl BooleanArrayGPU {
             len: value.len(),
             null_buffer,
         }
-    }
-
-    pub fn from_bytes_vec(value: &Vec<u8>, gpu_device: Arc<GpuDevice>) -> Self {
-        Self::from_bytes_slice(&value[..], gpu_device)
     }
 
     pub async fn raw_values(&self) -> Option<Vec<bool>> {

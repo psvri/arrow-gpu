@@ -173,14 +173,14 @@ mod tests {
     )]
     async fn test_large_f32_array() {
         let device = Arc::new(GpuDevice::new().await);
-        let gpu_array = Float32ArrayGPU::from_vec(
+        let gpu_array = Float32ArrayGPU::from_slice(
             &(0..1024 * 1024 * 10)
                 .into_iter()
                 .map(|x| x as f32)
                 .collect::<Vec<f32>>(),
             device.clone(),
         );
-        let values_array = Float32ArrayGPU::from_vec(&vec![100.0], device);
+        let values_array = Float32ArrayGPU::from_slice(&vec![100.0], device);
         let new_gpu_array = gpu_array.add_scalar(&values_array).await;
         for (index, value) in new_gpu_array
             .raw_values()
