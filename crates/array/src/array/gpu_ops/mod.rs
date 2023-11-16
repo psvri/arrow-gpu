@@ -3,10 +3,6 @@ pub mod f32_ops;
 use super::gpu_device::GpuDevice;
 use wgpu::{util::align_to, Buffer, Maintain};
 
-pub fn div_ceil(x: u64, y: u64) -> u64 {
-    x / y + ((x % y > 0) as u64)
-}
-
 pub(crate) fn reduction_op(
     gpu_device: &GpuDevice,
     item_size: usize,
@@ -20,7 +16,7 @@ pub(crate) fn reduction_op(
     let size = data.size();
     //println!("input size is {:?}", size);
     let value_buffer = gpu_device.create_scalar_buffer(&len);
-    let new_values_buffer = gpu_device.create_empty_buffer(align_to(div_ceil(size, 256), 4));
+    let new_values_buffer = gpu_device.create_empty_buffer(align_to(size.div_ceil(256), 4));
     /*println!(
         "new_values_buffer size is {:?} {:?}",
         new_values_buffer.size(),

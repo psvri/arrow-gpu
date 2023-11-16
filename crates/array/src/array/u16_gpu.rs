@@ -2,18 +2,17 @@ use crate::ArrowErrorGPU;
 use std::sync::Arc;
 
 use super::{
-    gpu_device::GpuDevice, gpu_ops::div_ceil, primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU,
-    ArrowArrayGPU,
+    gpu_device::GpuDevice, primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU, ArrowArrayGPU,
 };
 
 pub type UInt16ArrayGPU = PrimitiveArrayGpu<u16>;
 
 impl UInt16ArrayGPU {
     pub async fn broadcast(value: u16, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
-        let new_len = div_ceil(len.try_into().unwrap(), 2);
+        let new_len = len.div_ceil(2);
         let broadcast_value = (value as u32) | ((value as u32) << 16);
         let gpu_buffer =
-            UInt32ArrayGPU::create_broadcast_buffer(broadcast_value, new_len, &gpu_device).await;
+            UInt32ArrayGPU::create_broadcast_buffer(broadcast_value, new_len as u64, &gpu_device).await;
         let data = Arc::new(gpu_buffer);
         let null_buffer = None;
 
