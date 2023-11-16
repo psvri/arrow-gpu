@@ -8,12 +8,12 @@ use wgpu::Buffer;
 
 pub(crate) mod f32;
 
-const ABS_ENTRY_POINT: &'static str = "abs_";
-const SQRT_ENTRY_POINT: &'static str = "sqrt_";
-const EXP_ENTRY_POINT: &'static str = "exp_";
-const EXP2_ENTRY_POINT: &'static str = "exp2_";
-const LOG_ENTRY_POINT: &'static str = "log_";
-const LOG2_ENTRY_POINT: &'static str = "log2_";
+const ABS_ENTRY_POINT: &str = "abs_";
+const SQRT_ENTRY_POINT: &str = "sqrt_";
+const EXP_ENTRY_POINT: &str = "exp_";
+const EXP2_ENTRY_POINT: &str = "exp2_";
+const LOG_ENTRY_POINT: &str = "log_";
+const LOG2_ENTRY_POINT: &str = "log2_";
 
 #[async_trait]
 pub trait MathUnary {

@@ -318,7 +318,7 @@ impl GpuDevice {
 
         let mut encoder = self.create_command_encoder(None);
         let dispatch_size = original_values.size() / item_size;
-
+        dbg!(dispatch_size);
         let query = self.compute_pass(
             &mut encoder,
             None,

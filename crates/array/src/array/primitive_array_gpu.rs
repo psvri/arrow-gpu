@@ -53,13 +53,6 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
         }
     }
 
-    pub fn from_optional_vec(
-        value: &Vec<Option<T::NativeType>>,
-        gpu_device: Arc<GpuDevice>,
-    ) -> Self {
-        Self::from_optional_slice(&value[..], gpu_device)
-    }
-
     pub fn from_slice(value: &[T::NativeType], gpu_device: Arc<GpuDevice>) -> Self {
         let data = gpu_device.create_gpu_buffer_with_data(value);
         let null_buffer = None;
@@ -71,10 +64,6 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
             len: value.len(),
             null_buffer,
         }
-    }
-
-    pub fn from_vec(value: &Vec<T::NativeType>, gpu_device: Arc<GpuDevice>) -> Self {
-        Self::from_slice(&value[..], gpu_device)
     }
 
     pub async fn raw_values(&self) -> Option<Vec<T::NativeType>> {

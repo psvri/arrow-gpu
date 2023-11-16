@@ -98,10 +98,10 @@ mod tests {
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
                 let device = GPU_DEVICE.clone();
-                let gpu_array_1 = $operand_type::from_vec(&$src, device.clone());
-                let mut gpu_array_2 = $operand_type::from_vec(&$dst, device.clone());
-                let src_index = UInt32ArrayGPU::from_vec(&$src_index, device.clone());
-                let dst_index = UInt32ArrayGPU::from_vec(&$dst_index, device);
+                let gpu_array_1 = $operand_type::from_slice(&$src, device.clone());
+                let mut gpu_array_2 = $operand_type::from_slice(&$dst, device.clone());
+                let src_index = UInt32ArrayGPU::from_slice(&$src_index, device.clone());
+                let dst_index = UInt32ArrayGPU::from_slice(&$dst_index, device);
                 gpu_array_1.$operation(&src_index, &mut gpu_array_2, &dst_index).await;
                 assert_eq!(gpu_array_2.raw_values().await.unwrap(), $output);
             }
@@ -112,14 +112,14 @@ mod tests {
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
                 let device = GPU_DEVICE.clone();
-                let gpu_array_1 = $operand_type::from_vec(&$src, device.clone());
-                let mut gpu_array_2 = $operand_type::from_vec(&$dst, device.clone());
-                let src_index = UInt32ArrayGPU::from_vec(&$src_index, device.clone());
-                let dst_index = UInt32ArrayGPU::from_vec(&$dst_index, device.clone());
+                let gpu_array_1 = $operand_type::from_slice(&$src, device.clone());
+                let mut gpu_array_2 = $operand_type::from_slice(&$dst, device.clone());
+                let src_index = UInt32ArrayGPU::from_slice(&$src_index, device.clone());
+                let dst_index = UInt32ArrayGPU::from_slice(&$dst_index, device.clone());
                 gpu_array_1.$operation(&src_index, &mut gpu_array_2, &dst_index).await;
                 assert_eq!(gpu_array_2.raw_values().await.unwrap(), $output);
 
-                let mut gpu_array_2_dyn = $operand_type::from_vec(&$dst, device.clone()).into();
+                let mut gpu_array_2_dyn = $operand_type::from_slice(&$dst, device.clone()).into();
                 $operation_dyn(&gpu_array_1.into(), &src_index, &mut gpu_array_2_dyn, &dst_index).await;
 
                 let new_values = $operand_type::try_from(gpu_array_2_dyn)

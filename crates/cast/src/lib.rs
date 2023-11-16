@@ -98,7 +98,7 @@ mod tests {
                 use arrow_gpu_array::GPU_DEVICE;
                 let device = GPU_DEVICE.clone();
                 let data = $input;
-                let gpu_array = $input_ty::from_vec(&data, device);
+                let gpu_array = $input_ty::from_slice(&data, device);
                 let new_gpu_array: $output_ty =
                     <$input_ty as Cast<$output_ty>>::cast(&gpu_array).await;
                 let new_values = new_gpu_array.raw_values().await.unwrap();
