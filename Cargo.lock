@@ -301,6 +301,7 @@ dependencies = [
  "arrow_gpu_cast",
  "arrow_gpu_compare",
  "arrow_gpu_logical",
+ "arrow_gpu_math",
  "arrow_gpu_routines",
  "arrow_gpu_trigonometry",
 ]

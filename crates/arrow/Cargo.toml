@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 arrow_gpu_arithmetic = { path = "../arithmetic" }
 arrow_gpu_array = { path = "../array" }
+arrow_gpu_math = { path = "../math" }
 arrow_gpu_cast = { path = "../cast" }
 arrow_gpu_compare = { path = "../compare" }
 arrow_gpu_logical = { path = "../logical" }
