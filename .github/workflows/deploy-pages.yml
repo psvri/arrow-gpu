@@ -16,7 +16,7 @@ jobs:
     - name: Set up mdbook
       uses: taiki-e/install-action@v2
       with:
-        tool: mdbook
+        tool: mdbook,mdbook-pagetoc
     - name: Deploy GitHub Pages
       run: |
         cd docs

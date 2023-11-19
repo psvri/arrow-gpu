@@ -181,10 +181,28 @@ pub async fn add_array_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> Ar
     }
 }
 
+pub async fn sub_array_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (input1, input2) {
+        (ArrowArrayGPU::Float32ArrayGPU(arr1), ArrowArrayGPU::Float32ArrayGPU(arr2)) => {
+            arr1.sub(arr2).await.into()
+        }
+        _ => panic!("Operation not supported"),
+    }
+}
+
 pub async fn mul_array_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
     match (input1, input2) {
         (ArrowArrayGPU::Float32ArrayGPU(arr1), ArrowArrayGPU::Float32ArrayGPU(arr2)) => {
             arr1.mul(arr2).await.into()
+        }
+        _ => panic!("Operation not supported"),
+    }
+}
+
+pub async fn div_array_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (input1, input2) {
+        (ArrowArrayGPU::Float32ArrayGPU(arr1), ArrowArrayGPU::Float32ArrayGPU(arr2)) => {
+            arr1.div(arr2).await.into()
         }
         _ => panic!("Operation not supported"),
     }
@@ -199,11 +217,29 @@ pub async fn add_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArr
     }
 }
 
+pub async fn sub_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (input1.len(), input2.len()) {
+        (x, y) if (x == 1 && y == 1) || (x != 1 && y != 1) => sub_array_dyn(input1, input2).await,
+        (_, 1) => sub_scalar_dyn(input1, input2).await,
+        (1, _) => sub_scalar_dyn(input2, input1).await,
+        _ => unreachable!(),
+    }
+}
+
 pub async fn mul_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
     match (input1.len(), input2.len()) {
         (x, y) if (x == 1 && y == 1) || (x != 1 && y != 1) => mul_array_dyn(input1, input2).await,
         (_, 1) => mul_scalar_dyn(input1, input2).await,
         (1, _) => mul_scalar_dyn(input2, input1).await,
+        _ => unreachable!(),
+    }
+}
+
+pub async fn div_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (input1.len(), input2.len()) {
+        (x, y) if (x == 1 && y == 1) || (x != 1 && y != 1) => div_array_dyn(input1, input2).await,
+        (_, 1) => div_scalar_dyn(input1, input2).await,
+        (1, _) => div_scalar_dyn(input2, input1).await,
         _ => unreachable!(),
     }
 }

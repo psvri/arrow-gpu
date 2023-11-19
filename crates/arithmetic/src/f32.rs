@@ -211,6 +211,7 @@ mod tests {
         Float32ArrayGPU,
         Float32ArrayGPU,
         sub,
+        sub_dyn,
         vec![Some(0.0), Some(1.0), None, None, Some(4.0), Some(10.0)],
         vec![Some(1.0), Some(2.0), None, Some(4.0), None, Some(0.0)],
         vec![Some(-1.0), Some(-1.0), None, None, None, Some(10.0)]
@@ -234,6 +235,7 @@ mod tests {
         Float32ArrayGPU,
         Float32ArrayGPU,
         div,
+        div_dyn,
         vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
         vec![Some(1.0), Some(2.0), None, Some(4.0), None],
         vec![Some(0.0), Some(0.5), None, None, None]
