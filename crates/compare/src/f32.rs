@@ -21,6 +21,7 @@ mod test {
         Float32ArrayGPU,
         BooleanArrayGPU,
         gt,
+        gt_dyn,
         vec![
             Some(-1.0f32),
             Some(3.0),
@@ -68,6 +69,7 @@ mod test {
         Float32ArrayGPU,
         BooleanArrayGPU,
         gteq,
+        gteq_dyn,
         vec![
             Some(-1.0f32),
             Some(3.0),
@@ -115,6 +117,7 @@ mod test {
         Float32ArrayGPU,
         BooleanArrayGPU,
         lt,
+        lt_dyn,
         vec![
             Some(-1.0f32),
             Some(3.0),
@@ -162,6 +165,7 @@ mod test {
         Float32ArrayGPU,
         BooleanArrayGPU,
         lteq,
+        lteq_dyn,
         vec![
             Some(-1.0f32),
             Some(3.0),
@@ -209,6 +213,7 @@ mod test {
         Float32ArrayGPU,
         BooleanArrayGPU,
         eq,
+        eq_dyn,
         vec![
             Some(0.0f32),
             Some(3.0),

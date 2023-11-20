@@ -127,6 +127,7 @@ mod test {
         UInt16ArrayGPU,
         BooleanArrayGPU,
         lt,
+        lt_dyn,
         vec![
             Some(0u16),
             Some(3),
@@ -171,6 +172,7 @@ mod test {
         UInt16ArrayGPU,
         BooleanArrayGPU,
         lteq,
+        lteq_dyn,
         vec![
             Some(0u16),
             Some(3),
@@ -215,6 +217,7 @@ mod test {
         UInt16ArrayGPU,
         BooleanArrayGPU,
         eq,
+        eq_dyn,
         vec![
             Some(0u16),
             Some(3),

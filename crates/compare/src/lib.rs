@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use arrow_gpu_array::array::{
-    ArrowPrimitiveType, BooleanArrayGPU, NullBitBufferGpu, PrimitiveArrayGpu,
+    ArrowArrayGPU, ArrowPrimitiveType, BooleanArrayGPU, NullBitBufferGpu, PrimitiveArrayGpu,
 };
 use async_trait::async_trait;
 
@@ -125,5 +125,92 @@ impl<T: CompareType + ArrowPrimitiveType> MinMax for PrimitiveArrayGpu<T> {
 
     async fn max(&self, operand: &Self) -> Self {
         apply_function_min_max!(self, operand, MAX_ENTRY_POINT);
+    }
+}
+
+pub async fn gt_dyn(x: &ArrowArrayGPU, y: &ArrowArrayGPU) -> BooleanArrayGPU {
+    match (x, y) {
+        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowArrayGPU::Float32ArrayGPU(y)) => x.gt(y).await,
+        (ArrowArrayGPU::UInt32ArrayGPU(x), ArrowArrayGPU::UInt32ArrayGPU(y)) => x.gt(y).await,
+        (ArrowArrayGPU::UInt16ArrayGPU(x), ArrowArrayGPU::UInt16ArrayGPU(y)) => x.gt(y).await,
+        (ArrowArrayGPU::UInt8ArrayGPU(x), ArrowArrayGPU::UInt8ArrayGPU(y)) => x.gt(y).await,
+        (ArrowArrayGPU::Int32ArrayGPU(x), ArrowArrayGPU::Int32ArrayGPU(y)) => x.gt(y).await,
+        (ArrowArrayGPU::Int16ArrayGPU(x), ArrowArrayGPU::Int16ArrayGPU(y)) => x.gt(y).await,
+        (ArrowArrayGPU::Int8ArrayGPU(x), ArrowArrayGPU::Int8ArrayGPU(y)) => x.gt(y).await,
+        (ArrowArrayGPU::Date32ArrayGPU(x), ArrowArrayGPU::Date32ArrayGPU(y)) => x.gt(y).await,
+        _ => panic!(
+            "Cannot compare types {:?} and {:?}",
+            x.get_dtype(),
+            y.get_dtype()
+        ),
+    }
+}
+
+pub async fn gteq_dyn(x: &ArrowArrayGPU, y: &ArrowArrayGPU) -> BooleanArrayGPU {
+    match (x, y) {
+        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowArrayGPU::Float32ArrayGPU(y)) => x.gteq(y).await,
+        (ArrowArrayGPU::UInt32ArrayGPU(x), ArrowArrayGPU::UInt32ArrayGPU(y)) => x.gteq(y).await,
+        (ArrowArrayGPU::UInt16ArrayGPU(x), ArrowArrayGPU::UInt16ArrayGPU(y)) => x.gteq(y).await,
+        (ArrowArrayGPU::UInt8ArrayGPU(x), ArrowArrayGPU::UInt8ArrayGPU(y)) => x.gteq(y).await,
+        (ArrowArrayGPU::Int32ArrayGPU(x), ArrowArrayGPU::Int32ArrayGPU(y)) => x.gteq(y).await,
+        (ArrowArrayGPU::Int16ArrayGPU(x), ArrowArrayGPU::Int16ArrayGPU(y)) => x.gteq(y).await,
+        (ArrowArrayGPU::Int8ArrayGPU(x), ArrowArrayGPU::Int8ArrayGPU(y)) => x.gteq(y).await,
+        _ => panic!(
+            "Cannot compare types {:?} and {:?}",
+            x.get_dtype(),
+            y.get_dtype()
+        ),
+    }
+}
+
+pub async fn lt_dyn(x: &ArrowArrayGPU, y: &ArrowArrayGPU) -> BooleanArrayGPU {
+    match (x, y) {
+        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowArrayGPU::Float32ArrayGPU(y)) => x.lt(y).await,
+        (ArrowArrayGPU::UInt32ArrayGPU(x), ArrowArrayGPU::UInt32ArrayGPU(y)) => x.lt(y).await,
+        (ArrowArrayGPU::UInt16ArrayGPU(x), ArrowArrayGPU::UInt16ArrayGPU(y)) => x.lt(y).await,
+        (ArrowArrayGPU::UInt8ArrayGPU(x), ArrowArrayGPU::UInt8ArrayGPU(y)) => x.lt(y).await,
+        (ArrowArrayGPU::Int32ArrayGPU(x), ArrowArrayGPU::Int32ArrayGPU(y)) => x.lt(y).await,
+        (ArrowArrayGPU::Int16ArrayGPU(x), ArrowArrayGPU::Int16ArrayGPU(y)) => x.lt(y).await,
+        (ArrowArrayGPU::Int8ArrayGPU(x), ArrowArrayGPU::Int8ArrayGPU(y)) => x.lt(y).await,
+        _ => panic!(
+            "Cannot compare types {:?} and {:?}",
+            x.get_dtype(),
+            y.get_dtype()
+        ),
+    }
+}
+
+pub async fn lteq_dyn(x: &ArrowArrayGPU, y: &ArrowArrayGPU) -> BooleanArrayGPU {
+    match (x, y) {
+        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowArrayGPU::Float32ArrayGPU(y)) => x.lteq(y).await,
+        (ArrowArrayGPU::UInt32ArrayGPU(x), ArrowArrayGPU::UInt32ArrayGPU(y)) => x.lteq(y).await,
+        (ArrowArrayGPU::UInt16ArrayGPU(x), ArrowArrayGPU::UInt16ArrayGPU(y)) => x.lteq(y).await,
+        (ArrowArrayGPU::UInt8ArrayGPU(x), ArrowArrayGPU::UInt8ArrayGPU(y)) => x.lteq(y).await,
+        (ArrowArrayGPU::Int32ArrayGPU(x), ArrowArrayGPU::Int32ArrayGPU(y)) => x.lteq(y).await,
+        (ArrowArrayGPU::Int16ArrayGPU(x), ArrowArrayGPU::Int16ArrayGPU(y)) => x.lteq(y).await,
+        (ArrowArrayGPU::Int8ArrayGPU(x), ArrowArrayGPU::Int8ArrayGPU(y)) => x.lteq(y).await,
+        _ => panic!(
+            "Cannot compare types {:?} and {:?}",
+            x.get_dtype(),
+            y.get_dtype()
+        ),
+    }
+}
+
+pub async fn eq_dyn(x: &ArrowArrayGPU, y: &ArrowArrayGPU) -> BooleanArrayGPU {
+    match (x, y) {
+        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowArrayGPU::Float32ArrayGPU(y)) => x.eq(y).await,
+        (ArrowArrayGPU::UInt32ArrayGPU(x), ArrowArrayGPU::UInt32ArrayGPU(y)) => x.eq(y).await,
+        (ArrowArrayGPU::UInt16ArrayGPU(x), ArrowArrayGPU::UInt16ArrayGPU(y)) => x.eq(y).await,
+        (ArrowArrayGPU::UInt8ArrayGPU(x), ArrowArrayGPU::UInt8ArrayGPU(y)) => x.eq(y).await,
+        (ArrowArrayGPU::Int32ArrayGPU(x), ArrowArrayGPU::Int32ArrayGPU(y)) => x.eq(y).await,
+        (ArrowArrayGPU::Int16ArrayGPU(x), ArrowArrayGPU::Int16ArrayGPU(y)) => x.eq(y).await,
+        (ArrowArrayGPU::Int8ArrayGPU(x), ArrowArrayGPU::Int8ArrayGPU(y)) => x.eq(y).await,
+        (ArrowArrayGPU::Date32ArrayGPU(x), ArrowArrayGPU::Date32ArrayGPU(y)) => x.eq(y).await,
+        _ => panic!(
+            "Cannot compare types {:?} and {:?}",
+            x.get_dtype(),
+            y.get_dtype()
+        ),
     }
 }

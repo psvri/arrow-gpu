@@ -29,6 +29,7 @@ mod test {
         Int16ArrayGPU,
         BooleanArrayGPU,
         gt,
+        gt_dyn,
         vec![
             Some(0i16),
             Some(3),
@@ -73,6 +74,7 @@ mod test {
         Int16ArrayGPU,
         BooleanArrayGPU,
         gt,
+        gt_dyn,
         vec![Some(100i16); 100],
         vec![Some(1i16); 100],
         vec![Some(true); 100]
@@ -84,6 +86,7 @@ mod test {
         Int16ArrayGPU,
         BooleanArrayGPU,
         gteq,
+        gteq_dyn,
         vec![
             Some(0i16),
             Some(3),
@@ -128,6 +131,7 @@ mod test {
         Int16ArrayGPU,
         BooleanArrayGPU,
         lt,
+        lt_dyn,
         vec![
             Some(0i16),
             Some(3),
@@ -172,6 +176,7 @@ mod test {
         Int16ArrayGPU,
         BooleanArrayGPU,
         lteq,
+        lteq_dyn,
         vec![
             Some(0i16),
             Some(3),
@@ -216,6 +221,7 @@ mod test {
         Int16ArrayGPU,
         BooleanArrayGPU,
         eq,
+        eq_dyn,
         vec![
             Some(0i16),
             Some(3),

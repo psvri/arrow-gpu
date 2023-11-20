@@ -29,6 +29,7 @@ mod test {
         Int8ArrayGPU,
         BooleanArrayGPU,
         gt,
+        gt_dyn,
         vec![
             Some(0i8),
             Some(3),
@@ -73,6 +74,7 @@ mod test {
         Int8ArrayGPU,
         BooleanArrayGPU,
         gt,
+        gt_dyn,
         vec![Some(100i8); 100],
         vec![Some(1i8); 100],
         vec![Some(true); 100]
@@ -95,6 +97,7 @@ mod test {
         Int8ArrayGPU,
         BooleanArrayGPU,
         gteq,
+        gteq_dyn,
         vec![
             Some(0i8),
             Some(3),
@@ -139,6 +142,7 @@ mod test {
         Int8ArrayGPU,
         BooleanArrayGPU,
         lt,
+        lt_dyn,
         vec![
             Some(0i8),
             Some(3),
@@ -183,6 +187,7 @@ mod test {
         Int8ArrayGPU,
         BooleanArrayGPU,
         lteq,
+        lteq_dyn,
         vec![
             Some(0i8),
             Some(3),
@@ -227,6 +232,7 @@ mod test {
         Int8ArrayGPU,
         BooleanArrayGPU,
         eq,
+        eq_dyn,
         vec![
             Some(0i8),
             Some(3),

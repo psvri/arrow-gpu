@@ -44,3 +44,16 @@ caveats
 | UInt32 | |
 | Float32 | |
 | Date32 | |
+
+## Into Boolean
+
+|⟍ Into <br /> ⟍   <br /> From⟍   |  boolean |
+|-|-|
+| Int8 | |
+| Int16 | |
+| Int32 |  |
+| UInt8 | |
+| UInt16 | |
+| UInt32 | |
+| Float32 | ✓ |
+| Date32 | |
