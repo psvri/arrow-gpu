@@ -130,7 +130,7 @@ impl Logical for BooleanArrayGPU {
 #[cfg(test)]
 mod test {
     use crate::*;
-    use arrow_gpu_test_macros::test_array_op;
+    use arrow_gpu_test_macros::{test_array_op, test_unary_op};
 
     test_array_op!(
         test_bitwise_and_bool_array_bool,
@@ -215,5 +215,15 @@ mod test {
             Some(true)
         ],
         vec![Some(false), Some(true), Some(true), Some(false), None, None]
+    );
+
+    test_unary_op!(
+        test_bitwise_not_bool,
+        BooleanArrayGPU,
+        BooleanArrayGPU,
+        vec![true, true, false, true, false],
+        bitwise_not,
+        bitwise_not_dyn,
+        vec![false, false, true, false, true]
     );
 }

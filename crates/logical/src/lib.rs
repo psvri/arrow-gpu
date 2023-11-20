@@ -196,7 +196,10 @@ pub async fn bitwise_and_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> 
         (ArrowArrayGPU::BooleanArrayGPU(arr_1), ArrowArrayGPU::BooleanArrayGPU(arr_2)) => {
             arr_1.bitwise_and(arr_2).await.into()
         }
-        _ => panic!("Operation not supported"),
+        _ => panic!(
+            "Operation bitwise_and_dyn not supported for type {:?}",
+            data_1.get_dtype()
+        ),
     }
 }
 
@@ -223,7 +226,10 @@ pub async fn bitwise_or_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> A
         (ArrowArrayGPU::BooleanArrayGPU(arr_1), ArrowArrayGPU::BooleanArrayGPU(arr_2)) => {
             arr_1.bitwise_or(arr_2).await.into()
         }
-        _ => panic!("Operation not supported"),
+        _ => panic!(
+            "Operation bitwise_or_dyn not supported for type {:?}",
+            data_1.get_dtype()
+        ),
     }
 }
 
@@ -250,7 +256,10 @@ pub async fn bitwise_xor_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> 
         (ArrowArrayGPU::BooleanArrayGPU(arr_1), ArrowArrayGPU::BooleanArrayGPU(arr_2)) => {
             arr_1.bitwise_xor(arr_2).await.into()
         }
-        _ => panic!("Operation not supported"),
+        _ => panic!(
+            "Operation bitwise_xor_dyn not supported for type {:?}",
+            data_1.get_dtype()
+        ),
     }
 }
 
@@ -274,7 +283,10 @@ pub async fn bitwise_shl_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> 
         (ArrowArrayGPU::Int8ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
             arr_1.bitwise_shl(arr_2).await.into()
         }
-        _ => panic!("Operation not supported"),
+        _ => panic!(
+            "Operation bitwise_shl_dyn not supported for type {:?}",
+            data_1.get_dtype()
+        ),
     }
 }
 
@@ -298,7 +310,10 @@ pub async fn bitwise_shr_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> 
         (ArrowArrayGPU::Int8ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
             arr_1.bitwise_shr(arr_2).await.into()
         }
-        _ => panic!("Operation not supported"),
+        _ => panic!(
+            "Operation bitwise_shr_dyn not supported for type {:?}",
+            data_1.get_dtype()
+        ),
     }
 }
 
@@ -310,6 +325,10 @@ pub async fn bitwise_not_dyn(data_1: &ArrowArrayGPU) -> ArrowArrayGPU {
         ArrowArrayGPU::Int16ArrayGPU(arr_1) => arr_1.bitwise_not().await.into(),
         ArrowArrayGPU::UInt8ArrayGPU(arr_1) => arr_1.bitwise_not().await.into(),
         ArrowArrayGPU::Int8ArrayGPU(arr_1) => arr_1.bitwise_not().await.into(),
-        _ => panic!("Operation not supported"),
+        ArrowArrayGPU::BooleanArrayGPU(arr_1) => arr_1.bitwise_not().await.into(),
+        _ => panic!(
+            "Operation bitwise_not_dyn not supported for type {:?}",
+            data_1.get_dtype()
+        ),
     }
 }
