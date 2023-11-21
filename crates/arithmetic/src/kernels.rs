@@ -1,5 +1,10 @@
-use arrow_gpu_array::array::ArrowArrayGPU;
+use std::sync::Arc;
+
+use arrow_gpu_array::array::{
+    ArrowArrayGPU, ArrowPrimitiveType, GpuDevice, NullBitBufferGpu, PrimitiveArrayGpu,
+};
 use async_trait::async_trait;
+use wgpu::Buffer;
 
 #[async_trait]
 pub trait ArrowScalarAdd<Rhs> {
@@ -241,5 +246,57 @@ pub async fn div_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArr
         (_, 1) => div_scalar_dyn(input1, input2).await,
         (1, _) => div_scalar_dyn(input2, input1).await,
         _ => unreachable!(),
+    }
+}
+
+#[async_trait]
+pub trait Neg {
+    type OutputType;
+    async fn neg(&self) -> Self::OutputType;
+}
+
+pub trait NegUnaryType {
+    type OutputType;
+    const SHADER: &'static str;
+    const BUFFER_SIZE_MULTIPLIER: u64;
+
+    fn create_new(
+        data: Arc<Buffer>,
+        device: Arc<GpuDevice>,
+        len: usize,
+        null_buffer: Option<NullBitBufferGpu>,
+    ) -> Self::OutputType;
+}
+
+#[async_trait]
+impl<T: NegUnaryType + ArrowPrimitiveType> Neg for PrimitiveArrayGpu<T> {
+    type OutputType = T::OutputType;
+
+    async fn neg(&self) -> Self::OutputType {
+        let new_buffer = self.gpu_device.apply_unary_function(
+            &self.data,
+            &self.data.size() * <T as NegUnaryType>::BUFFER_SIZE_MULTIPLIER,
+            <T as ArrowPrimitiveType>::ITEM_SIZE,
+            T::SHADER,
+            "neg",
+        );
+        let new_null_buffer = NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer);
+
+        return <T as NegUnaryType>::create_new(
+            Arc::new(new_buffer.await),
+            self.gpu_device.clone(),
+            self.len,
+            new_null_buffer.await,
+        );
+    }
+}
+
+pub async fn neg_dyn(input: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match input {
+        ArrowArrayGPU::Float32ArrayGPU(x) => x.neg().await.into(),
+        _ => panic!(
+            "Operation negation not supported for type {:?}",
+            input.get_dtype()
+        ),
     }
 }

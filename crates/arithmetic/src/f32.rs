@@ -8,6 +8,7 @@ use crate::*;
 
 const F32_SCALAR_SHADER: &str = include_str!("../compute_shaders/f32/scalar.wgsl");
 const F32_ARRAY_SHADER: &str = include_str!("../compute_shaders/f32/array.wgsl");
+const F32_NEG_SHADER: &str = include_str!("../compute_shaders/f32/neg.wgsl");
 
 impl_arithmetic_op!(
     ArrowScalarAdd,
@@ -98,6 +99,29 @@ impl_arithmetic_array_op!(
     F32_ARRAY_SHADER,
     "div_f32"
 );
+
+impl NegUnaryType for f32 {
+    type OutputType = Float32ArrayGPU;
+
+    const SHADER: &'static str = F32_NEG_SHADER;
+
+    const BUFFER_SIZE_MULTIPLIER: u64 = 1;
+
+    fn create_new(
+        data: Arc<wgpu::Buffer>,
+        gpu_device: Arc<GpuDevice>,
+        len: usize,
+        null_buffer: Option<NullBitBufferGpu>,
+    ) -> Self::OutputType {
+        Float32ArrayGPU {
+            data,
+            gpu_device,
+            phantom: std::marker::PhantomData,
+            len,
+            null_buffer,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -239,5 +263,15 @@ mod tests {
         vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
         vec![Some(1.0), Some(2.0), None, Some(4.0), None],
         vec![Some(0.0), Some(0.5), None, None, None]
+    );
+
+    test_unary_op_float!(
+        test_f32_exp2,
+        Float32ArrayGPU,
+        Float32ArrayGPU,
+        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        neg,
+        neg_dyn,
+        vec![0.0, -1.0, -2.0, -3.0, 1.0, 2.0, 3.0]
     );
 }

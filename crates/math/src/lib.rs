@@ -95,23 +95,6 @@ impl<T: FloatMathUnaryType + ArrowPrimitiveType> FloatMathUnary for PrimitiveArr
     }
 
     async fn exp(&self) -> Self::OutputType {
-        /*let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * <T as FloatMathUnaryType>::BUFFER_SIZE_MULTIPLIER,
-                <T as ArrowPrimitiveType>::ITEM_SIZE,
-                T::SHADER,
-                "exp",
-            )
-            .await;
-
-        <T as FloatMathUnaryType>::create_new(
-            Arc::new(new_buffer),
-            self.gpu_device.clone(),
-            self.len,
-            NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
-        )*/
         apply_unary_function!(self, FloatMathUnaryType, EXP_ENTRY_POINT);
     }
 

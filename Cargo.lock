@@ -316,6 +316,7 @@ dependencies = [
  "once_cell",
  "pollster",
  "tokio",
+ "wgpu",
 ]
 
 [[package]]
