@@ -214,3 +214,49 @@ pub async fn eq_dyn(x: &ArrowArrayGPU, y: &ArrowArrayGPU) -> BooleanArrayGPU {
         ),
     }
 }
+
+pub async fn max_dyn(x: &ArrowArrayGPU, y: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (x, y) {
+        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowArrayGPU::Float32ArrayGPU(y)) => {
+            x.max(y).await.into()
+        }
+        (ArrowArrayGPU::UInt32ArrayGPU(x), ArrowArrayGPU::UInt32ArrayGPU(y)) => {
+            x.max(y).await.into()
+        }
+        (ArrowArrayGPU::UInt16ArrayGPU(x), ArrowArrayGPU::UInt16ArrayGPU(y)) => {
+            x.max(y).await.into()
+        }
+        (ArrowArrayGPU::Int32ArrayGPU(x), ArrowArrayGPU::Int32ArrayGPU(y)) => x.max(y).await.into(),
+        (ArrowArrayGPU::Date32ArrayGPU(x), ArrowArrayGPU::Date32ArrayGPU(y)) => {
+            x.max(y).await.into()
+        }
+        _ => panic!(
+            "Cannot compute max for types {:?} and {:?}",
+            x.get_dtype(),
+            y.get_dtype()
+        ),
+    }
+}
+
+pub async fn min_dyn(x: &ArrowArrayGPU, y: &ArrowArrayGPU) -> ArrowArrayGPU {
+    match (x, y) {
+        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowArrayGPU::Float32ArrayGPU(y)) => {
+            x.min(y).await.into()
+        }
+        (ArrowArrayGPU::UInt32ArrayGPU(x), ArrowArrayGPU::UInt32ArrayGPU(y)) => {
+            x.min(y).await.into()
+        }
+        (ArrowArrayGPU::UInt16ArrayGPU(x), ArrowArrayGPU::UInt16ArrayGPU(y)) => {
+            x.min(y).await.into()
+        }
+        (ArrowArrayGPU::Int32ArrayGPU(x), ArrowArrayGPU::Int32ArrayGPU(y)) => x.min(y).await.into(),
+        (ArrowArrayGPU::Date32ArrayGPU(x), ArrowArrayGPU::Date32ArrayGPU(y)) => {
+            x.min(y).await.into()
+        }
+        _ => panic!(
+            "Cannot compute min for types {:?} and {:?}",
+            x.get_dtype(),
+            y.get_dtype()
+        ),
+    }
+}

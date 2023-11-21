@@ -298,6 +298,7 @@ mod test {
         Int32ArrayGPU,
         Int32ArrayGPU,
         min,
+        min_dyn,
         vec![Some(0i32), Some(3), Some(3), Some(0), None, None],
         vec![Some(1i32), Some(2), Some(3), None, Some(4), None],
         vec![Some(0i32), Some(2), Some(3), None, None, None]
@@ -309,6 +310,7 @@ mod test {
         Int32ArrayGPU,
         Int32ArrayGPU,
         max,
+        max_dyn,
         vec![Some(0i32), Some(3), Some(3), Some(0), None, None],
         vec![Some(1i32), Some(2), Some(3), None, Some(4), None],
         vec![Some(1i32), Some(3), Some(3), None, None, None]

@@ -225,13 +225,14 @@ macro_rules! test_float_array_op {
         async fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.clone();
-            let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
-            let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
+            let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
+            let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device);
             let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
+            let new_values = new_gpu_array.values().await;
             for (index, new_value) in new_values.iter().enumerate() {
                 if !float_eq_in_error_optional($output[index], *new_value) {
                     panic!(
-                        "assertion failed: `(left {} == right {}) \n left: `{:?}` \n right: `{:?}`",
+                        "assertion failed: `(left {:?} == right {:?}) \n left: `{:?}` \n right: `{:?}`",
                         $output[index], *new_value, $output, new_values
                     );
                 }
@@ -245,7 +246,7 @@ macro_rules! test_float_array_op {
             for (index, new_value) in new_values.iter().enumerate() {
                 if !float_eq_in_error_optional($output[index], *new_value) {
                     panic!(
-                        "assertion failed: `(left {} == right {}) \n left: `{:?}` \n right: `{:?}`",
+                        "assertion failed: `(left {:?} == right {:?}) \n left: `{:?}` \n right: `{:?}`",
                         $output[index], *new_value, $output, new_values
                     );
                 }

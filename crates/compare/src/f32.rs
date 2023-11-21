@@ -261,6 +261,7 @@ mod test {
         Float32ArrayGPU,
         Float32ArrayGPU,
         max,
+        max_dyn,
         vec![
             Some(-1.0f32),
             Some(3.0),
@@ -308,6 +309,7 @@ mod test {
         Float32ArrayGPU,
         Float32ArrayGPU,
         min,
+        min_dyn,
         vec![
             Some(-1.0f32),
             Some(3.0),
