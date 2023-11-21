@@ -4,12 +4,11 @@ use std::sync::*;
 use wgpu::Buffer;
 
 const FLOATUNARY_SHADER: &str = include_str!("../compute_shaders/f32/floatunary.wgsl");
-const UNARY_SHADER: &str = include_str!("../compute_shaders/f32/unary.wgsl");
 
 impl MathUnaryType for f32 {
     type OutputType = Float32ArrayGPU;
 
-    const SHADER: &'static str = UNARY_SHADER;
+    const SHADER: &'static str = FLOATUNARY_SHADER;
     const BUFFER_SIZE_MULTIPLIER: u64 = 1;
 
     fn create_new(

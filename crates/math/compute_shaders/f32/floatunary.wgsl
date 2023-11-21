@@ -36,3 +36,9 @@ fn log_(@builtin(global_invocation_id) global_id: vec3<u32>) {
 fn log2_(@builtin(global_invocation_id) global_id: vec3<u32>) {
     new_values[global_id.x] = log2(original_values[global_id.x]);
 }
+
+@compute
+@workgroup_size(256)
+fn abs_(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    new_values[global_id.x] = abs(original_values[global_id.x]);
+}
