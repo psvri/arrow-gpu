@@ -6,6 +6,8 @@ use crate::{
     *,
 };
 
+pub(crate) const ANY_SHADER: &str = include_str!("../compute_shaders/u32/any.wgsl");
+
 impl LogicalType for BooleanArrayGPU {
     const SHADER: &'static str = U32_LOGICAL_SHADER;
     const SHIFT_SHADER: &'static str = "";
@@ -127,9 +129,27 @@ impl Logical for BooleanArrayGPU {
     }
 }
 
+#[async_trait]
+impl LogicalContains for BooleanArrayGPU {
+    async fn any(&self) -> bool {
+        let new_buffer = self
+            .gpu_device
+            .apply_unary_function(&self.data, 4, 4, ANY_SHADER, "any")
+            .await;
+
+        u32::from_le_bytes(
+            self.gpu_device
+                .retrive_data(&new_buffer)
+                .await
+                .try_into()
+                .unwrap(),
+        ) > 0
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use crate::*;
+    use super::*;
     use arrow_gpu_test_macros::{test_array_op, test_unary_op};
 
     test_array_op!(
@@ -226,4 +246,26 @@ mod test {
         bitwise_not_dyn,
         vec![false, false, true, false, true]
     );
+
+    #[tokio::test]
+    async fn test_any() {
+        use arrow_gpu_array::GPU_DEVICE;
+        let device = GPU_DEVICE.clone();
+        let data = vec![true, true, false, true, false];
+        let gpu_array = BooleanArrayGPU::from_slice(&data, device.clone());
+        assert!(gpu_array.any().await);
+
+        let data = vec![true; 8192 * 2];
+        let gpu_array = BooleanArrayGPU::from_slice(&data, device.clone());
+        assert!(gpu_array.any().await);
+
+        let mut data = vec![false; 8192 * 2];
+        let gpu_array = BooleanArrayGPU::from_slice(&data, device.clone());
+        assert!(!gpu_array.any().await);
+
+        let mut data_2 = vec![true; 8192 * 2];
+        data_2.append(&mut data);
+        let gpu_array = BooleanArrayGPU::from_slice(&data_2, device.clone());
+        assert!(gpu_array.any().await);
+    }
 }

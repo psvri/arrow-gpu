@@ -35,6 +35,11 @@ pub trait Logical {
 }
 
 #[async_trait]
+pub trait LogicalContains {
+    async fn any(&self) -> bool;
+}
+
+#[async_trait]
 impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
     async fn bitwise_and(&self, operand: &Self) -> Self {
         let new_buffer = self
