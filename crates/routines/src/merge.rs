@@ -110,10 +110,12 @@ mod test {
             #[tokio::test]
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
-                let device = GPU_DEVICE.clone();
+                use arrow_gpu_array::array::GpuDevice;
+                use pollster::FutureExt;
+                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone());
                 let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());
-                let mask = BooleanArrayGPU::from_optional_slice(&$mask, device);
+                let mask = BooleanArrayGPU::from_optional_slice(&$mask, device.clone());
                 let new_gpu_array = gpu_array_1.$operation(&gpu_array_2, &mask).await;
                 assert_eq!(new_gpu_array.values().await, $output);
             }
@@ -122,10 +124,12 @@ mod test {
             #[tokio::test]
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
-                let device = GPU_DEVICE.clone();
+                use arrow_gpu_array::array::GpuDevice;
+                use pollster::FutureExt;
+                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone());
                 let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());
-                let mask = BooleanArrayGPU::from_optional_slice(&$mask, device);
+                let mask = BooleanArrayGPU::from_optional_slice(&$mask, device.clone());
                 let new_gpu_array = gpu_array_1.$operation(&gpu_array_2, &mask).await;
                 assert_eq!(new_gpu_array.values().await, $output);
 

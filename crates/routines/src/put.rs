@@ -97,7 +97,9 @@ mod tests {
             #[tokio::test]
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
-                let device = GPU_DEVICE.clone();
+                use arrow_gpu_array::array::GpuDevice;
+                use pollster::FutureExt;
+                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone());
                 let gpu_array_1 = $operand_type::from_slice(&$src, device.clone());
                 let mut gpu_array_2 = $operand_type::from_slice(&$dst, device.clone());
                 let src_index = UInt32ArrayGPU::from_slice(&$src_index, device.clone());
@@ -111,7 +113,9 @@ mod tests {
             #[tokio::test]
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
-                let device = GPU_DEVICE.clone();
+                use arrow_gpu_array::array::GpuDevice;
+                use pollster::FutureExt;
+                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone());
                 let gpu_array_1 = $operand_type::from_slice(&$src, device.clone());
                 let mut gpu_array_2 = $operand_type::from_slice(&$dst, device.clone());
                 let src_index = UInt32ArrayGPU::from_slice(&$src_index, device.clone());

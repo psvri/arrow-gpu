@@ -13,4 +13,3 @@ futures-intrusive = { workspace = true}
 tokio = { workspace = true}
 async-trait =  { workspace = true}
 log =  { workspace = true}
-once_cell =  { workspace = true}

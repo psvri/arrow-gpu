@@ -8,11 +8,9 @@ pub enum ArrowErrorGPU {
     CastingNotSupported(String),
 }
 
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use array::GpuDevice;
-use once_cell::sync::Lazy;
-use pollster::FutureExt;
 
 #[doc(hidden)]
-pub static GPU_DEVICE: Lazy<Arc<GpuDevice>> = Lazy::new(|| Arc::new(GpuDevice::new().block_on()));
+pub static GPU_DEVICE: OnceLock<Arc<GpuDevice>> = OnceLock::new();

@@ -13,5 +13,4 @@ arrow_gpu_array = { path = "../array" }
 [dev-dependencies]
 arrow_gpu_test_macros = {path = "../test_macros"}
 tokio = { workspace = true}
-once_cell = { workspace = true }
 pollster = { workspace = true }

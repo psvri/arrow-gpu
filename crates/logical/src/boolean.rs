@@ -249,8 +249,12 @@ mod test {
 
     #[tokio::test]
     async fn test_any() {
+        use arrow_gpu_array::array::GpuDevice;
         use arrow_gpu_array::GPU_DEVICE;
-        let device = GPU_DEVICE.clone();
+        use pollster::FutureExt;
+        let device = GPU_DEVICE
+            .get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone())
+            .clone();
         let data = vec![true, true, false, true, false];
         let gpu_array = BooleanArrayGPU::from_slice(&data, device.clone());
         assert!(gpu_array.any().await);

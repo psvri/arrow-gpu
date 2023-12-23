@@ -153,9 +153,11 @@ pub mod test {
             #[tokio::test]
             async fn $fn_name() {
                 use crate::GPU_DEVICE;
-                let device = GPU_DEVICE.clone();
+                use crate::GpuDevice;
+                use pollster::FutureExt;
+                let device = GPU_DEVICE.get_or_init(|| std::sync::Arc::new(GpuDevice::new().block_on()).clone());
                 let length = 100;
-                let new_gpu_array = $ty::broadcast($input, length, device).await;
+                let new_gpu_array = $ty::broadcast($input, length, device.clone()).await;
                 let new_values = new_gpu_array.raw_values().await.unwrap();
                 assert_eq!(new_values, vec![$input; length.try_into().unwrap()]);
             }
