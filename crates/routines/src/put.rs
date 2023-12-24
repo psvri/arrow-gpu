@@ -1,11 +1,11 @@
 use arrow_gpu_array::array::{ArrowArrayGPU, GpuDevice, UInt32ArrayGPU};
-use wgpu::{Buffer, Maintain};
+use wgpu::Buffer;
 
 use crate::Swizzle;
 
 pub(crate) const U32_PUT_SHADER: &str = include_str!("../compute_shaders/32bit/put.wgsl");
 
-pub(crate) async fn apply_put_function(
+pub(crate) fn apply_put_function(
     device: &GpuDevice,
     src_buffer: &Buffer,
     dst_buffer: &Buffer,
@@ -54,14 +54,10 @@ pub(crate) async fn apply_put_function(
     );
 
     query.resolve(&mut encoder);
-    let submission_index = device.queue.submit(Some(encoder.finish()));
-    device
-        .device
-        .poll(Maintain::WaitForSubmissionIndex(submission_index));
-    query.wait_for_results(&device.device, &device.queue).await;
+    device.queue.submit(Some(encoder.finish()));
 }
 
-pub async fn put_dyn(
+pub fn put_dyn(
     src: &ArrowArrayGPU,
     src_indexes: &UInt32ArrayGPU,
     dst: &mut ArrowArrayGPU,
@@ -69,16 +65,16 @@ pub async fn put_dyn(
 ) {
     match (src, dst) {
         (ArrowArrayGPU::Float32ArrayGPU(x), ArrowArrayGPU::Float32ArrayGPU(y)) => {
-            x.put(src_indexes, y, dst_indexes).await
+            x.put(src_indexes, y, dst_indexes)
         }
         (ArrowArrayGPU::Int32ArrayGPU(x), ArrowArrayGPU::Int32ArrayGPU(y)) => {
-            x.put(src_indexes, y, dst_indexes).await
+            x.put(src_indexes, y, dst_indexes)
         }
         (ArrowArrayGPU::UInt32ArrayGPU(x), ArrowArrayGPU::UInt32ArrayGPU(y)) => {
-            x.put(src_indexes, y, dst_indexes).await
+            x.put(src_indexes, y, dst_indexes)
         }
         (ArrowArrayGPU::Date32ArrayGPU(x), ArrowArrayGPU::Date32ArrayGPU(y)) => {
-            x.put(src_indexes, y, dst_indexes).await
+            x.put(src_indexes, y, dst_indexes)
         }
         (x, y) => panic!(
             "Put Operation not supported for {:?} and {:?}",
@@ -104,7 +100,7 @@ mod tests {
                 let mut gpu_array_2 = $operand_type::from_slice(&$dst, device.clone());
                 let src_index = UInt32ArrayGPU::from_slice(&$src_index, device.clone());
                 let dst_index = UInt32ArrayGPU::from_slice(&$dst_index, device);
-                gpu_array_1.$operation(&src_index, &mut gpu_array_2, &dst_index).await;
+                gpu_array_1.$operation(&src_index, &mut gpu_array_2, &dst_index);
                 assert_eq!(gpu_array_2.raw_values().unwrap(), $output);
             }
         };
@@ -119,11 +115,11 @@ mod tests {
                 let mut gpu_array_2 = $operand_type::from_slice(&$dst, device.clone());
                 let src_index = UInt32ArrayGPU::from_slice(&$src_index, device.clone());
                 let dst_index = UInt32ArrayGPU::from_slice(&$dst_index, device.clone());
-                gpu_array_1.$operation(&src_index, &mut gpu_array_2, &dst_index).await;
+                gpu_array_1.$operation(&src_index, &mut gpu_array_2, &dst_index);
                 assert_eq!(gpu_array_2.raw_values().unwrap(), $output);
 
                 let mut gpu_array_2_dyn = $operand_type::from_slice(&$dst, device.clone()).into();
-                $operation_dyn(&gpu_array_1.into(), &src_index, &mut gpu_array_2_dyn, &dst_index).await;
+                $operation_dyn(&gpu_array_1.into(), &src_index, &mut gpu_array_2_dyn, &dst_index);
 
                 let new_values = $operand_type::try_from(gpu_array_2_dyn)
                     .unwrap()

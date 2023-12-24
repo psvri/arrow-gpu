@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use arrow_gpu_array::array::*;
-use async_trait::async_trait;
 
 use crate::Cast;
 
@@ -14,9 +13,8 @@ const I16_CAST_F32_SHADER: &str = concat!(
     include_str!("../compute_shaders/i16/cast_f32.wgsl")
 );
 
-#[async_trait]
 impl Cast<Int32ArrayGPU> for Int16ArrayGPU {
-    async fn cast(&self) -> Int32ArrayGPU {
+    fn cast(&self) -> Int32ArrayGPU {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size() * 2,
@@ -35,9 +33,8 @@ impl Cast<Int32ArrayGPU> for Int16ArrayGPU {
     }
 }
 
-#[async_trait]
 impl Cast<UInt32ArrayGPU> for Int16ArrayGPU {
-    async fn cast(&self) -> UInt32ArrayGPU {
+    fn cast(&self) -> UInt32ArrayGPU {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size() * 2,
@@ -56,9 +53,8 @@ impl Cast<UInt32ArrayGPU> for Int16ArrayGPU {
     }
 }
 
-#[async_trait]
 impl Cast<Float32ArrayGPU> for Int16ArrayGPU {
-    async fn cast(&self) -> Float32ArrayGPU {
+    fn cast(&self) -> Float32ArrayGPU {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size() * 2,
@@ -77,9 +73,8 @@ impl Cast<Float32ArrayGPU> for Int16ArrayGPU {
     }
 }
 
-#[async_trait]
 impl Cast<UInt16ArrayGPU> for Int16ArrayGPU {
-    async fn cast(&self) -> UInt16ArrayGPU {
+    fn cast(&self) -> UInt16ArrayGPU {
         UInt16ArrayGPU {
             data: Arc::new(self.gpu_device.clone_buffer(&self.data)),
             gpu_device: self.gpu_device.clone(),

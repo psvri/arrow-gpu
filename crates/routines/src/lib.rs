@@ -3,7 +3,6 @@ use std::sync::Arc;
 use arrow_gpu_array::array::{
     ArrowPrimitiveType, BooleanArrayGPU, NullBitBufferGpu, PrimitiveArrayGpu, UInt32ArrayGPU,
 };
-use async_trait::async_trait;
 use merge::merge_null_buffers;
 use put::apply_put_function;
 use take::apply_take_function;
@@ -23,19 +22,18 @@ pub use merge::merge_dyn;
 pub use put::put_dyn;
 pub use take::take_dyn;
 
-#[async_trait]
 pub trait Swizzle {
     // Selects self incase of true else selects from other.
     // None values in mask results in None
-    async fn merge(&self, other: &Self, mask: &BooleanArrayGPU) -> Self;
+    fn merge(&self, other: &Self, mask: &BooleanArrayGPU) -> Self;
 
     /// Take values from array by index.
     /// None values in mask results in None
-    async fn take(&self, indexes: &UInt32ArrayGPU) -> Self;
+    fn take(&self, indexes: &UInt32ArrayGPU) -> Self;
 
     /// Put values from src array to dst array.
     /// None values in mask results in None
-    async fn put(&self, src_indexes: &UInt32ArrayGPU, dst: &mut Self, dst_indexes: &UInt32ArrayGPU);
+    fn put(&self, src_indexes: &UInt32ArrayGPU, dst: &mut Self, dst_indexes: &UInt32ArrayGPU);
 }
 
 pub trait SwizzleType {
@@ -44,9 +42,8 @@ pub trait SwizzleType {
     const PUT_SHADER: &'static str = todo!();
 }
 
-#[async_trait]
 impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
-    async fn merge(&self, other: &Self, mask: &BooleanArrayGPU) -> Self {
+    fn merge(&self, other: &Self, mask: &BooleanArrayGPU) -> Self {
         let new_buffer = self.gpu_device.apply_ternary_function(
             &self.data,
             &other.data,
@@ -77,7 +74,7 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
         }
     }
 
-    async fn take(&self, indexes: &UInt32ArrayGPU) -> Self {
+    fn take(&self, indexes: &UInt32ArrayGPU) -> Self {
         let new_buffer = apply_take_function(
             &self.gpu_device,
             &self.data,
@@ -86,8 +83,7 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
             T::ITEM_SIZE,
             T::TAKE_SHADER,
             "take",
-        )
-        .await;
+        );
 
         let new_null_buffer = match &self.null_buffer {
             Some(_) => todo!(),
@@ -103,12 +99,7 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
         }
     }
 
-    async fn put(
-        &self,
-        src_indexes: &UInt32ArrayGPU,
-        dst: &mut Self,
-        dst_indexes: &UInt32ArrayGPU,
-    ) {
+    fn put(&self, src_indexes: &UInt32ArrayGPU, dst: &mut Self, dst_indexes: &UInt32ArrayGPU) {
         apply_put_function(
             &self.gpu_device,
             &self.data,
@@ -118,8 +109,7 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
             src_indexes.len as u64,
             T::PUT_SHADER,
             "put",
-        )
-        .await;
+        );
 
         match (&self.null_buffer, &dst.null_buffer) {
             (None, None) => {}

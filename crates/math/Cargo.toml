@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 arrow_gpu_array = { path = "../array" }
-async-trait = { workspace = true }
 wgpu = { workspace = true }
 
 [dev-dependencies]

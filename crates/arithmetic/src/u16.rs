@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use arrow_gpu_array::array::{types::*, *};
-use async_trait::async_trait;
 
 use crate::*;
 

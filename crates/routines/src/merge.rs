@@ -52,35 +52,35 @@ pub fn merge_null_buffers(
     }
 }
 
-pub async fn merge_dyn(
+pub fn merge_dyn(
     operand_1: &ArrowArrayGPU,
     operand_2: &ArrowArrayGPU,
     mask: &BooleanArrayGPU,
 ) -> ArrowArrayGPU {
     match (operand_1, operand_2) {
         (ArrowArrayGPU::Date32ArrayGPU(op1), ArrowArrayGPU::Date32ArrayGPU(op2)) => {
-            op1.merge(op2, mask).await.into()
+            op1.merge(op2, mask).into()
         }
         (ArrowArrayGPU::Int32ArrayGPU(op1), ArrowArrayGPU::Int32ArrayGPU(op2)) => {
-            op1.merge(op2, mask).await.into()
+            op1.merge(op2, mask).into()
         }
         (ArrowArrayGPU::Int16ArrayGPU(op1), ArrowArrayGPU::Int16ArrayGPU(op2)) => {
-            op1.merge(op2, mask).await.into()
+            op1.merge(op2, mask).into()
         }
         (ArrowArrayGPU::Int8ArrayGPU(op1), ArrowArrayGPU::Int8ArrayGPU(op2)) => {
-            op1.merge(op2, mask).await.into()
+            op1.merge(op2, mask).into()
         }
         (ArrowArrayGPU::UInt32ArrayGPU(op1), ArrowArrayGPU::UInt32ArrayGPU(op2)) => {
-            op1.merge(op2, mask).await.into()
+            op1.merge(op2, mask).into()
         }
         (ArrowArrayGPU::UInt16ArrayGPU(op1), ArrowArrayGPU::UInt16ArrayGPU(op2)) => {
-            op1.merge(op2, mask).await.into()
+            op1.merge(op2, mask).into()
         }
         (ArrowArrayGPU::UInt8ArrayGPU(op1), ArrowArrayGPU::UInt8ArrayGPU(op2)) => {
-            op1.merge(op2, mask).await.into()
+            op1.merge(op2, mask).into()
         }
         (ArrowArrayGPU::Float32ArrayGPU(op1), ArrowArrayGPU::Float32ArrayGPU(op2)) => {
-            op1.merge(op2, mask).await.into()
+            op1.merge(op2, mask).into()
         }
         _ => panic!(
             "Merge Operation not supported between {:?} and {:?}",
@@ -103,7 +103,7 @@ mod test {
                 let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());
                 let mask = BooleanArrayGPU::from_optional_slice(&$mask, device.clone());
-                let new_gpu_array = gpu_array_1.$operation(&gpu_array_2, &mask).await;
+                let new_gpu_array = gpu_array_1.$operation(&gpu_array_2, &mask);
                 assert_eq!(new_gpu_array.values(), $output);
             }
         };
@@ -116,11 +116,10 @@ mod test {
                 let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());
                 let mask = BooleanArrayGPU::from_optional_slice(&$mask, device.clone());
-                let new_gpu_array = gpu_array_1.$operation(&gpu_array_2, &mask).await;
+                let new_gpu_array = gpu_array_1.$operation(&gpu_array_2, &mask);
                 assert_eq!(new_gpu_array.values(), $output);
 
-                let new_gpu_array =
-                    $operation_dyn(&gpu_array_1.into(), &gpu_array_2.into(), &mask).await;
+                let new_gpu_array = $operation_dyn(&gpu_array_1.into(), &gpu_array_2.into(), &mask);
                 let new_values = $output_type::try_from(new_gpu_array).unwrap().values();
                 assert_eq!(new_values, $output);
             }

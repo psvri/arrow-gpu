@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use arrow_gpu_array::array::{types::*, *};
-use async_trait::async_trait;
 
 use crate::impl_arithmetic_op;
 use crate::*;
@@ -205,13 +204,8 @@ mod tests {
             device.clone(),
         );
         let values_array = Float32ArrayGPU::from_slice(&vec![100.0], device);
-        let new_gpu_array = gpu_array.add_scalar(&values_array).await;
-        for (index, value) in new_gpu_array
-            .raw_values()
-            .unwrap()
-            .into_iter()
-            .enumerate()
-        {
+        let new_gpu_array = gpu_array.add_scalar(&values_array);
+        for (index, value) in new_gpu_array.raw_values().unwrap().into_iter().enumerate() {
             assert_eq!((index as f32) + 100.0, value);
         }
     }

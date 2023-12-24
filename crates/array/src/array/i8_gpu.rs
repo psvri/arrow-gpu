@@ -8,15 +8,14 @@ use super::{
 pub type Int8ArrayGPU = PrimitiveArrayGpu<i8>;
 
 impl Int8ArrayGPU {
-    pub async fn broadcast(value: i8, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+    pub fn broadcast(value: i8, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let new_len = len.div_ceil(4);
         let broadcast_value = (value as u32)
             | ((value as u32) << 8)
             | ((value as u32) << 16)
             | ((value as u32) << 24);
         let gpu_buffer =
-            UInt32ArrayGPU::create_broadcast_buffer(broadcast_value, new_len as u64, &gpu_device)
-                .await;
+            UInt32ArrayGPU::create_broadcast_buffer(broadcast_value, new_len as u64, &gpu_device);
         let data = Arc::new(gpu_buffer);
         let null_buffer = None;
 

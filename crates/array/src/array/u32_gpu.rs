@@ -32,7 +32,7 @@ impl TryFrom<ArrowArrayGPU> for UInt32ArrayGPU {
 }
 
 impl UInt32ArrayGPU {
-    pub async fn create_broadcast_buffer(value: u32, len: u64, gpu_device: &GpuDevice) -> Buffer {
+    pub fn create_broadcast_buffer(value: u32, len: u64, gpu_device: &GpuDevice) -> Buffer {
         let scalar_buffer = &gpu_device.create_scalar_buffer(&value);
         gpu_device.apply_broadcast_function(
             scalar_buffer,
@@ -43,8 +43,12 @@ impl UInt32ArrayGPU {
         )
     }
 
-    pub async fn broadcast(value: u32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
-        let data = Arc::new(Self::create_broadcast_buffer(value, len as u64, &gpu_device).await);
+    pub fn broadcast(value: u32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+        let data = Arc::new(Self::create_broadcast_buffer(
+            value,
+            len as u64,
+            &gpu_device,
+        ));
         let null_buffer = None;
 
         Self {

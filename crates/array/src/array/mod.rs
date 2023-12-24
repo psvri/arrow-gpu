@@ -149,16 +149,16 @@ impl ArrowArrayGPU {
         }
     }
 
-    pub async fn clone_array(&self) -> ArrowArrayGPU {
+    pub fn clone_array(&self) -> ArrowArrayGPU {
         match self {
-            ArrowArrayGPU::Float32ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::UInt32ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::UInt16ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::UInt8ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::Int32ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::Int16ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::Int8ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::Date32ArrayGPU(x) => x.clone_array().await.into(),
+            ArrowArrayGPU::Float32ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::UInt32ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::UInt16ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::UInt8ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::Int32ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::Int16ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::Int8ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::Date32ArrayGPU(x) => x.clone_array().into(),
             ArrowArrayGPU::BooleanArrayGPU(_) => todo!(),
         }
     }
@@ -178,19 +178,15 @@ impl ArrowArrayGPU {
     }
 }
 
-pub async fn broadcast_dyn(
-    value: ScalarValue,
-    len: usize,
-    device: Arc<GpuDevice>,
-) -> ArrowArrayGPU {
+pub fn broadcast_dyn(value: ScalarValue, len: usize, device: Arc<GpuDevice>) -> ArrowArrayGPU {
     match value {
-        ScalarValue::F32(x) => Float32ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::U32(x) => UInt32ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::U16(x) => UInt16ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::U8(x) => UInt8ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::I32(x) => Int32ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::I16(x) => Int16ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::I8(x) => Int8ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::BOOL(x) => BooleanArrayGPU::broadcast(x, len, device).await.into(),
+        ScalarValue::F32(x) => Float32ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::U32(x) => UInt32ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::U16(x) => UInt16ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::U8(x) => UInt8ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::I32(x) => Int32ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::I16(x) => Int16ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::I8(x) => Int8ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::BOOL(x) => BooleanArrayGPU::broadcast(x, len, device).into(),
     }
 }

@@ -1,11 +1,11 @@
 use arrow_gpu_array::array::{ArrowArrayGPU, GpuDevice, UInt32ArrayGPU};
-use wgpu::{Buffer, Maintain};
+use wgpu::Buffer;
 
 use crate::Swizzle;
 
 pub(crate) const U32_TAKE_SHADER: &str = include_str!("../compute_shaders/32bit/take.wgsl");
 
-pub(crate) async fn apply_take_function(
+pub(crate) fn apply_take_function(
     device: &GpuDevice,
     operand_1: &Buffer,
     operand_2: &Buffer,
@@ -51,20 +51,16 @@ pub(crate) async fn apply_take_function(
     );
 
     query.resolve(&mut encoder);
-    let submission_index = device.queue.submit(Some(encoder.finish()));
-    device
-        .device
-        .poll(Maintain::WaitForSubmissionIndex(submission_index));
-    query.wait_for_results(&device.device, &device.queue).await;
+    device.queue.submit(Some(encoder.finish()));
     new_values_buffer
 }
 
-pub async fn take_dyn(operand_1: &ArrowArrayGPU, indexes: &UInt32ArrayGPU) -> ArrowArrayGPU {
+pub fn take_dyn(operand_1: &ArrowArrayGPU, indexes: &UInt32ArrayGPU) -> ArrowArrayGPU {
     match operand_1 {
-        ArrowArrayGPU::Date32ArrayGPU(op1) => op1.take(indexes).await.into(),
-        ArrowArrayGPU::UInt32ArrayGPU(op1) => op1.take(indexes).await.into(),
-        ArrowArrayGPU::Int32ArrayGPU(op1) => op1.take(indexes).await.into(),
-        ArrowArrayGPU::Float32ArrayGPU(op1) => op1.take(indexes).await.into(),
+        ArrowArrayGPU::Date32ArrayGPU(op1) => op1.take(indexes).into(),
+        ArrowArrayGPU::UInt32ArrayGPU(op1) => op1.take(indexes).into(),
+        ArrowArrayGPU::Int32ArrayGPU(op1) => op1.take(indexes).into(),
+        ArrowArrayGPU::Float32ArrayGPU(op1) => op1.take(indexes).into(),
         _ => panic!(
             "Take Operation not supported for {:?}",
             operand_1.get_dtype(),
@@ -85,7 +81,7 @@ mod tests {
                 let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
                 let gpu_array_1 = $operand1_type::from_slice(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_slice(&$input_2, device.clone());
-                let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
+                let new_gpu_array = gpu_array_1.$operation(&gpu_array_2);
                 assert_eq!(new_gpu_array.raw_values().unwrap(), $output);
             }
         };
@@ -99,10 +95,10 @@ mod tests {
                 let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone());
                 let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
-                let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
+                let new_gpu_array = gpu_array_1.$operation(&gpu_array_2);
                 assert_eq!(new_gpu_array.values(), $output);
 
-                let new_gpu_array = $operation_dyn(&gpu_array_1.into(), &gpu_array_2.into()).await;
+                let new_gpu_array = $operation_dyn(&gpu_array_1.into(), &gpu_array_2.into());
                 let new_values = $output_type::try_from(new_gpu_array)
                     .unwrap()
                     .values();

@@ -1,5 +1,4 @@
 use crate::{kernels::aggregate::ArrowSum, ArrowErrorGPU};
-use async_trait::async_trait;
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
 
@@ -16,7 +15,7 @@ pub type Float32ArrayGPU = PrimitiveArrayGpu<f32>;
 impl_unary_ops!(ArrowSum, sum, Float32ArrayGPU, f32, sum);
 
 impl Float32ArrayGPU {
-    pub async fn broadcast(value: f32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+    pub fn broadcast(value: f32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let scalar_buffer = &gpu_device.create_scalar_buffer(&value);
         let gpu_buffer = gpu_device.apply_broadcast_function(
             scalar_buffer,
@@ -101,7 +100,7 @@ mod tests {
             device.clone(),
         );
 
-        assert_eq!(gpu_array.sum().await, 65536.0);
+        assert_eq!(gpu_array.sum(), 65536.0);
 
         // TODO fix this
         let cvec = (0..9_999)
@@ -110,7 +109,7 @@ mod tests {
             .collect::<Vec<f32>>();
         let total = (0..9_999u32).into_iter().sum::<u32>() as f32;
         let gpu_array = Float32ArrayGPU::from_slice(&cvec, device);
-        assert_eq!(gpu_array.sum().await, total);
+        assert_eq!(gpu_array.sum(), total);
     }
 
     #[tokio::test]

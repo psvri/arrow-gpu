@@ -1,5 +1,4 @@
 use crate::{kernels::broadcast::Broadcast, ArrowErrorGPU};
-use async_trait::async_trait;
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
 
@@ -32,11 +31,10 @@ impl TryFrom<ArrowArrayGPU> for Int32ArrayGPU {
     }
 }
 
-#[async_trait]
 impl<T: ArrowPrimitiveType<NativeType = i32>> Broadcast<i32> for PrimitiveArrayGpu<T> {
     type Output = PrimitiveArrayGpu<T>;
 
-    async fn broadcast(value: i32, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
+    fn broadcast(value: i32, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
         let scalar_buffer = gpu_device.create_scalar_buffer(&value);
         let gpu_buffer = gpu_device.apply_broadcast_function(
             &scalar_buffer,

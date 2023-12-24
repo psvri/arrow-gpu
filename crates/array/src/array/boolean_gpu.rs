@@ -1,7 +1,6 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
-use async_trait::async_trait;
 use wgpu::Buffer;
 
 use crate::kernels::broadcast::Broadcast;
@@ -159,11 +158,10 @@ impl TryFrom<ArrowArrayGPU> for BooleanArrayGPU {
     }
 }
 
-#[async_trait]
 impl Broadcast<bool> for BooleanArrayGPU {
     type Output = BooleanArrayGPU;
 
-    async fn broadcast(value: bool, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
+    fn broadcast(value: bool, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
         let null_buffer_builder = BooleanBufferBuilder::new_set_with_capacity(len);
 
         let buffer = if value {

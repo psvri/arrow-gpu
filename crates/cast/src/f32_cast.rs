@@ -2,13 +2,11 @@ use std::sync::Arc;
 
 use crate::Cast;
 use arrow_gpu_array::array::{Float32ArrayGPU, NullBitBufferGpu, UInt8ArrayGPU};
-use async_trait::async_trait;
 
 const F32_CAST_U8_SHADER: &str = include_str!("../compute_shaders/f32/cast_u8.wgsl");
 
-#[async_trait]
 impl Cast<UInt8ArrayGPU> for Float32ArrayGPU {
-    async fn cast(&self) -> UInt8ArrayGPU {
+    fn cast(&self) -> UInt8ArrayGPU {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             (self.data.size() / 4).next_multiple_of(4),

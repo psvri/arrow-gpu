@@ -3,7 +3,6 @@ pub(crate) mod i16_kernel;
 pub(crate) mod i8_kernel;
 pub(crate) mod u16_kernel;
 pub(crate) mod u8_kernel;
-use async_trait::async_trait;
 use std::sync::Arc;
 use wgpu::Buffer;
 
@@ -11,11 +10,10 @@ use arrow_gpu_array::array::*;
 
 pub use self::f32_kernel::*;
 
-#[async_trait]
 pub trait Hyperbolic {
     type Output;
 
-    async fn sinh(&self) -> Self::Output;
+    fn sinh(&self) -> Self::Output;
 }
 
 pub trait HyperbolicType {
@@ -32,12 +30,11 @@ pub trait HyperbolicType {
     ) -> Self::OutputType;
 }
 
-#[async_trait]
 pub trait Trigonometric {
     type Output;
 
-    async fn cos(&self) -> Self::Output;
-    async fn sin(&self) -> Self::Output;
+    fn cos(&self) -> Self::Output;
+    fn sin(&self) -> Self::Output;
 }
 
 pub trait TrigonometricType {
@@ -54,11 +51,10 @@ pub trait TrigonometricType {
     ) -> Self::OutputType;
 }
 
-#[async_trait]
 impl<T: HyperbolicType + ArrowPrimitiveType> Hyperbolic for PrimitiveArrayGpu<T> {
     type Output = T::OutputType;
 
-    async fn sinh(&self) -> Self::Output {
+    fn sinh(&self) -> Self::Output {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size() * <T as HyperbolicType>::BUFFER_SIZE_MULTIPLIER,
@@ -76,11 +72,10 @@ impl<T: HyperbolicType + ArrowPrimitiveType> Hyperbolic for PrimitiveArrayGpu<T>
     }
 }
 
-#[async_trait]
 impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArrayGpu<T> {
     type Output = T::OutputType;
 
-    async fn cos(&self) -> Self::Output {
+    fn cos(&self) -> Self::Output {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size() * <T as TrigonometricType>::BUFFER_SIZE_MULTIPLIER,
@@ -97,7 +92,7 @@ impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArray
         )
     }
 
-    async fn sin(&self) -> Self::Output {
+    fn sin(&self) -> Self::Output {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size() * <T as TrigonometricType>::BUFFER_SIZE_MULTIPLIER,
@@ -115,35 +110,35 @@ impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArray
     }
 }
 
-pub async fn sinh_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
+pub fn sinh_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
     match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.sinh().await.into(),
-        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.sinh().await.into(),
-        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.sinh().await.into(),
-        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.sinh().await.into(),
-        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.sinh().await.into(),
+        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.sinh().into(),
+        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.sinh().into(),
+        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.sinh().into(),
+        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.sinh().into(),
+        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.sinh().into(),
         _ => panic!("Operation not supported"),
     }
 }
 
-pub async fn cos_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
+pub fn cos_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
     match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.cos().await.into(),
-        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.cos().await.into(),
-        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.cos().await.into(),
-        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.cos().await.into(),
-        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.cos().await.into(),
+        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.cos().into(),
+        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.cos().into(),
+        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.cos().into(),
+        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.cos().into(),
+        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.cos().into(),
         _ => panic!("Operation not supported"),
     }
 }
 
-pub async fn sin_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
+pub fn sin_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
     match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.sin().await.into(),
-        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.sin().await.into(),
-        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.sin().await.into(),
-        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.sin().await.into(),
-        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.sin().await.into(),
+        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.sin().into(),
+        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.sin().into(),
+        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.sin().into(),
+        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.sin().into(),
+        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.sin().into(),
         _ => panic!("Operation not supported"),
     }
 }

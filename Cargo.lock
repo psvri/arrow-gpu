@@ -312,7 +312,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "async-trait",
  "pollster",
  "tokio",
  "wgpu",
@@ -322,7 +321,6 @@ dependencies = [
 name = "arrow_gpu_array"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "bytemuck",
  "futures-intrusive",
  "log",
@@ -348,7 +346,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "async-trait",
  "pollster",
  "tokio",
  "wgpu",
@@ -360,7 +357,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "async-trait",
  "pollster",
  "tokio",
  "wgpu",
@@ -372,7 +368,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "async-trait",
  "pollster",
  "tokio",
  "wgpu",
@@ -384,7 +379,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "async-trait",
  "pollster",
  "tokio",
  "wgpu",
@@ -396,7 +390,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "async-trait",
  "pollster",
  "tokio",
  "wgpu",
@@ -412,7 +405,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "async-trait",
  "pollster",
  "tokio",
  "wgpu",
@@ -425,17 +417,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39e9c3835d686b0a6084ab4234fcd1b07dbf6e4767dce60874b12356a25ecd4a"
 dependencies = [
  "libloading 0.7.4",
-]
-
-[[package]]
-name = "async-trait"
-version = "0.1.74"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a66537f1bb974b254c98ed142ff995236e81b9d0fe4db0575f46612cb15eb0f9"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use arrow_gpu_array::array::*;
-use async_trait::async_trait;
 
 use crate::Cast;
 
@@ -18,9 +17,8 @@ const I8_CAST_F32_SHADER: &str = concat!(
     include_str!("../compute_shaders/i8/cast_f32.wgsl")
 );
 
-#[async_trait]
 impl Cast<Int32ArrayGPU> for Int8ArrayGPU {
-    async fn cast(&self) -> Int32ArrayGPU {
+    fn cast(&self) -> Int32ArrayGPU {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size() * 4,
@@ -39,9 +37,8 @@ impl Cast<Int32ArrayGPU> for Int8ArrayGPU {
     }
 }
 
-#[async_trait]
 impl Cast<UInt32ArrayGPU> for Int8ArrayGPU {
-    async fn cast(&self) -> UInt32ArrayGPU {
+    fn cast(&self) -> UInt32ArrayGPU {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size() * 4,
@@ -60,9 +57,8 @@ impl Cast<UInt32ArrayGPU> for Int8ArrayGPU {
     }
 }
 
-#[async_trait]
 impl Cast<Int16ArrayGPU> for Int8ArrayGPU {
-    async fn cast(&self) -> Int16ArrayGPU {
+    fn cast(&self) -> Int16ArrayGPU {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size() * 2,
@@ -81,9 +77,8 @@ impl Cast<Int16ArrayGPU> for Int8ArrayGPU {
     }
 }
 
-#[async_trait]
 impl Cast<UInt16ArrayGPU> for Int8ArrayGPU {
-    async fn cast(&self) -> UInt16ArrayGPU {
+    fn cast(&self) -> UInt16ArrayGPU {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size() * 2,
@@ -102,9 +97,8 @@ impl Cast<UInt16ArrayGPU> for Int8ArrayGPU {
     }
 }
 
-#[async_trait]
 impl Cast<UInt8ArrayGPU> for Int8ArrayGPU {
-    async fn cast(&self) -> UInt8ArrayGPU {
+    fn cast(&self) -> UInt8ArrayGPU {
         let new_buffer = self.gpu_device.clone_buffer(&self.data);
 
         UInt8ArrayGPU {
@@ -117,9 +111,8 @@ impl Cast<UInt8ArrayGPU> for Int8ArrayGPU {
     }
 }
 
-#[async_trait]
 impl Cast<Float32ArrayGPU> for Int8ArrayGPU {
-    async fn cast(&self) -> Float32ArrayGPU {
+    fn cast(&self) -> Float32ArrayGPU {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size() * 4,

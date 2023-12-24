@@ -101,7 +101,7 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
         }
     }
 
-    pub async fn clone_array(&self) -> Self {
+    pub fn clone_array(&self) -> Self {
         let data = self.gpu_device.clone_buffer(&self.data);
         let null_buffer = NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer);
         Self {
@@ -132,12 +132,11 @@ impl<T: ArrowPrimitiveType> Debug for PrimitiveArrayGpu<T> {
 
 macro_rules! impl_unary_ops {
     ($trait_name: ident, $trait_function: ident, $for_ty: ident, $out_ty: ident, $op: ident) => {
-        #[async_trait]
         impl $trait_name for $for_ty {
             type Output = $out_ty;
 
-            async fn $trait_function(&self) -> Self::Output {
-                $op(&self.gpu_device, &self.data, self.len).await
+            fn $trait_function(&self) -> Self::Output {
+                $op(&self.gpu_device, &self.data, self.len)
             }
         }
     };
@@ -151,11 +150,12 @@ pub mod test {
         ($fn_name: ident, $ty: ident, $input: expr) => {
             #[tokio::test]
             async fn $fn_name() {
-                use crate::GPU_DEVICE;
                 use crate::GpuDevice;
-                let device = GPU_DEVICE.get_or_init(|| std::sync::Arc::new(GpuDevice::new()).clone());
+                use crate::GPU_DEVICE;
+                let device =
+                    GPU_DEVICE.get_or_init(|| std::sync::Arc::new(GpuDevice::new()).clone());
                 let length = 100;
-                let new_gpu_array = $ty::broadcast($input, length, device.clone()).await;
+                let new_gpu_array = $ty::broadcast($input, length, device.clone());
                 let new_values = new_gpu_array.raw_values().unwrap();
                 assert_eq!(new_values, vec![$input; length.try_into().unwrap()]);
             }

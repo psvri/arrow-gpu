@@ -1,5 +1,4 @@
 use arrow_gpu_array::array::*;
-use async_trait::async_trait;
 
 use crate::{
     u32::{U32_LOGICAL_SHADER, U32_NOT_SHADER},
@@ -14,9 +13,8 @@ impl LogicalType for BooleanArrayGPU {
     const NOT_SHADER: &'static str = U32_NOT_SHADER;
 }
 
-#[async_trait]
 impl Logical for BooleanArrayGPU {
-    async fn bitwise_and(&self, operand: &Self) -> Self {
+    fn bitwise_and(&self, operand: &Self) -> Self {
         let new_buffer = self.gpu_device.apply_binary_function(
             &self.data,
             &operand.data,
@@ -35,7 +33,7 @@ impl Logical for BooleanArrayGPU {
         }
     }
 
-    async fn bitwise_or(&self, operand: &Self) -> Self {
+    fn bitwise_or(&self, operand: &Self) -> Self {
         let new_buffer = self.gpu_device.apply_binary_function(
             &self.data,
             &operand.data,
@@ -54,7 +52,7 @@ impl Logical for BooleanArrayGPU {
         }
     }
 
-    async fn bitwise_xor(&self, operand: &Self) -> Self {
+    fn bitwise_xor(&self, operand: &Self) -> Self {
         let new_buffer = self.gpu_device.apply_binary_function(
             &self.data,
             &operand.data,
@@ -73,7 +71,7 @@ impl Logical for BooleanArrayGPU {
         }
     }
 
-    async fn bitwise_not(&self) -> Self {
+    fn bitwise_not(&self) -> Self {
         let new_buffer = self.gpu_device.apply_unary_function(
             &self.data,
             self.data.size(),
@@ -90,7 +88,7 @@ impl Logical for BooleanArrayGPU {
         }
     }
 
-    async fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self {
+    fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self {
         let new_buffer = self.gpu_device.apply_binary_function(
             &self.data,
             &operand.data,
@@ -109,7 +107,7 @@ impl Logical for BooleanArrayGPU {
         }
     }
 
-    async fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self {
+    fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self {
         let new_buffer = self.gpu_device.apply_binary_function(
             &self.data,
             &operand.data,
@@ -129,9 +127,8 @@ impl Logical for BooleanArrayGPU {
     }
 }
 
-#[async_trait]
 impl LogicalContains for BooleanArrayGPU {
-    async fn any(&self) -> bool {
+    fn any(&self) -> bool {
         let new_buffer = self
             .gpu_device
             .apply_unary_function(&self.data, 4, 4, ANY_SHADER, "any");
@@ -254,19 +251,19 @@ mod test {
             .clone();
         let data = vec![true, true, false, true, false];
         let gpu_array = BooleanArrayGPU::from_slice(&data, device.clone());
-        assert!(gpu_array.any().await);
+        assert!(gpu_array.any());
 
         let data = vec![true; 8192 * 2];
         let gpu_array = BooleanArrayGPU::from_slice(&data, device.clone());
-        assert!(gpu_array.any().await);
+        assert!(gpu_array.any());
 
         let mut data = vec![false; 8192 * 2];
         let gpu_array = BooleanArrayGPU::from_slice(&data, device.clone());
-        assert!(!gpu_array.any().await);
+        assert!(!gpu_array.any());
 
         let mut data_2 = vec![true; 8192 * 2];
         data_2.append(&mut data);
         let gpu_array = BooleanArrayGPU::from_slice(&data_2, device.clone());
-        assert!(gpu_array.any().await);
+        assert!(gpu_array.any());
     }
 }
