@@ -59,16 +59,13 @@ impl<T: HyperbolicType + ArrowPrimitiveType> Hyperbolic for PrimitiveArrayGpu<T>
     type Output = T::OutputType;
 
     async fn sinh(&self) -> Self::Output {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * <T as HyperbolicType>::BUFFER_SIZE_MULTIPLIER,
-                <T as ArrowPrimitiveType>::ITEM_SIZE,
-                T::SHADER,
-                format!("sinh_{}", T::TYPE_STR).as_str(),
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_unary_function(
+            &self.data,
+            self.data.size() * <T as HyperbolicType>::BUFFER_SIZE_MULTIPLIER,
+            <T as ArrowPrimitiveType>::ITEM_SIZE,
+            T::SHADER,
+            format!("sinh_{}", T::TYPE_STR).as_str(),
+        );
 
         <T as HyperbolicType>::create_new(
             Arc::new(new_buffer),
@@ -84,16 +81,13 @@ impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArray
     type Output = T::OutputType;
 
     async fn cos(&self) -> Self::Output {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * <T as TrigonometricType>::BUFFER_SIZE_MULTIPLIER,
-                <T as ArrowPrimitiveType>::ITEM_SIZE,
-                T::SHADER,
-                format!("cos_{}", T::TYPE_STR).as_str(),
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_unary_function(
+            &self.data,
+            self.data.size() * <T as TrigonometricType>::BUFFER_SIZE_MULTIPLIER,
+            <T as ArrowPrimitiveType>::ITEM_SIZE,
+            T::SHADER,
+            format!("cos_{}", T::TYPE_STR).as_str(),
+        );
 
         <T as TrigonometricType>::create_new(
             Arc::new(new_buffer),
@@ -104,16 +98,13 @@ impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArray
     }
 
     async fn sin(&self) -> Self::Output {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * <T as TrigonometricType>::BUFFER_SIZE_MULTIPLIER,
-                <T as ArrowPrimitiveType>::ITEM_SIZE,
-                T::SHADER,
-                format!("sin_{}", T::TYPE_STR).as_str(),
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_unary_function(
+            &self.data,
+            self.data.size() * <T as TrigonometricType>::BUFFER_SIZE_MULTIPLIER,
+            <T as ArrowPrimitiveType>::ITEM_SIZE,
+            T::SHADER,
+            format!("sin_{}", T::TYPE_STR).as_str(),
+        );
 
         <T as TrigonometricType>::create_new(
             Arc::new(new_buffer),

@@ -20,8 +20,8 @@ pub(crate) mod u32;
 pub(crate) mod u8;
 
 pub use merge::merge_dyn;
-pub use take::take_dyn;
 pub use put::put_dyn;
+pub use take::take_dyn;
 
 #[async_trait]
 pub trait Swizzle {
@@ -47,24 +47,20 @@ pub trait SwizzleType {
 #[async_trait]
 impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
     async fn merge(&self, other: &Self, mask: &BooleanArrayGPU) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_ternary_function(
-                &self.data,
-                &other.data,
-                &mask.data,
-                T::ITEM_SIZE,
-                T::MERGE_SHADER,
-                "merge_array",
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_ternary_function(
+            &self.data,
+            &other.data,
+            &mask.data,
+            T::ITEM_SIZE,
+            T::MERGE_SHADER,
+            "merge_array",
+        );
 
         let op1 = self.null_buffer.as_ref().map(|x| x.bit_buffer.as_ref());
         let op2 = other.null_buffer.as_ref().map(|x| x.bit_buffer.as_ref());
         let mask_null = mask.null_buffer.as_ref().map(|x| x.bit_buffer.as_ref());
 
-        let bit_buffer =
-            merge_null_buffers(&self.gpu_device, op1, op2, &mask.data, mask_null).await;
+        let bit_buffer = merge_null_buffers(&self.gpu_device, op1, op2, &mask.data, mask_null);
 
         let new_null_buffer = bit_buffer.map(|buffer| NullBitBufferGpu {
             bit_buffer: Arc::new(buffer),
@@ -126,7 +122,7 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
         .await;
 
         match (&self.null_buffer, &dst.null_buffer) {
-            (None, None) => {},
+            (None, None) => {}
             (None, Some(_)) => todo!(),
             (Some(_), None) => todo!(),
             (Some(_), Some(_)) => todo!(),

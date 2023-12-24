@@ -4,8 +4,7 @@ use bytemuck::Pod;
 use log::info;
 use pollster::FutureExt;
 use wgpu::{
-    util::DeviceExt, Adapter, BindGroup, Buffer, ComputePipeline, Device, Maintain, Queue,
-    ShaderModule,
+    util::DeviceExt, Adapter, BindGroup, Buffer, ComputePipeline, Device, Queue, ShaderModule,
 };
 
 use super::RustNativeType;
@@ -246,10 +245,7 @@ impl GpuDevice {
 
         encoder.copy_buffer_to_buffer(buffer, 0, &staging_buffer, 0, buffer.size());
 
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-
-        //self.device
-        //    .poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
+        self.queue.submit(Some(encoder.finish()));
 
         staging_buffer
     }
@@ -289,7 +285,7 @@ impl GpuDevice {
         }
     }
 
-    pub async fn apply_unary_function(
+    pub fn apply_unary_function(
         &self,
         original_values: &Buffer,
         new_buffer_size: u64,
@@ -330,14 +326,12 @@ impl GpuDevice {
         );
 
         query.resolve(&mut encoder);
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-        // self.device
-        //     .poll(Maintain::WaitForSubmissionIndex(submission_index));
-        // query.wait_for_results(&self.device, &self.queue).await;
+        self.queue.submit(Some(encoder.finish()));
+
         new_values_buffer
     }
 
-    pub async fn apply_scalar_function(
+    pub fn apply_scalar_function(
         &self,
         original_values: &Buffer,
         scalar_value: &Buffer,
@@ -382,14 +376,12 @@ impl GpuDevice {
             dispatch_size.div_ceil(256) as u32,
         );
 
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-        // self.device
-        //     .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        self.queue.submit(Some(encoder.finish()));
 
         new_values_buffer
     }
 
-    pub async fn apply_binary_function(
+    pub fn apply_binary_function(
         &self,
         operand_1: &Buffer,
         operand_2: &Buffer,
@@ -433,14 +425,12 @@ impl GpuDevice {
             dispatch_size.div_ceil(256) as u32,
         );
 
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-        // self.device
-        //     .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        self.queue.submit(Some(encoder.finish()));
 
         new_values_buffer
     }
 
-    pub async fn apply_ternary_function(
+    pub fn apply_ternary_function(
         &self,
         operand_1: &Buffer,
         operand_2: &Buffer,
@@ -489,14 +479,12 @@ impl GpuDevice {
             dispatch_size.div_ceil(256) as u32,
         );
 
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-        // self.device
-        //     .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        self.queue.submit(Some(encoder.finish()));
 
         new_values_buffer
     }
 
-    pub async fn apply_broadcast_function(
+    pub fn apply_broadcast_function(
         &self,
         scalar_value: &Buffer,
         output_buffer_size: u64,
@@ -536,9 +524,7 @@ impl GpuDevice {
             dispatch_size.div_ceil(256) as u32,
         );
 
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-        // self.device
-        //     .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        self.queue.submit(Some(encoder.finish()));
 
         new_values_buffer
     }

@@ -42,18 +42,15 @@ pub trait LogicalContains {
 #[async_trait]
 impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
     async fn bitwise_and(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                T::ITEM_SIZE,
-                T::SHADER,
-                AND_ENTRY_POINT,
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_binary_function(
+            &self.data,
+            &operand.data,
+            T::ITEM_SIZE,
+            T::SHADER,
+            AND_ENTRY_POINT,
+        );
         let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
 
         Self {
             data: Arc::new(new_buffer),
@@ -65,18 +62,15 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
     }
 
     async fn bitwise_or(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                T::ITEM_SIZE,
-                T::SHADER,
-                OR_ENTRY_POINT,
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_binary_function(
+            &self.data,
+            &operand.data,
+            T::ITEM_SIZE,
+            T::SHADER,
+            OR_ENTRY_POINT,
+        );
         let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
 
         Self {
             data: Arc::new(new_buffer),
@@ -88,18 +82,15 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
     }
 
     async fn bitwise_xor(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                T::ITEM_SIZE,
-                T::SHADER,
-                XOR_ENTRY_POINT,
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_binary_function(
+            &self.data,
+            &operand.data,
+            T::ITEM_SIZE,
+            T::SHADER,
+            XOR_ENTRY_POINT,
+        );
         let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
 
         Self {
             data: Arc::new(new_buffer),
@@ -111,16 +102,13 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
     }
 
     async fn bitwise_not(&self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size(),
-                T::ITEM_SIZE,
-                T::NOT_SHADER,
-                NOT_ENTRY_POINT,
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_unary_function(
+            &self.data,
+            self.data.size(),
+            T::ITEM_SIZE,
+            T::NOT_SHADER,
+            NOT_ENTRY_POINT,
+        );
 
         Self {
             data: Arc::new(new_buffer),
@@ -132,18 +120,15 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
     }
 
     async fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                T::ITEM_SIZE,
-                T::SHIFT_SHADER,
-                SHIFT_LEFT_ENTRY_POINT,
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_binary_function(
+            &self.data,
+            &operand.data,
+            T::ITEM_SIZE,
+            T::SHIFT_SHADER,
+            SHIFT_LEFT_ENTRY_POINT,
+        );
         let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
 
         Self {
             data: Arc::new(new_buffer),
@@ -155,18 +140,15 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
     }
 
     async fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                T::ITEM_SIZE,
-                T::SHIFT_SHADER,
-                SHIFT_RIGHT_ENTRY_POINT,
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_binary_function(
+            &self.data,
+            &operand.data,
+            T::ITEM_SIZE,
+            T::SHIFT_SHADER,
+            SHIFT_RIGHT_ENTRY_POINT,
+        );
         let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
 
         Self {
             data: Arc::new(new_buffer),

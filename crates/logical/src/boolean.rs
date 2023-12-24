@@ -17,12 +17,15 @@ impl LogicalType for BooleanArrayGPU {
 #[async_trait]
 impl Logical for BooleanArrayGPU {
     async fn bitwise_and(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(&self.data, &operand.data, 4, Self::SHADER, AND_ENTRY_POINT)
-            .await;
+        let new_buffer = self.gpu_device.apply_binary_function(
+            &self.data,
+            &operand.data,
+            4,
+            Self::SHADER,
+            AND_ENTRY_POINT,
+        );
         let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
 
         Self {
             data: Arc::new(new_buffer),
@@ -33,12 +36,15 @@ impl Logical for BooleanArrayGPU {
     }
 
     async fn bitwise_or(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(&self.data, &operand.data, 4, Self::SHADER, OR_ENTRY_POINT)
-            .await;
+        let new_buffer = self.gpu_device.apply_binary_function(
+            &self.data,
+            &operand.data,
+            4,
+            Self::SHADER,
+            OR_ENTRY_POINT,
+        );
         let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
 
         Self {
             data: Arc::new(new_buffer),
@@ -49,12 +55,15 @@ impl Logical for BooleanArrayGPU {
     }
 
     async fn bitwise_xor(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(&self.data, &operand.data, 4, Self::SHADER, XOR_ENTRY_POINT)
-            .await;
+        let new_buffer = self.gpu_device.apply_binary_function(
+            &self.data,
+            &operand.data,
+            4,
+            Self::SHADER,
+            XOR_ENTRY_POINT,
+        );
         let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
 
         Self {
             data: Arc::new(new_buffer),
@@ -65,16 +74,13 @@ impl Logical for BooleanArrayGPU {
     }
 
     async fn bitwise_not(&self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size(),
-                4,
-                Self::NOT_SHADER,
-                NOT_ENTRY_POINT,
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_unary_function(
+            &self.data,
+            self.data.size(),
+            4,
+            Self::NOT_SHADER,
+            NOT_ENTRY_POINT,
+        );
 
         Self {
             data: Arc::new(new_buffer),
@@ -85,18 +91,15 @@ impl Logical for BooleanArrayGPU {
     }
 
     async fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                4,
-                Self::SHIFT_SHADER,
-                SHIFT_LEFT_ENTRY_POINT,
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_binary_function(
+            &self.data,
+            &operand.data,
+            4,
+            Self::SHIFT_SHADER,
+            SHIFT_LEFT_ENTRY_POINT,
+        );
         let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
 
         Self {
             data: Arc::new(new_buffer),
@@ -107,18 +110,15 @@ impl Logical for BooleanArrayGPU {
     }
 
     async fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                4,
-                Self::SHIFT_SHADER,
-                SHIFT_RIGHT_ENTRY_POINT,
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_binary_function(
+            &self.data,
+            &operand.data,
+            4,
+            Self::SHIFT_SHADER,
+            SHIFT_RIGHT_ENTRY_POINT,
+        );
         let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
 
         Self {
             data: Arc::new(new_buffer),
@@ -134,8 +134,7 @@ impl LogicalContains for BooleanArrayGPU {
     async fn any(&self) -> bool {
         let new_buffer = self
             .gpu_device
-            .apply_unary_function(&self.data, 4, 4, ANY_SHADER, "any")
-            .await;
+            .apply_unary_function(&self.data, 4, 4, ANY_SHADER, "any");
 
         u32::from_le_bytes(
             self.gpu_device

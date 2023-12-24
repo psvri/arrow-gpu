@@ -13,7 +13,7 @@ pub(crate) const U8_MERGE_SHADER: &str = concat!(
 
 use crate::Swizzle;
 
-pub async fn merge_null_buffers(
+pub fn merge_null_buffers(
     device: &GpuDevice,
     operand_1_null_buffer: Option<&Buffer>,
     operand_2_null_buffer: Option<&Buffer>,
@@ -23,41 +23,29 @@ pub async fn merge_null_buffers(
     const SHADER: &str = include_str!("../compute_shaders/u32/merge_null_buffer.wgsl");
 
     let merged_buffer_1 = if let Some(op1_null_buffer) = operand_1_null_buffer {
-        Some(
-            device
-                .apply_binary_function(op1_null_buffer, mask, 4, SHADER, "merge_selected")
-                .await,
-        )
+        Some(device.apply_binary_function(op1_null_buffer, mask, 4, SHADER, "merge_selected"))
     } else {
         None
     };
 
     let merged_buffer_2 = if let Some(op2_null_buffer) = operand_2_null_buffer {
-        Some(
-            device
-                .apply_binary_function(op2_null_buffer, mask, 4, SHADER, "merge_not_selected")
-                .await,
-        )
+        Some(device.apply_binary_function(op2_null_buffer, mask, 4, SHADER, "merge_not_selected"))
     } else {
         None
     };
 
     let merged_buffer = match (merged_buffer_1, merged_buffer_2) {
-        (Some(mb1), Some(mb2)) => Some(
-            device
-                .apply_binary_function(&mb1, &mb2, 4, SHADER, "merge_or")
-                .await,
-        ),
+        (Some(mb1), Some(mb2)) => {
+            Some(device.apply_binary_function(&mb1, &mb2, 4, SHADER, "merge_or"))
+        }
         (None, Some(mb)) | (Some(mb), None) => Some(mb),
         (None, None) => None,
     };
 
     match (merged_buffer, mask_null_buffer) {
-        (Some(mb1), Some(mb2)) => Some(
-            device
-                .apply_binary_function(&mb1, mb2, 4, SHADER, "merge_nulls")
-                .await,
-        ),
+        (Some(mb1), Some(mb2)) => {
+            Some(device.apply_binary_function(&mb1, mb2, 4, SHADER, "merge_nulls"))
+        }
         (None, Some(mb)) => Some(device.clone_buffer(mb)),
         (Some(mb), None) => Some(mb),
         (None, None) => None,

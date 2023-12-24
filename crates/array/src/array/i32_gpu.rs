@@ -38,15 +38,13 @@ impl<T: ArrowPrimitiveType<NativeType = i32>> Broadcast<i32> for PrimitiveArrayG
 
     async fn broadcast(value: i32, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
         let scalar_buffer = gpu_device.create_scalar_buffer(&value);
-        let gpu_buffer = gpu_device
-            .apply_broadcast_function(
-                &scalar_buffer,
-                4 * len as u64,
-                4,
-                I32_BROADCAST_SHADER,
-                "broadcast",
-            )
-            .await;
+        let gpu_buffer = gpu_device.apply_broadcast_function(
+            &scalar_buffer,
+            4 * len as u64,
+            4,
+            I32_BROADCAST_SHADER,
+            "broadcast",
+        );
         let data = Arc::new(gpu_buffer);
         let null_buffer = None;
 

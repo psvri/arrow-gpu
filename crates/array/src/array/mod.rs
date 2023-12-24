@@ -135,7 +135,7 @@ impl ArrowArrayGPU {
         }
     }
 
-    pub async fn get_raw_values(&self) -> ScalarArray {
+    pub fn get_raw_values(&self) -> ScalarArray {
         match self {
             ArrowArrayGPU::Float32ArrayGPU(x) => x.raw_values().unwrap().into(),
             ArrowArrayGPU::UInt16ArrayGPU(x) => x.raw_values().unwrap().into(),

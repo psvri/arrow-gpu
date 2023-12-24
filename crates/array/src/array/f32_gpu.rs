@@ -18,15 +18,13 @@ impl_unary_ops!(ArrowSum, sum, Float32ArrayGPU, f32, sum);
 impl Float32ArrayGPU {
     pub async fn broadcast(value: f32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let scalar_buffer = &gpu_device.create_scalar_buffer(&value);
-        let gpu_buffer = gpu_device
-            .apply_broadcast_function(
-                scalar_buffer,
-                4 * len as u64,
-                4,
-                F32_BROADCAST_SHADER,
-                "broadcast",
-            )
-            .await;
+        let gpu_buffer = gpu_device.apply_broadcast_function(
+            scalar_buffer,
+            4 * len as u64,
+            4,
+            F32_BROADCAST_SHADER,
+            "broadcast",
+        );
         let data = Arc::new(gpu_buffer);
         let null_buffer = None;
 
@@ -145,8 +143,7 @@ mod tests {
         let new_bit_buffer = NullBitBufferGpu::merge_null_bit_buffer(
             &gpu_array_2.null_buffer,
             &gpu_array_1.null_buffer,
-        )
-        .await;
+        );
         assert_eq!(new_bit_buffer.unwrap().raw_values(), vec![0b00000011]);
     }
 

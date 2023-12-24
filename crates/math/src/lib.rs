@@ -69,7 +69,7 @@ macro_rules! apply_unary_function {
         let new_null_buffer = NullBitBufferGpu::clone_null_bit_buffer(&$self.null_buffer);
 
         return <T as $trait_name>::create_new(
-            Arc::new(new_buffer.await),
+            Arc::new(new_buffer),
             $self.gpu_device.clone(),
             $self.len,
             new_null_buffer,

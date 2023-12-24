@@ -16,17 +16,14 @@ macro_rules! impl_arithmetic_op {
             type Output = Self;
 
             async fn $trait_function(&self, value: &PrimitiveArrayGpu<T>) -> Self::Output {
-                let new_buffer = self
-                    .gpu_device
-                    .apply_scalar_function(
-                        &self.data,
-                        &value.data,
-                        self.data.size(),
-                        $ty_size,
-                        $shader,
-                        $entry_point,
-                    )
-                    .await;
+                let new_buffer = self.gpu_device.apply_scalar_function(
+                    &self.data,
+                    &value.data,
+                    self.data.size(),
+                    $ty_size,
+                    $shader,
+                    $entry_point,
+                );
 
                 Self {
                     data: Arc::new(new_buffer),
@@ -53,13 +50,15 @@ macro_rules! impl_arithmetic_array_op {
 
             async fn $trait_function(&self, value: &PrimitiveArrayGpu<T>) -> Self::Output {
                 assert!(Arc::ptr_eq(&self.gpu_device, &value.gpu_device));
-                let new_data_buffer = self
-                    .gpu_device
-                    .apply_binary_function(&self.data, &value.data, $ty_size, $shader, $entry_point)
-                    .await;
+                let new_data_buffer = self.gpu_device.apply_binary_function(
+                    &self.data,
+                    &value.data,
+                    $ty_size,
+                    $shader,
+                    $entry_point,
+                );
                 let new_null_buffer =
-                    NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &value.null_buffer)
-                        .await;
+                    NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &value.null_buffer);
 
                 Self {
                     data: Arc::new(new_data_buffer),

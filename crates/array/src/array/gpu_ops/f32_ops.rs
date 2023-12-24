@@ -1,5 +1,4 @@
 use super::*;
-use pollster::FutureExt;
 use wgpu::Buffer;
 
 use crate::array::gpu_device::GpuDevice;

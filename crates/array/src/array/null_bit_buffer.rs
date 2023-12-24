@@ -142,7 +142,7 @@ impl NullBitBufferGpu {
         self.gpu_device.clone_buffer(&self.bit_buffer)
     }
 
-    pub async fn merge_null_bit_buffer(
+    pub fn merge_null_bit_buffer(
         left: &Option<NullBitBufferGpu>,
         right: &Option<NullBitBufferGpu>,
     ) -> Option<NullBitBufferGpu> {
@@ -160,17 +160,14 @@ impl NullBitBufferGpu {
                 assert_eq!(left.bit_buffer.size(), right.bit_buffer.size());
                 assert_eq!(left.len, right.len);
                 assert!(Arc::ptr_eq(&left.gpu_device, &right.gpu_device));
-                let new_bit_buffer = left
-                    .gpu_device
-                    .apply_scalar_function(
-                        &left.bit_buffer,
-                        &right.bit_buffer,
-                        left.bit_buffer.size(),
-                        4,
-                        LOGICAL_AND_SHADER,
-                        "bitwise_and",
-                    )
-                    .await;
+                let new_bit_buffer = left.gpu_device.apply_scalar_function(
+                    &left.bit_buffer,
+                    &right.bit_buffer,
+                    left.bit_buffer.size(),
+                    4,
+                    LOGICAL_AND_SHADER,
+                    "bitwise_and",
+                );
                 let len = left.len;
                 let gpu_device = left.gpu_device.clone();
 

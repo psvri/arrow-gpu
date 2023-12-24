@@ -9,16 +9,13 @@ const F32_CAST_U8_SHADER: &str = include_str!("../compute_shaders/f32/cast_u8.wg
 #[async_trait]
 impl Cast<UInt8ArrayGPU> for Float32ArrayGPU {
     async fn cast(&self) -> UInt8ArrayGPU {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                (self.data.size() / 4).next_multiple_of(4),
-                16, // 4 * 4
-                F32_CAST_U8_SHADER,
-                "cast_u8",
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_unary_function(
+            &self.data,
+            (self.data.size() / 4).next_multiple_of(4),
+            16, // 4 * 4
+            F32_CAST_U8_SHADER,
+            "cast_u8",
+        );
 
         UInt8ArrayGPU {
             data: Arc::new(new_buffer),

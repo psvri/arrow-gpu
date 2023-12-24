@@ -43,16 +43,13 @@ pub trait MinMax {
 
 macro_rules! apply_function {
     ($self: ident, $operand:ident, $entry_point: ident) => {
-        let new_buffer = $self
-            .gpu_device
-            .apply_binary_function(
-                &$self.data,
-                &$operand.data,
-                T::ITEM_SIZE,
-                T::COMPARE_SHADER,
-                $entry_point,
-            )
-            .await;
+        let new_buffer = $self.gpu_device.apply_binary_function(
+            &$self.data,
+            &$operand.data,
+            T::ITEM_SIZE,
+            T::COMPARE_SHADER,
+            $entry_point,
+        );
 
         return BooleanArrayGPU {
             data: Arc::new(new_buffer),
@@ -61,24 +58,20 @@ macro_rules! apply_function {
             null_buffer: NullBitBufferGpu::merge_null_bit_buffer(
                 &$self.null_buffer,
                 &$operand.null_buffer,
-            )
-            .await,
+            ),
         }
     };
 }
 
 macro_rules! apply_function_min_max {
     ($self: ident, $operand:ident, $entry_point: ident) => {
-        let new_buffer = $self
-            .gpu_device
-            .apply_binary_function(
-                &$self.data,
-                &$operand.data,
-                T::ITEM_SIZE,
-                T::MIN_MAX_SHADER,
-                $entry_point,
-            )
-            .await;
+        let new_buffer = $self.gpu_device.apply_binary_function(
+            &$self.data,
+            &$operand.data,
+            T::ITEM_SIZE,
+            T::MIN_MAX_SHADER,
+            $entry_point,
+        );
 
         return Self {
             data: Arc::new(new_buffer),
@@ -88,8 +81,7 @@ macro_rules! apply_function_min_max {
             null_buffer: NullBitBufferGpu::merge_null_bit_buffer(
                 &$self.null_buffer,
                 &$operand.null_buffer,
-            )
-            .await,
+            ),
         }
     };
 }

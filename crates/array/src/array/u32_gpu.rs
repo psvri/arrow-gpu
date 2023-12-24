@@ -34,9 +34,13 @@ impl TryFrom<ArrowArrayGPU> for UInt32ArrayGPU {
 impl UInt32ArrayGPU {
     pub async fn create_broadcast_buffer(value: u32, len: u64, gpu_device: &GpuDevice) -> Buffer {
         let scalar_buffer = &gpu_device.create_scalar_buffer(&value);
-        gpu_device
-            .apply_broadcast_function(scalar_buffer, 4 * len, 4, U32_BROADCAST_SHADER, "broadcast")
-            .await
+        gpu_device.apply_broadcast_function(
+            scalar_buffer,
+            4 * len,
+            4,
+            U32_BROADCAST_SHADER,
+            "broadcast",
+        )
     }
 
     pub async fn broadcast(value: u32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {

@@ -16,18 +16,14 @@ const I16_CAST_F32_SHADER: &str = concat!(
 
 #[async_trait]
 impl Cast<Int32ArrayGPU> for Int16ArrayGPU {
-
     async fn cast(&self) -> Int32ArrayGPU {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 2,
-                2,
-                I16_CAST_I32_SHADER,
-                "cast_i32",
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_unary_function(
+            &self.data,
+            self.data.size() * 2,
+            2,
+            I16_CAST_I32_SHADER,
+            "cast_i32",
+        );
 
         Int32ArrayGPU {
             data: Arc::new(new_buffer),
@@ -41,18 +37,14 @@ impl Cast<Int32ArrayGPU> for Int16ArrayGPU {
 
 #[async_trait]
 impl Cast<UInt32ArrayGPU> for Int16ArrayGPU {
-
     async fn cast(&self) -> UInt32ArrayGPU {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 2,
-                2,
-                I16_CAST_I32_SHADER,
-                "cast_i32",
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_unary_function(
+            &self.data,
+            self.data.size() * 2,
+            2,
+            I16_CAST_I32_SHADER,
+            "cast_i32",
+        );
 
         UInt32ArrayGPU {
             data: Arc::new(new_buffer),
@@ -66,18 +58,14 @@ impl Cast<UInt32ArrayGPU> for Int16ArrayGPU {
 
 #[async_trait]
 impl Cast<Float32ArrayGPU> for Int16ArrayGPU {
-
     async fn cast(&self) -> Float32ArrayGPU {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 2,
-                2,
-                I16_CAST_F32_SHADER,
-                "cast_f32",
-            )
-            .await;
+        let new_buffer = self.gpu_device.apply_unary_function(
+            &self.data,
+            self.data.size() * 2,
+            2,
+            I16_CAST_F32_SHADER,
+            "cast_f32",
+        );
 
         Float32ArrayGPU {
             data: Arc::new(new_buffer),
@@ -91,7 +79,6 @@ impl Cast<Float32ArrayGPU> for Int16ArrayGPU {
 
 #[async_trait]
 impl Cast<UInt16ArrayGPU> for Int16ArrayGPU {
-
     async fn cast(&self) -> UInt16ArrayGPU {
         UInt16ArrayGPU {
             data: Arc::new(self.gpu_device.clone_buffer(&self.data)),

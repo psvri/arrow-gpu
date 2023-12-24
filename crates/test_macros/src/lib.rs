@@ -170,7 +170,7 @@ macro_rules! test_unary_op_float {
         async fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
             use pollster::FutureExt;
-            let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()).clone());
+            let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()));
             let data = $input;
             let gpu_array = $input_ty::from_slice(&data, device.clone());
             let new_gpu_array = gpu_array.$unary_fn().await;
@@ -208,7 +208,7 @@ macro_rules! test_float_array_op {
         async fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
             use pollster::FutureExt;
-            let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()).clone());
+            let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()));
             let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device);
             let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
@@ -228,7 +228,7 @@ macro_rules! test_float_array_op {
         async fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
             use pollster::FutureExt;
-            let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()).clone());
+            let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()));
             let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());
             let new_gpu_array = gpu_array_1.$operation(&gpu_array_2).await;
