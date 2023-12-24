@@ -270,12 +270,12 @@ impl<T: NegUnaryType + ArrowPrimitiveType> Neg for PrimitiveArrayGpu<T> {
         );
         let new_null_buffer = NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer);
 
-        return <T as NegUnaryType>::create_new(
+        <T as NegUnaryType>::create_new(
             Arc::new(new_buffer),
             self.gpu_device.clone(),
             self.len,
             new_null_buffer,
-        );
+        )
     }
 }
 

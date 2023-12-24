@@ -95,8 +95,8 @@ mod test {
     #[macro_export]
     macro_rules! test_merge_op {
         ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $mask: expr, $output: expr) => {
-            #[tokio::test]
-            async fn $fn_name() {
+            #[test]
+            fn $fn_name() {
                 use arrow_gpu_array::array::GpuDevice;
                 use arrow_gpu_array::GPU_DEVICE;
                 let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
@@ -108,8 +108,8 @@ mod test {
             }
         };
         ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr,  $mask: expr, $output: expr) => {
-            #[tokio::test]
-            async fn $fn_name() {
+            #[test]
+            fn $fn_name() {
                 use arrow_gpu_array::array::GpuDevice;
                 use arrow_gpu_array::GPU_DEVICE;
                 let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());

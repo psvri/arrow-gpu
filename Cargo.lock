@@ -312,8 +312,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "pollster",
- "tokio",
  "wgpu",
 ]
 
@@ -325,7 +323,6 @@ dependencies = [
  "futures-intrusive",
  "log",
  "pollster",
- "tokio",
  "wgpu",
 ]
 
@@ -346,8 +343,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "pollster",
- "tokio",
  "wgpu",
 ]
 
@@ -357,8 +352,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "pollster",
- "tokio",
  "wgpu",
 ]
 
@@ -368,8 +361,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "pollster",
- "tokio",
  "wgpu",
 ]
 
@@ -379,8 +370,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "pollster",
- "tokio",
  "wgpu",
 ]
 
@@ -390,8 +379,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "pollster",
- "tokio",
  "wgpu",
 ]
 
@@ -405,8 +392,6 @@ version = "0.1.0"
 dependencies = [
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
- "pollster",
- "tokio",
  "wgpu",
 ]
 
@@ -1387,16 +1372,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num_cpus"
-version = "1.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4161fcb6d602d4d2081af7c3a45852d875a03dd337a6bfdd6e06407b61342a43"
-dependencies = [
- "hermit-abi",
- "libc",
-]
-
-[[package]]
 name = "objc"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1464,12 +1439,6 @@ name = "paste"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
-
-[[package]]
-name = "pin-project-lite"
-version = "0.2.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8afb450f006bf6385ca15ef45d71d2288452bc3683ce2e2cacc0d18e4be60b58"
 
 [[package]]
 name = "pkg-config"
@@ -1806,29 +1775,6 @@ checksum = "be4d6b5f19ff7664e8c98d03e2139cb510db9b0a60b55f8e8709b689d939b6bc"
 dependencies = [
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "tokio"
-version = "1.35.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "841d45b238a16291a4e1584e61820b8ae57d696cc5015c459c229ccc6990cc1c"
-dependencies = [
- "backtrace",
- "num_cpus",
- "pin-project-lite",
- "tokio-macros",
-]
-
-[[package]]
-name = "tokio-macros"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b8a1e28f2deaa14e508979454cb3a223b10b938b45af148bc0986de36f1923b"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]

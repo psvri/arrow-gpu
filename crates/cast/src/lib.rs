@@ -95,8 +95,8 @@ mod tests {
     macro_rules! test_cast_op {
         ($(#[$m:meta])* $fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $cast_type: ident, $output: expr) => {
             $(#[$m])*
-            #[tokio::test]
-            async fn $fn_name() {
+            #[test]
+            fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
                 let device = GPU_DEVICE.get_or_init(|| std::sync::Arc::new(GpuDevice::new()).clone());
                 let data = $input;

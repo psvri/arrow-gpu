@@ -6,20 +6,20 @@ use arrow::{
 };
 use arrow_gpu::{array::*, kernels::ArrowAdd};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use pollster::FutureExt;
 
 fn bench_cpu_f32_add(data: &mut Float32Array, value: &dyn Datum) -> ArrayRef {
     add(data, value).unwrap()
 }
 
 fn bench_gpu_f32_add(data: &Float32ArrayGPU, value: &Float32ArrayGPU) -> Float32ArrayGPU {
-    data.add(&value).block_on()
+    data.add(&value)
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     let device = Arc::new(GpuDevice::new());
+    let count = 1024 * 1024 * 2;
     let mut gpu_data = Float32ArrayGPU::from_slice(
-        &(0..1024 * 1024 * 10)
+        &(0..count)
             .into_iter()
             .map(|x| x as f32)
             .collect::<Vec<f32>>(),
@@ -27,7 +27,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     );
     let value_data = Float32ArrayGPU::from_slice(&vec![100.0], device.clone());
     let mut cpu_data = Float32Array::from(
-        (0..1024 * 1024 * 10)
+        (0..count)
             .into_iter()
             .map(|x| x as f32)
             .collect::<Vec<f32>>(),

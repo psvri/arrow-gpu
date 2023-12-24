@@ -188,8 +188,8 @@ mod tests {
 
     use super::*;
 
-    #[tokio::test]
-    async fn test_boolean_values() {
+    #[test]
+    fn test_boolean_values() {
         let gpu_device = GpuDevice::new();
         let values = vec![Some(true), Some(true), Some(false), None];
         let array = BooleanArrayGPU::from_optional_slice(&values, Arc::new(gpu_device));

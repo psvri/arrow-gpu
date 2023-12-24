@@ -89,8 +89,8 @@ mod tests {
     use crate::array::primitive_array_gpu::test::*;
 
     #[ignore = "Not passing in CI but passes in local 🤔"]
-    #[tokio::test]
-    async fn test_f32_sum() {
+    #[test]
+    fn test_f32_sum() {
         let device = Arc::new(GpuDevice::new());
         let gpu_array = Float32ArrayGPU::from_slice(
             &(0..256 * 256)
@@ -112,8 +112,8 @@ mod tests {
         assert_eq!(gpu_array.sum(), total);
     }
 
-    #[tokio::test]
-    async fn test_f32_array_from_optinal_vec() {
+    #[test]
+    fn test_f32_array_from_optinal_vec() {
         let device = Arc::new(GpuDevice::new());
         let gpu_array_1 = Float32ArrayGPU::from_optional_slice(
             &vec![Some(0.0), Some(1.0), None, None, Some(4.0)],

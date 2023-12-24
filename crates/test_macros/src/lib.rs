@@ -1,10 +1,9 @@
 #[macro_export]
 macro_rules! test_unary_op {
     ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $unary_fn_dyn: ident, $output: expr) => {
-        #[tokio::test]
-        async fn $fn_name() {
+        #[test]
+        fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
-            use pollster::FutureExt;
             let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
             let data = $input;
             let gpu_array = $input_ty::from_slice(&data, device.clone());
@@ -19,10 +18,9 @@ macro_rules! test_unary_op {
         }
     };
     ($fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $output: expr) => {
-        #[tokio::test]
-        async fn $fn_name() {
+        #[test]
+        fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
-            use pollster::FutureExt;
             let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
             let data = $input;
             let gpu_array = $input_ty::from_slice(&data, device);
@@ -35,10 +33,9 @@ macro_rules! test_unary_op {
 #[macro_export]
 macro_rules! test_scalar_op {
     ($fn_name: ident, $input_ty: ident, $scalar_ty: ident, $output_ty: ident, $input: expr, $scalar_fn: ident, $scalar_fn_dyn: ident, $scalar: expr, $output: expr) => {
-        #[tokio::test]
-        async fn $fn_name() {
+        #[test]
+        fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
-            use pollster::FutureExt;
             let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
             let data = $input;
             let array = $input_ty::from_slice(&data, device.clone());
@@ -60,10 +57,9 @@ macro_rules! test_scalar_op {
 macro_rules! test_array_op {
     ($(#[$m:meta])* $fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $output: expr) => {
         $(#[$m])*
-        #[tokio::test]
-        async fn $fn_name() {
+        #[test]
+        fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
-            use pollster::FutureExt;
             let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()).clone());
             let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());
@@ -73,10 +69,9 @@ macro_rules! test_array_op {
     };
     ($(#[$m:meta])* $fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr, $output: expr) => {
         $(#[$m])*
-        #[tokio::test]
-        async fn $fn_name() {
+        #[test]
+        fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
-            use pollster::FutureExt;
             let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()).clone());
             let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());
@@ -126,10 +121,9 @@ pub fn float_eq_in_error_optional(left: Option<f32>, right: Option<f32>) -> bool
 #[macro_export]
 macro_rules! test_float_scalar_op {
     ($fn_name: ident, $input_ty: ident, $scalar_ty: ident, $output_ty: ident, $input: expr, $scalar_fn: ident, $scalar_fn_dyn: ident, $scalar: expr, $output: expr) => {
-        #[tokio::test]
-        async fn $fn_name() {
+        #[test]
+        fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
-            use pollster::FutureExt;
             let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()).clone());
             let data = $input;
             let array = $input_ty::from_slice(&data, device.clone());
@@ -166,10 +160,9 @@ macro_rules! test_float_scalar_op {
 macro_rules! test_unary_op_float {
     ($(#[$m:meta])* $fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $unary_fn: ident, $unary_fn_dyn: ident, $output: expr) => {
         $(#[$m])*
-        #[tokio::test]
-        async fn $fn_name() {
+        #[test]
+        fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
-            use pollster::FutureExt;
             let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()));
             let data = $input;
             let gpu_array = $input_ty::from_slice(&data, device.clone());
@@ -204,10 +197,9 @@ macro_rules! test_unary_op_float {
 #[macro_export]
 macro_rules! test_float_array_op {
     ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $output: expr) => {
-        #[tokio::test]
-        async fn $fn_name() {
+        #[test]
+        fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
-            use pollster::FutureExt;
             let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()));
             let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device);
@@ -224,10 +216,9 @@ macro_rules! test_float_array_op {
         }
     };
     ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr, $output: expr) => {
-        #[tokio::test]
-        async fn $fn_name() {
+        #[test]
+        fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
-            use pollster::FutureExt;
             let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()));
             let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
             let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());

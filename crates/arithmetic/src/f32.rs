@@ -189,12 +189,12 @@ mod tests {
         vec![-100.0, -99.0, -98.0, -97.0, -96.0]
     );
 
-    #[tokio::test]
+    #[test]
     #[cfg_attr(
         target_os = "windows",
         ignore = "Not passing in CI but passes in local 🤔"
     )]
-    async fn test_large_f32_array() {
+    fn test_large_f32_array() {
         let device = Arc::new(GpuDevice::new());
         let gpu_array = Float32ArrayGPU::from_slice(
             &(0..1024 * 1024 * 10)

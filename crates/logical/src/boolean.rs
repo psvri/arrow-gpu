@@ -242,8 +242,8 @@ mod test {
         vec![false, false, true, false, true]
     );
 
-    #[tokio::test]
-    async fn test_any() {
+    #[test]
+    fn test_any() {
         use arrow_gpu_array::array::GpuDevice;
         use arrow_gpu_array::GPU_DEVICE;
         let device = GPU_DEVICE

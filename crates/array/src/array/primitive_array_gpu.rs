@@ -109,7 +109,7 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
             gpu_device: self.gpu_device.clone(),
             phantom: PhantomData,
             len: self.len,
-            null_buffer: null_buffer,
+            null_buffer,
         }
     }
 }
@@ -148,8 +148,8 @@ pub(crate) use impl_unary_ops;
 pub mod test {
     macro_rules! test_broadcast {
         ($fn_name: ident, $ty: ident, $input: expr) => {
-            #[tokio::test]
-            async fn $fn_name() {
+            #[test]
+            fn $fn_name() {
                 use crate::GpuDevice;
                 use crate::GPU_DEVICE;
                 let device =

@@ -90,8 +90,8 @@ mod tests {
     macro_rules! test_put_op {
         ($(#[$m:meta])* $fn_name: ident, $operand_type: ident, $operation: ident, $src: expr, $dst: expr, $src_index: expr, $dst_index: expr, $output: expr) => {
             $(#[$m])*
-            #[tokio::test]
-            async fn $fn_name() {
+            #[test]
+            fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
                 use arrow_gpu_array::array::GpuDevice;
                 use pollster::FutureExt;
@@ -106,8 +106,8 @@ mod tests {
         };
         ($(#[$m:meta])* $fn_name: ident, $operand_type: ident, $operation: ident, $operation_dyn: ident, $src: expr, $dst: expr, $src_index: expr, $dst_index: expr, $output: expr) => {
             $(#[$m])*
-            #[tokio::test]
-            async fn $fn_name() {
+            #[test]
+            fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
                 use arrow_gpu_array::array::GpuDevice;
                 let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
