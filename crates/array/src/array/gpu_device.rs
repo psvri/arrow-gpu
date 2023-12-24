@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use bytemuck::Pod;
 use log::info;
+use pollster::FutureExt;
 use wgpu::{
     util::DeviceExt, Adapter, BindGroup, Buffer, ComputePipeline, Device, Maintain, Queue,
     ShaderModule,
@@ -88,7 +89,7 @@ pub struct GpuDevice {
 }
 
 impl GpuDevice {
-    pub async fn new() -> GpuDevice {
+    pub fn new() -> GpuDevice {
         let instance = wgpu::Instance::default();
 
         let adapter = instance
@@ -97,7 +98,7 @@ impl GpuDevice {
                 compatible_surface: None,
                 force_fallback_adapter: false,
             })
-            .await
+            .block_on()
             .unwrap();
 
         let (device, queue) = adapter
@@ -109,7 +110,7 @@ impl GpuDevice {
                 },
                 None,
             )
-            .await
+            .block_on()
             .unwrap();
 
         info!("{:?}", device);
@@ -117,7 +118,7 @@ impl GpuDevice {
         Self { device, queue }
     }
 
-    pub async fn from_adapter(adapter: Adapter) -> GpuDevice {
+    pub fn from_adapter(adapter: Adapter) -> GpuDevice {
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
@@ -127,7 +128,7 @@ impl GpuDevice {
                 },
                 None,
             )
-            .await
+            .block_on()
             .unwrap();
 
         Self { device, queue }
@@ -238,7 +239,7 @@ impl GpuDevice {
             })
     }
 
-    pub async fn clone_buffer(&self, buffer: &Buffer) -> Buffer {
+    pub fn clone_buffer(&self, buffer: &Buffer) -> Buffer {
         let staging_buffer = self.create_empty_buffer(buffer.size());
 
         let mut encoder = self.create_command_encoder(None);
@@ -247,13 +248,13 @@ impl GpuDevice {
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
 
-        self.device
-            .poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
+        //self.device
+        //    .poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
 
         staging_buffer
     }
 
-    pub async fn retrive_data(&self, data: &Buffer) -> Vec<u8> {
+    pub fn retrive_data(&self, data: &Buffer) -> Vec<u8> {
         let size = data.size() as wgpu::BufferAddress;
 
         let staging_buffer = self.create_retrive_buffer(size);
@@ -270,7 +271,7 @@ impl GpuDevice {
         self.device
             .poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
 
-        if let Some(Ok(())) = receiver.receive().await {
+        if let Some(Ok(())) = receiver.receive().block_on() {
             // Gets contents of buffer
             let data = buffer_slice.get_mapped_range();
             // Since contents are got in bytes, this converts these bytes back to u32
@@ -330,9 +331,9 @@ impl GpuDevice {
 
         query.resolve(&mut encoder);
         let submission_index = self.queue.submit(Some(encoder.finish()));
-        self.device
-            .poll(Maintain::WaitForSubmissionIndex(submission_index));
-        query.wait_for_results(&self.device, &self.queue).await;
+        // self.device
+        //     .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        // query.wait_for_results(&self.device, &self.queue).await;
         new_values_buffer
     }
 
@@ -382,8 +383,8 @@ impl GpuDevice {
         );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
-        self.device
-            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        // self.device
+        //     .poll(Maintain::WaitForSubmissionIndex(submission_index));
 
         new_values_buffer
     }
@@ -433,8 +434,8 @@ impl GpuDevice {
         );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
-        self.device
-            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        // self.device
+        //     .poll(Maintain::WaitForSubmissionIndex(submission_index));
 
         new_values_buffer
     }
@@ -489,8 +490,8 @@ impl GpuDevice {
         );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
-        self.device
-            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        // self.device
+        //     .poll(Maintain::WaitForSubmissionIndex(submission_index));
 
         new_values_buffer
     }
@@ -536,8 +537,8 @@ impl GpuDevice {
         );
 
         let submission_index = self.queue.submit(Some(encoder.finish()));
-        self.device
-            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        // self.device
+        //     .poll(Maintain::WaitForSubmissionIndex(submission_index));
 
         new_values_buffer
     }

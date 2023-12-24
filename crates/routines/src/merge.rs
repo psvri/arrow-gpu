@@ -58,7 +58,7 @@ pub async fn merge_null_buffers(
                 .apply_binary_function(&mb1, mb2, 4, SHADER, "merge_nulls")
                 .await,
         ),
-        (None, Some(mb)) => Some(device.clone_buffer(mb).await),
+        (None, Some(mb)) => Some(device.clone_buffer(mb)),
         (Some(mb), None) => Some(mb),
         (None, None) => None,
     }
@@ -109,36 +109,31 @@ mod test {
         ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $mask: expr, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
-                use arrow_gpu_array::GPU_DEVICE;
                 use arrow_gpu_array::array::GpuDevice;
-                use pollster::FutureExt;
-                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone());
+                use arrow_gpu_array::GPU_DEVICE;
+                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
                 let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());
                 let mask = BooleanArrayGPU::from_optional_slice(&$mask, device.clone());
                 let new_gpu_array = gpu_array_1.$operation(&gpu_array_2, &mask).await;
-                assert_eq!(new_gpu_array.values().await, $output);
+                assert_eq!(new_gpu_array.values(), $output);
             }
         };
         ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr,  $mask: expr, $output: expr) => {
             #[tokio::test]
             async fn $fn_name() {
-                use arrow_gpu_array::GPU_DEVICE;
                 use arrow_gpu_array::array::GpuDevice;
-                use pollster::FutureExt;
-                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone());
+                use arrow_gpu_array::GPU_DEVICE;
+                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
                 let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());
                 let mask = BooleanArrayGPU::from_optional_slice(&$mask, device.clone());
                 let new_gpu_array = gpu_array_1.$operation(&gpu_array_2, &mask).await;
-                assert_eq!(new_gpu_array.values().await, $output);
+                assert_eq!(new_gpu_array.values(), $output);
 
                 let new_gpu_array =
                     $operation_dyn(&gpu_array_1.into(), &gpu_array_2.into(), &mask).await;
-                let new_values = $output_type::try_from(new_gpu_array)
-                    .unwrap()
-                    .values()
-                    .await;
+                let new_values = $output_type::try_from(new_gpu_array).unwrap().values();
                 assert_eq!(new_values, $output);
             }
         };

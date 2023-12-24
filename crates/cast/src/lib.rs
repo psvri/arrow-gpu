@@ -101,20 +101,18 @@ mod tests {
             #[tokio::test]
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
-                use pollster::FutureExt;
-                let device = GPU_DEVICE.get_or_init(|| std::sync::Arc::new(GpuDevice::new().block_on()).clone());
+                let device = GPU_DEVICE.get_or_init(|| std::sync::Arc::new(GpuDevice::new()).clone());
                 let data = $input;
                 let gpu_array = $input_ty::from_slice(&data, device.clone());
                 let new_gpu_array: $output_ty =
                     <$input_ty as Cast<$output_ty>>::cast(&gpu_array).await;
-                let new_values = new_gpu_array.raw_values().await.unwrap();
+                let new_values = new_gpu_array.raw_values().unwrap();
                 assert_eq!(new_values, $output);
 
                 let new_gpu_array = cast_dyn(&gpu_array.into(), &ArrowType::$cast_type).await;
                 let new_values = $output_ty::try_from(new_gpu_array)
                     .unwrap()
                     .raw_values()
-                    .await
                     .unwrap();
                 assert_eq!(new_values, $output);
             }

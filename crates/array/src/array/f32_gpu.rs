@@ -94,7 +94,7 @@ mod tests {
     #[ignore = "Not passing in CI but passes in local 🤔"]
     #[tokio::test]
     async fn test_f32_sum() {
-        let device = Arc::new(GpuDevice::new().await);
+        let device = Arc::new(GpuDevice::new());
         let gpu_array = Float32ArrayGPU::from_slice(
             &(0..256 * 256)
                 .into_iter()
@@ -117,17 +117,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_f32_array_from_optinal_vec() {
-        let device = Arc::new(GpuDevice::new().await);
+        let device = Arc::new(GpuDevice::new());
         let gpu_array_1 = Float32ArrayGPU::from_optional_slice(
             &vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
             device.clone(),
         );
         assert_eq!(
-            gpu_array_1.raw_values().await.unwrap(),
+            gpu_array_1.raw_values().unwrap(),
             vec![0.0, 1.0, 0.0, 0.0, 4.0]
         );
         assert_eq!(
-            gpu_array_1.null_buffer.as_ref().unwrap().raw_values().await,
+            gpu_array_1.null_buffer.as_ref().unwrap().raw_values(),
             vec![0b00010011]
         );
         let gpu_array_2 = Float32ArrayGPU::from_optional_slice(
@@ -135,11 +135,11 @@ mod tests {
             device,
         );
         assert_eq!(
-            gpu_array_2.raw_values().await.unwrap(),
+            gpu_array_2.raw_values().unwrap(),
             vec![1.0, 2.0, 0.0, 4.0, 0.0]
         );
         assert_eq!(
-            gpu_array_2.null_buffer.as_ref().unwrap().raw_values().await,
+            gpu_array_2.null_buffer.as_ref().unwrap().raw_values(),
             vec![0b00001011]
         );
         let new_bit_buffer = NullBitBufferGpu::merge_null_bit_buffer(
@@ -147,7 +147,7 @@ mod tests {
             &gpu_array_1.null_buffer,
         )
         .await;
-        assert_eq!(new_bit_buffer.unwrap().raw_values().await, vec![0b00000011]);
+        assert_eq!(new_bit_buffer.unwrap().raw_values(), vec![0b00000011]);
     }
 
     test_broadcast!(test_broadcast_f32, Float32ArrayGPU, 1.0);

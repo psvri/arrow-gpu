@@ -127,7 +127,7 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
             gpu_device: self.gpu_device.clone(),
             phantom: std::marker::PhantomData,
             len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         }
     }
 

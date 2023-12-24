@@ -23,7 +23,7 @@ pub async fn sum(gpu_device: &GpuDevice, left: &Buffer, mut len: usize) -> f32 {
 }
 
 pub fn get_f32_array(gpu_device: &GpuDevice, data: &Buffer) -> Vec<f32> {
-    let data = gpu_device.retrive_data(data).block_on();
+    let data = gpu_device.retrive_data(data);
     let result: Vec<f32> = bytemuck::cast_slice(&data).to_vec();
     //println!("{:?}", result);
     /*for i in &result {

@@ -15,7 +15,7 @@ fn bench_gpu_f32_add(data: &mut Float32ArrayGPU) -> f32 {
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
-    let device = GpuDevice::new().block_on();
+    let device = GpuDevice::new();
     let mut gpu_data = Float32ArrayGPU::from_slice(
         &(0..1024 * 1024 * 10)
             .into_iter()

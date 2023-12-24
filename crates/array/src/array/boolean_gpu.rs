@@ -2,7 +2,6 @@ use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use pollster::FutureExt;
 use wgpu::Buffer;
 
 use crate::kernels::broadcast::Broadcast;
@@ -87,8 +86,8 @@ impl BooleanArrayGPU {
         }
     }
 
-    pub async fn raw_values(&self) -> Option<Vec<bool>> {
-        let result = self.gpu_device.retrive_data(&self.data).await;
+    pub fn raw_values(&self) -> Option<Vec<bool>> {
+        let result = self.gpu_device.retrive_data(&self.data);
         let result: Vec<u8> = bytemuck::cast_slice(&result).to_vec();
         let mut bool_result = Vec::<bool>::with_capacity(self.len);
         for i in 0..self.len {
@@ -97,14 +96,14 @@ impl BooleanArrayGPU {
         Some(bool_result)
     }
 
-    pub async fn values(&self) -> Vec<Option<bool>> {
-        let primitive_values = self.raw_values().await.unwrap();
+    pub fn values(&self) -> Vec<Option<bool>> {
+        let primitive_values = self.raw_values().unwrap();
         let mut result_vec = Vec::with_capacity(self.len);
 
         // TODO rework this
         match &self.null_buffer {
             Some(null_bit_buffer) => {
-                let null_values = null_bit_buffer.raw_values().await;
+                let null_values = null_bit_buffer.raw_values();
                 for (pos, val) in primitive_values.iter().enumerate() {
                     if (null_values[pos / 8] & 1 << (pos % 8)) != 0 {
                         result_vec.push(Some(*val))
@@ -134,7 +133,7 @@ impl Debug for BooleanArrayGPU {
             f,
             "Array of length {} contains {:?}",
             self.len,
-            self.values().block_on()
+            self.values()
         )?;
         write!(f, "}}")
     }
@@ -193,14 +192,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_boolean_values() {
-        let gpu_device = GpuDevice::new().await;
+        let gpu_device = GpuDevice::new();
         let values = vec![Some(true), Some(true), Some(false), None];
         let array = BooleanArrayGPU::from_optional_slice(&values, Arc::new(gpu_device));
 
-        let raw_values = array.raw_values().await.unwrap();
+        let raw_values = array.raw_values().unwrap();
         assert_eq!(raw_values, vec![true, true, false, false]);
 
-        let gpu_values = array.values().await;
+        let gpu_values = array.values();
         assert_eq!(gpu_values, values);
     }
 

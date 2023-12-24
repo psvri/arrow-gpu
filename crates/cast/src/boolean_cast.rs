@@ -78,7 +78,7 @@ impl Cast<Float32ArrayGPU> for BooleanArrayGPU {
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         }
     }
 }

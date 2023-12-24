@@ -119,18 +119,18 @@ impl NullBitBufferGpu {
         }
     }
 
-    pub async fn raw_values(&self) -> Vec<u8> {
-        let result = &self.gpu_device.retrive_data(&self.bit_buffer).await;
+    pub fn raw_values(&self) -> Vec<u8> {
+        let result = &self.gpu_device.retrive_data(&self.bit_buffer);
         let buffer_size = align_to(self.len, 8) / 8;
         result[0..buffer_size].to_vec()
     }
 
-    pub async fn clone_null_bit_buffer(data: &Option<Self>) -> Option<Self> {
+    pub fn clone_null_bit_buffer(data: &Option<Self>) -> Option<Self> {
         match data {
             None => None,
             Some(null_bit_buffer) => Some({
                 NullBitBufferGpu {
-                    bit_buffer: Arc::new(null_bit_buffer.clone_buffer().await),
+                    bit_buffer: Arc::new(null_bit_buffer.clone_buffer()),
                     len: null_bit_buffer.len,
                     gpu_device: null_bit_buffer.gpu_device.clone(),
                 }
@@ -138,8 +138,8 @@ impl NullBitBufferGpu {
         }
     }
 
-    async fn clone_buffer(&self) -> Buffer {
-        self.gpu_device.clone_buffer(&self.bit_buffer).await
+    fn clone_buffer(&self) -> Buffer {
+        self.gpu_device.clone_buffer(&self.bit_buffer)
     }
 
     pub async fn merge_null_bit_buffer(
@@ -149,7 +149,7 @@ impl NullBitBufferGpu {
         match (left, right) {
             (None, None) => None,
             (Some(x), None) | (None, Some(x)) => Some({
-                let buffer = x.clone_buffer().await;
+                let buffer = x.clone_buffer();
                 Self {
                     bit_buffer: buffer.into(),
                     len: x.len,

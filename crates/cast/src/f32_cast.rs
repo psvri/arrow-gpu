@@ -25,7 +25,7 @@ impl Cast<UInt8ArrayGPU> for Float32ArrayGPU {
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         }
     }
 }
@@ -38,10 +38,7 @@ mod test {
     use arrow_gpu_array::array::*;
 
     test_cast_op!(
-        #[cfg_attr(
-            target_os = "linux",
-            ignore = "Not passing in CI 🤔"
-        )]
+        #[cfg_attr(target_os = "linux", ignore = "Not passing in CI 🤔")]
         test_cast_f32_to_u8,
         Float32ArrayGPU,
         UInt8ArrayGPU,

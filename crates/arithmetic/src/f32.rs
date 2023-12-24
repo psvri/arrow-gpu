@@ -196,7 +196,7 @@ mod tests {
         ignore = "Not passing in CI but passes in local 🤔"
     )]
     async fn test_large_f32_array() {
-        let device = Arc::new(GpuDevice::new().await);
+        let device = Arc::new(GpuDevice::new());
         let gpu_array = Float32ArrayGPU::from_slice(
             &(0..1024 * 1024 * 10)
                 .into_iter()
@@ -208,7 +208,6 @@ mod tests {
         let new_gpu_array = gpu_array.add_scalar(&values_array).await;
         for (index, value) in new_gpu_array
             .raw_values()
-            .await
             .unwrap()
             .into_iter()
             .enumerate()

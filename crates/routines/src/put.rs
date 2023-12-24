@@ -99,13 +99,13 @@ mod tests {
                 use arrow_gpu_array::GPU_DEVICE;
                 use arrow_gpu_array::array::GpuDevice;
                 use pollster::FutureExt;
-                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone());
+                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
                 let gpu_array_1 = $operand_type::from_slice(&$src, device.clone());
                 let mut gpu_array_2 = $operand_type::from_slice(&$dst, device.clone());
                 let src_index = UInt32ArrayGPU::from_slice(&$src_index, device.clone());
                 let dst_index = UInt32ArrayGPU::from_slice(&$dst_index, device);
                 gpu_array_1.$operation(&src_index, &mut gpu_array_2, &dst_index).await;
-                assert_eq!(gpu_array_2.raw_values().await.unwrap(), $output);
+                assert_eq!(gpu_array_2.raw_values().unwrap(), $output);
             }
         };
         ($(#[$m:meta])* $fn_name: ident, $operand_type: ident, $operation: ident, $operation_dyn: ident, $src: expr, $dst: expr, $src_index: expr, $dst_index: expr, $output: expr) => {
@@ -114,14 +114,13 @@ mod tests {
             async fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
                 use arrow_gpu_array::array::GpuDevice;
-                use pollster::FutureExt;
-                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone());
+                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
                 let gpu_array_1 = $operand_type::from_slice(&$src, device.clone());
                 let mut gpu_array_2 = $operand_type::from_slice(&$dst, device.clone());
                 let src_index = UInt32ArrayGPU::from_slice(&$src_index, device.clone());
                 let dst_index = UInt32ArrayGPU::from_slice(&$dst_index, device.clone());
                 gpu_array_1.$operation(&src_index, &mut gpu_array_2, &dst_index).await;
-                assert_eq!(gpu_array_2.raw_values().await.unwrap(), $output);
+                assert_eq!(gpu_array_2.raw_values().unwrap(), $output);
 
                 let mut gpu_array_2_dyn = $operand_type::from_slice(&$dst, device.clone()).into();
                 $operation_dyn(&gpu_array_1.into(), &src_index, &mut gpu_array_2_dyn, &dst_index).await;
@@ -129,7 +128,6 @@ mod tests {
                 let new_values = $operand_type::try_from(gpu_array_2_dyn)
                     .unwrap()
                     .raw_values()
-                    .await
                     .unwrap();
                 assert_eq!(new_values, $output);
             }

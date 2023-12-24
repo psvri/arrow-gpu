@@ -72,7 +72,7 @@ macro_rules! apply_unary_function {
             Arc::new(new_buffer.await),
             $self.gpu_device.clone(),
             $self.len,
-            new_null_buffer.await,
+            new_null_buffer,
         );
     };
 }

@@ -74,7 +74,7 @@ impl<T: HyperbolicType + ArrowPrimitiveType> Hyperbolic for PrimitiveArrayGpu<T>
             Arc::new(new_buffer),
             self.gpu_device.clone(),
             self.len,
-            NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         )
     }
 }
@@ -99,7 +99,7 @@ impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArray
             Arc::new(new_buffer),
             self.gpu_device.clone(),
             self.len,
-            NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         )
     }
 
@@ -119,7 +119,7 @@ impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArray
             Arc::new(new_buffer),
             self.gpu_device.clone(),
             self.len,
-            NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         )
     }
 }

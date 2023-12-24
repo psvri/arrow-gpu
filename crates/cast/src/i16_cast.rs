@@ -34,7 +34,7 @@ impl Cast<Int32ArrayGPU> for Int16ArrayGPU {
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         }
     }
 }
@@ -59,7 +59,7 @@ impl Cast<UInt32ArrayGPU> for Int16ArrayGPU {
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         }
     }
 }
@@ -84,7 +84,7 @@ impl Cast<Float32ArrayGPU> for Int16ArrayGPU {
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         }
     }
 }
@@ -94,11 +94,11 @@ impl Cast<UInt16ArrayGPU> for Int16ArrayGPU {
 
     async fn cast(&self) -> UInt16ArrayGPU {
         UInt16ArrayGPU {
-            data: Arc::new(self.gpu_device.clone_buffer(&self.data).await),
+            data: Arc::new(self.gpu_device.clone_buffer(&self.data)),
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         }
     }
 }

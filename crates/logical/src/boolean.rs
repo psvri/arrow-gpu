@@ -80,7 +80,7 @@ impl Logical for BooleanArrayGPU {
             data: Arc::new(new_buffer),
             gpu_device: self.gpu_device.clone(),
             len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         }
     }
 
@@ -140,7 +140,6 @@ impl LogicalContains for BooleanArrayGPU {
         u32::from_le_bytes(
             self.gpu_device
                 .retrive_data(&new_buffer)
-                .await
                 .try_into()
                 .unwrap(),
         ) > 0
@@ -251,9 +250,8 @@ mod test {
     async fn test_any() {
         use arrow_gpu_array::array::GpuDevice;
         use arrow_gpu_array::GPU_DEVICE;
-        use pollster::FutureExt;
         let device = GPU_DEVICE
-            .get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone())
+            .get_or_init(|| Arc::new(GpuDevice::new()))
             .clone();
         let data = vec![true, true, false, true, false];
         let gpu_array = BooleanArrayGPU::from_slice(&data, device.clone());
