@@ -119,70 +119,56 @@ impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArray
     }
 }
 
-//TODO replace the below fns with macros
+macro_rules! dyn_fn {
+    ($([$dyn: ident, $dyn_op: ident, $array_op: ident, $($arr:ident),* ]),*) => {
+        $(
+            pub fn $dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
+                let mut pipeline = ArrowComputePipeline::new(data.get_gpu_device(), None);
+                let result = $dyn_op(data, &mut pipeline);
+                pipeline.finish();
+                result
+            }
 
-pub fn sinh_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.sinh().into(),
-        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.sinh().into(),
-        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.sinh().into(),
-        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.sinh().into(),
-        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.sinh().into(),
-        _ => panic!("Operation not supported"),
+            pub fn $dyn_op(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
+                match data {
+                    $(ArrowArrayGPU::$arr(arr_1) => arr_1.$array_op(pipeline).into(),)*
+                    _ => panic!("Operation {} not supported for type {:?}", stringify!($dyn_op), data.get_dtype())
+                }
+            }
+        )+
     }
 }
 
-pub fn sinh_op_dyn(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.sinh_op(pipeline).into(),
-        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.sinh_op(pipeline).into(),
-        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.sinh_op(pipeline).into(),
-        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.sinh_op(pipeline).into(),
-        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.sinh_op(pipeline).into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn cos_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.cos().into(),
-        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.cos().into(),
-        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.cos().into(),
-        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.cos().into(),
-        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.cos().into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn cos_op_dyn(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.cos_op(pipeline).into(),
-        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.cos_op(pipeline).into(),
-        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.cos_op(pipeline).into(),
-        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.cos_op(pipeline).into(),
-        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.cos_op(pipeline).into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn sin_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.sin().into(),
-        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.sin().into(),
-        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.sin().into(),
-        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.sin().into(),
-        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.sin().into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn sin_op_dyn(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.sin_op(pipeline).into(),
-        ArrowArrayGPU::UInt16ArrayGPU(arr) => arr.sin_op(pipeline).into(),
-        ArrowArrayGPU::UInt8ArrayGPU(arr) => arr.sin_op(pipeline).into(),
-        ArrowArrayGPU::Int16ArrayGPU(arr) => arr.sin_op(pipeline).into(),
-        ArrowArrayGPU::Int8ArrayGPU(arr) => arr.sin_op(pipeline).into(),
-        _ => panic!("Operation not supported"),
-    }
-}
+dyn_fn!(
+    [
+        sinh_dyn,
+        sinh_op_dyn,
+        sinh_op,
+        Float32ArrayGPU,
+        UInt16ArrayGPU,
+        UInt8ArrayGPU,
+        Int16ArrayGPU,
+        Int8ArrayGPU
+    ],
+    [
+        cos_dyn,
+        cos_op_dyn,
+        cos_op,
+        Float32ArrayGPU,
+        UInt16ArrayGPU,
+        UInt8ArrayGPU,
+        Int16ArrayGPU,
+        Int8ArrayGPU
+    ],
+    [
+        sin_dyn,
+        sin_op_dyn,
+        sin_op,
+        Float32ArrayGPU,
+        UInt16ArrayGPU,
+        UInt8ArrayGPU,
+        Int16ArrayGPU,
+        Int8ArrayGPU
+    ]
+    
+);

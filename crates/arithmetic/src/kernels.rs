@@ -66,7 +66,7 @@ pub trait ArrowScalarRem<Rhs>: ArrayUtils {
 }
 
 macro_rules! dyn_fn {
-    ($function:ident, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*,$([$x: ident, $z: ident]),*) => {
+    ($function:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*,$([$x: ident, $z: ident]),*) => {
         pub fn $function(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
             let mut pipeline = ArrowComputePipeline::new(data_1.get_gpu_device(), None);
             let result = $function_op(data_1, data_2, &mut pipeline);
@@ -87,7 +87,7 @@ macro_rules! dyn_fn {
             }
         }
     };
-    ($([$dyn: ident, $array: ident, $scalar: ident, $dyn_op: ident, $array_op: ident, $scalar_op: ident]),*) => {
+    ($([$dyn: ident, $dyn_op: ident, $array_op: ident, $scalar_op: ident]),*) => {
         $(
             pub fn $dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
                 let mut pipeline = ArrowComputePipeline::new(input1.get_gpu_device(), None);
@@ -110,7 +110,6 @@ macro_rules! dyn_fn {
 
 dyn_fn!(
     add_scalar_dyn,
-    add_scalar,
     add_scalar_op_dyn,
     add_scalar_op,
     Float32ArrayGPU,
@@ -122,7 +121,6 @@ dyn_fn!(
 
 dyn_fn!(
     sub_scalar_dyn,
-    sub_scalar,
     sub_scalar_op_dyn,
     sub_scalar_op,
     Float32ArrayGPU,
@@ -132,7 +130,6 @@ dyn_fn!(
 
 dyn_fn!(
     mul_scalar_dyn,
-    mul_scalar,
     mul_scalar_op_dyn,
     mul_scalar_op,
     Float32ArrayGPU,
@@ -142,7 +139,6 @@ dyn_fn!(
 
 dyn_fn!(
     div_scalar_dyn,
-    div_scalar,
     div_scalar_op_dyn,
     div_scalar_op,
     Float32ArrayGPU,
@@ -152,7 +148,6 @@ dyn_fn!(
 
 dyn_fn!(
     rem_scalar_dyn,
-    rem_scalar,
     rem_scalar_op_dyn,
     rem_scalar_op,
     Float32ArrayGPU,
@@ -205,7 +200,6 @@ pub trait ArrowDiv<Rhs>: ArrayUtils {
 
 dyn_fn!(
     add_array_dyn,
-    add,
     add_array_op_dyn,
     add_op,
     Float32ArrayGPU,
@@ -218,7 +212,6 @@ dyn_fn!(
 
 dyn_fn!(
     sub_array_dyn,
-    sub,
     sub_array_op_dyn,
     sub_op,
     Float32ArrayGPU,
@@ -226,7 +219,6 @@ dyn_fn!(
 
 dyn_fn!(
     mul_array_dyn,
-    mul,
     mul_array_op_dyn,
     mul_op,
     Float32ArrayGPU,
@@ -234,7 +226,6 @@ dyn_fn!(
 
 dyn_fn!(
     div_array_dyn,
-    div,
     div_array_op_dyn,
     div_op,
     Float32ArrayGPU,
@@ -243,32 +234,24 @@ dyn_fn!(
 dyn_fn!(
     [
         add_dyn,
-        add_array_dyn,
-        add_scalar_dyn,
         add_op_dyn,
         add_array_op_dyn,
         add_scalar_op_dyn
     ],
     [
         sub_dyn,
-        sub_array_dyn,
-        sub_scalar_dyn,
         sub_op_dyn,
         sub_array_op_dyn,
         sub_scalar_op_dyn
     ],
     [
         mul_dyn,
-        mul_array_dyn,
-        mul_scalar_dyn,
         mul_op_dyn,
         mul_array_op_dyn,
         mul_scalar_op_dyn
     ],
     [
         div_dyn,
-        div_array_dyn,
-        div_scalar_dyn,
         div_op_dyn,
         div_array_op_dyn,
         div_scalar_op_dyn
