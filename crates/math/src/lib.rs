@@ -146,88 +146,31 @@ impl<T: FloatMathUnaryType + ArrowPrimitiveType> FloatMathUnary for PrimitiveArr
     }
 }
 
-//TODO replace the below dyn fns with macros
+macro_rules! dyn_fn {
+    ($([$dyn: ident, $dyn_op: ident, $array_op: ident, $($arr:ident),* ]),*) => {
+        $(
+            pub fn $dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
+                let mut pipeline = ArrowComputePipeline::new(data.get_gpu_device(), None);
+                let result = $dyn_op(data, &mut pipeline);
+                pipeline.finish();
+                result
+            }
 
-pub fn abs_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.abs().into(),
-        _ => panic!("Operation not supported"),
+            pub fn $dyn_op(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
+                match data {
+                    $(ArrowArrayGPU::$arr(arr_1) => arr_1.$array_op(pipeline).into(),)*
+                    _ => panic!("Operation {} not supported for type {:?}", stringify!($dyn_op), data.get_dtype())
+                }
+            }
+        )+
     }
 }
 
-pub fn abs_op_dyn(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.abs_op(pipeline).into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn sqrt_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.sqrt().into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn sqrt_op_dyn(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.sqrt_op(pipeline).into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn exp_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.exp().into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn exp_op_dyn(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.exp_op(pipeline).into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn exp2_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.exp2().into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn exp2_op_dyn(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.exp2_op(pipeline).into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn log_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.log().into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn log_op_dyn(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.log_op(pipeline).into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn log2_dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.log2().into(),
-        _ => panic!("Operation not supported"),
-    }
-}
-
-pub fn log2_op_dyn(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
-    match data {
-        ArrowArrayGPU::Float32ArrayGPU(arr) => arr.log2_op(pipeline).into(),
-        _ => panic!("Operation not supported"),
-    }
-}
+dyn_fn!(
+    [abs_dyn, abs_op_dyn, abs_op, Float32ArrayGPU],
+    [sqrt_dyn, sqrt_op_dyn, sqrt_op, Float32ArrayGPU],
+    [exp_dyn, exp_op_dyn, exp_op, Float32ArrayGPU],
+    [exp2_dyn, exp2_op_dyn, exp2_op, Float32ArrayGPU],
+    [log_dyn, log_op_dyn, log_op, Float32ArrayGPU],
+    [log2_dyn, log2_op_dyn, log2_op, Float32ArrayGPU]
+);
