@@ -4,7 +4,8 @@ use bytemuck::Pod;
 use log::info;
 use pollster::FutureExt;
 use wgpu::{
-    util::DeviceExt, Adapter, BindGroup, Buffer, ComputePipeline, Device, Queue, ShaderModule,
+    util::DeviceExt, Adapter, BindGroup, BindGroupDescriptor, Buffer, ComputePipeline, Device,
+    Queue, ShaderModule,
 };
 
 use super::RustNativeType;
@@ -57,7 +58,7 @@ impl CmpQuery {
         );
     }
 
-    pub async fn wait_for_results(&self, device: &wgpu::Device, queue: &wgpu::Queue) {
+    pub fn wait_for_results(&self, device: &wgpu::Device, queue: &wgpu::Queue) {
         self.destination_buffer
             .slice(..)
             .map_async(wgpu::MapMode::Read, |_| ());
@@ -104,8 +105,8 @@ impl GpuDevice {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
-                    features: wgpu::Features::TIMESTAMP_QUERY,
-                    limits: wgpu::Limits::downlevel_defaults(),
+                    required_features: wgpu::Features::TIMESTAMP_QUERY,
+                    required_limits: wgpu::Limits::downlevel_defaults(),
                 },
                 None,
             )
@@ -122,8 +123,8 @@ impl GpuDevice {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
-                    features: wgpu::Features::empty(),
-                    limits: wgpu::Limits::downlevel_defaults(),
+                    required_features: wgpu::Features::empty(),
+                    required_limits: wgpu::Limits::downlevel_defaults(),
                 },
                 None,
             )
@@ -176,7 +177,6 @@ impl GpuDevice {
         query
     }
 
-    #[inline]
     pub fn create_shader_module(&self, shader: &str) -> ShaderModule {
         self.device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -185,7 +185,6 @@ impl GpuDevice {
             })
     }
 
-    #[inline]
     pub fn create_compute_pipeline(&self, shader: &str, entry_point: &str) -> ComputePipeline {
         let cs_module = self.create_shader_module(shader);
         self.device
@@ -197,7 +196,6 @@ impl GpuDevice {
             })
     }
 
-    #[inline]
     pub fn create_gpu_buffer_with_data(&self, data: &[impl RustNativeType]) -> Buffer {
         self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -246,6 +244,14 @@ impl GpuDevice {
         encoder.copy_buffer_to_buffer(buffer, 0, &staging_buffer, 0, buffer.size());
 
         self.queue.submit(Some(encoder.finish()));
+
+        staging_buffer
+    }
+
+    pub fn clone_buffer_pass(&self, buffer: &Buffer, encoder: &mut wgpu::CommandEncoder) -> Buffer {
+        let staging_buffer = self.create_empty_buffer(buffer.size());
+
+        encoder.copy_buffer_to_buffer(buffer, 0, &staging_buffer, 0, buffer.size());
 
         staging_buffer
     }
@@ -527,5 +533,9 @@ impl GpuDevice {
         self.queue.submit(Some(encoder.finish()));
 
         new_values_buffer
+    }
+
+    pub fn create_bind_group(&self, desc: &BindGroupDescriptor) -> BindGroup {
+        self.device.create_bind_group(desc)
     }
 }

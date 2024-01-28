@@ -11,9 +11,8 @@ const I32_ARRAY_SHADER: &str = include_str!("../compute_shaders/i32/array.wgsl")
 impl_arithmetic_op!(
     ArrowScalarAdd,
     Int32Type,
-    add_scalar,
+    add_scalar_op,
     Int32ArrayGPU,
-    4,
     I32_SCALAR_SHADER,
     "i32_add"
 );
@@ -21,9 +20,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarSub,
     Int32Type,
-    sub_scalar,
+    sub_scalar_op,
     Int32ArrayGPU,
-    4,
     I32_SCALAR_SHADER,
     "i32_sub"
 );
@@ -31,9 +29,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarMul,
     Int32Type,
-    mul_scalar,
+    mul_scalar_op,
     Int32ArrayGPU,
-    4,
     I32_SCALAR_SHADER,
     "i32_mul"
 );
@@ -41,9 +38,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarDiv,
     Int32Type,
-    div_scalar,
+    div_scalar_op,
     Int32ArrayGPU,
-    4,
     I32_SCALAR_SHADER,
     "i32_div"
 );
@@ -51,9 +47,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarRem,
     Int32Type,
-    rem_scalar,
+    rem_scalar_op,
     Int32ArrayGPU,
-    4,
     I32_SCALAR_SHADER,
     "i32_rem"
 );
@@ -61,9 +56,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarAdd,
     Int32Type,
-    add_scalar,
+    add_scalar_op,
     Date32ArrayGPU,
-    4,
     I32_SCALAR_SHADER,
     "i32_add"
 );
@@ -71,9 +65,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarSub,
     Int32Type,
-    sub_scalar,
+    sub_scalar_op,
     Date32ArrayGPU,
-    4,
     I32_SCALAR_SHADER,
     "i32_sub"
 );
@@ -81,9 +74,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarMul,
     Int32Type,
-    mul_scalar,
+    mul_scalar_op,
     Date32ArrayGPU,
-    4,
     I32_SCALAR_SHADER,
     "i32_mul"
 );
@@ -91,9 +83,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarDiv,
     Int32Type,
-    div_scalar,
+    div_scalar_op,
     Date32ArrayGPU,
-    4,
     I32_SCALAR_SHADER,
     "i32_div"
 );
@@ -101,9 +92,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarRem,
     Int32Type,
-    rem_scalar,
+    rem_scalar_op,
     Date32ArrayGPU,
-    4,
     I32_SCALAR_SHADER,
     "i32_rem"
 );
@@ -111,9 +101,8 @@ impl_arithmetic_op!(
 impl_arithmetic_array_op!(
     ArrowAdd,
     Int32Type,
-    add,
+    add_op,
     Int32ArrayGPU,
-    4,
     I32_ARRAY_SHADER,
     "add_i32"
 );
@@ -121,9 +110,8 @@ impl_arithmetic_array_op!(
 impl_arithmetic_array_op!(
     ArrowAdd,
     Int32Type,
-    add,
+    add_op,
     Date32ArrayGPU,
-    4,
     I32_ARRAY_SHADER,
     "add_i32"
 );

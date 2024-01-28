@@ -1,11 +1,11 @@
-use arrow_gpu_array::array::{ArrowArrayGPU, GpuDevice, UInt32ArrayGPU};
+use arrow_gpu_array::array::{ArrowArrayGPU, ArrowComputePipeline, GpuDevice, UInt32ArrayGPU};
 use wgpu::Buffer;
 
 use crate::Swizzle;
 
 pub(crate) const U32_PUT_SHADER: &str = include_str!("../compute_shaders/32bit/put.wgsl");
 
-pub(crate) fn apply_put_function(
+pub(crate) fn apply_put_op(
     device: &GpuDevice,
     src_buffer: &Buffer,
     dst_buffer: &Buffer,
@@ -14,6 +14,7 @@ pub(crate) fn apply_put_function(
     indexes_count: u64,
     shader: &str,
     entry_point: &str,
+    pipeline: &mut ArrowComputePipeline,
 ) {
     let compute_pipeline = device.create_compute_pipeline(shader, entry_point);
 
@@ -41,11 +42,10 @@ pub(crate) fn apply_put_function(
         ],
     });
 
-    let mut encoder = device.create_command_encoder(Some(entry_point));
     let dispatch_size = indexes_count;
 
     let query = device.compute_pass(
-        &mut encoder,
+        &mut pipeline.encoder,
         None,
         &compute_pipeline,
         &bind_group_array,
@@ -53,8 +53,7 @@ pub(crate) fn apply_put_function(
         dispatch_size.div_ceil(256) as u32,
     );
 
-    query.resolve(&mut encoder);
-    device.queue.submit(Some(encoder.finish()));
+    query.resolve(&mut pipeline.encoder);
 }
 
 pub fn put_dyn(
@@ -75,6 +74,34 @@ pub fn put_dyn(
         }
         (ArrowArrayGPU::Date32ArrayGPU(x), ArrowArrayGPU::Date32ArrayGPU(y)) => {
             x.put(src_indexes, y, dst_indexes)
+        }
+        (x, y) => panic!(
+            "Put Operation not supported for {:?} and {:?}",
+            x.get_dtype(),
+            y.get_dtype(),
+        ),
+    }
+}
+
+pub fn put_op_dyn(
+    src: &ArrowArrayGPU,
+    src_indexes: &UInt32ArrayGPU,
+    dst: &mut ArrowArrayGPU,
+    dst_indexes: &UInt32ArrayGPU,
+    pipeline: &mut ArrowComputePipeline,
+) {
+    match (src, dst) {
+        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowArrayGPU::Float32ArrayGPU(y)) => {
+            x.put_op(src_indexes, y, dst_indexes, pipeline)
+        }
+        (ArrowArrayGPU::Int32ArrayGPU(x), ArrowArrayGPU::Int32ArrayGPU(y)) => {
+            x.put_op(src_indexes, y, dst_indexes, pipeline)
+        }
+        (ArrowArrayGPU::UInt32ArrayGPU(x), ArrowArrayGPU::UInt32ArrayGPU(y)) => {
+            x.put_op(src_indexes, y, dst_indexes, pipeline)
+        }
+        (ArrowArrayGPU::Date32ArrayGPU(x), ArrowArrayGPU::Date32ArrayGPU(y)) => {
+            x.put_op(src_indexes, y, dst_indexes, pipeline)
         }
         (x, y) => panic!(
             "Put Operation not supported for {:?} and {:?}",

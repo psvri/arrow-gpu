@@ -1,3 +1,4 @@
+use super::ArrayUtils;
 use super::{gpu_device::GpuDevice, NullBitBufferGpu};
 use crate::array::{ArrowPrimitiveType, BooleanBufferBuilder};
 
@@ -127,6 +128,12 @@ impl<T: ArrowPrimitiveType> Debug for PrimitiveArrayGpu<T> {
             self.values()
         )?;
         write!(f, "}}")
+    }
+}
+
+impl<T: ArrowPrimitiveType> ArrayUtils for PrimitiveArrayGpu<T> {
+    fn get_gpu_device(&self) -> Arc<GpuDevice> {
+        self.gpu_device.clone()
     }
 }
 

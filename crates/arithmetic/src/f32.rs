@@ -12,9 +12,8 @@ const F32_NEG_SHADER: &str = include_str!("../compute_shaders/f32/neg.wgsl");
 impl_arithmetic_op!(
     ArrowScalarAdd,
     Float32Type,
-    add_scalar,
+    add_scalar_op,
     Float32ArrayGPU,
-    4,
     F32_SCALAR_SHADER,
     "f32_add"
 );
@@ -22,9 +21,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarSub,
     Float32Type,
-    sub_scalar,
+    sub_scalar_op,
     Float32ArrayGPU,
-    4,
     F32_SCALAR_SHADER,
     "f32_sub"
 );
@@ -32,9 +30,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarMul,
     Float32Type,
-    mul_scalar,
+    mul_scalar_op,
     Float32ArrayGPU,
-    4,
     F32_SCALAR_SHADER,
     "f32_mul"
 );
@@ -42,9 +39,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarDiv,
     Float32Type,
-    div_scalar,
+    div_scalar_op,
     Float32ArrayGPU,
-    4,
     F32_SCALAR_SHADER,
     "f32_div"
 );
@@ -52,9 +48,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarRem,
     Float32Type,
-    rem_scalar,
+    rem_scalar_op,
     Float32ArrayGPU,
-    4,
     F32_SCALAR_SHADER,
     "f32_rem"
 );
@@ -62,9 +57,8 @@ impl_arithmetic_op!(
 impl_arithmetic_array_op!(
     ArrowAdd,
     Float32Type,
-    add,
+    add_op,
     Float32ArrayGPU,
-    4,
     F32_ARRAY_SHADER,
     "add_f32"
 );
@@ -72,9 +66,8 @@ impl_arithmetic_array_op!(
 impl_arithmetic_array_op!(
     ArrowSub,
     Float32Type,
-    sub,
+    sub_op,
     Float32ArrayGPU,
-    4,
     F32_ARRAY_SHADER,
     "sub_f32"
 );
@@ -82,9 +75,8 @@ impl_arithmetic_array_op!(
 impl_arithmetic_array_op!(
     ArrowMul,
     Float32Type,
-    mul,
+    mul_op,
     Float32ArrayGPU,
-    4,
     F32_ARRAY_SHADER,
     "mul_f32"
 );
@@ -92,9 +84,8 @@ impl_arithmetic_array_op!(
 impl_arithmetic_array_op!(
     ArrowDiv,
     Float32Type,
-    div,
+    div_op,
     Float32ArrayGPU,
-    4,
     F32_ARRAY_SHADER,
     "div_f32"
 );

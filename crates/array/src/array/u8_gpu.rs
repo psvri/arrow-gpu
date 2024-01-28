@@ -3,7 +3,7 @@ use crate::ArrowErrorGPU;
 use std::sync::Arc;
 
 use super::{
-    gpu_device::GpuDevice, primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU, ArrowArrayGPU,
+    gpu_device::GpuDevice, primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU, ArrowArrayGPU, ArrowComputePipeline,
 };
 pub type UInt8ArrayGPU = PrimitiveArrayGpu<u8>;
 
@@ -22,6 +22,26 @@ impl UInt8ArrayGPU {
         Self {
             data,
             gpu_device,
+            phantom: std::marker::PhantomData,
+            len,
+            null_buffer,
+        }
+    }
+
+    pub fn broadcast_op(value: u8, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
+        let new_len = len.div_ceil(4);
+        let broadcast_value = (value as u32)
+            | ((value as u32) << 8)
+            | ((value as u32) << 16)
+            | ((value as u32) << 24);
+        let gpu_buffer =
+            UInt32ArrayGPU::create_broadcast_buffer_op(broadcast_value, new_len as u64, pipeline);
+        let data = Arc::new(gpu_buffer);
+        let null_buffer = None;
+
+        Self {
+            data,
+            gpu_device: pipeline.device.clone(),
             phantom: std::marker::PhantomData,
             len,
             null_buffer,

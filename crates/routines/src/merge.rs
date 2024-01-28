@@ -1,4 +1,4 @@
-use arrow_gpu_array::array::{ArrowArrayGPU, BooleanArrayGPU, GpuDevice};
+use arrow_gpu_array::array::{ArrowArrayGPU, ArrowComputePipeline, BooleanArrayGPU, GpuDevice};
 use wgpu::Buffer;
 
 pub(crate) const U32_MERGE_SHADER: &str = include_str!("../compute_shaders/32bit/merge.wgsl");
@@ -28,11 +28,9 @@ pub fn merge_null_buffers(
         None
     };
 
-    let merged_buffer_2 = if let Some(op2_null_buffer) = operand_2_null_buffer {
-        Some(device.apply_binary_function(op2_null_buffer, mask, 4, SHADER, "merge_not_selected"))
-    } else {
-        None
-    };
+    let merged_buffer_2 = operand_2_null_buffer.map(|op2_null_buffer| {
+        device.apply_binary_function(op2_null_buffer, mask, 4, SHADER, "merge_not_selected")
+    });
 
     let merged_buffer = match (merged_buffer_1, merged_buffer_2) {
         (Some(mb1), Some(mb2)) => {
@@ -47,6 +45,77 @@ pub fn merge_null_buffers(
             Some(device.apply_binary_function(&mb1, mb2, 4, SHADER, "merge_nulls"))
         }
         (None, Some(mb)) => Some(device.clone_buffer(mb)),
+        (Some(mb), None) => Some(mb),
+        (None, None) => None,
+    }
+}
+
+pub fn merge_null_buffers_op(
+    operand_1_null_buffer: Option<&Buffer>,
+    operand_2_null_buffer: Option<&Buffer>,
+    mask: &Buffer,
+    mask_null_buffer: Option<&Buffer>,
+    pipeline: &mut ArrowComputePipeline,
+) -> Option<Buffer> {
+    const SHADER: &str = include_str!("../compute_shaders/u32/merge_null_buffer.wgsl");
+
+    let merged_buffer_1 = if let Some(op1_null_buffer) = operand_1_null_buffer {
+        let dispatch_size = op1_null_buffer.size().div_ceil(4).div_ceil(256) as u32;
+        Some(pipeline.apply_binary_function(
+            op1_null_buffer,
+            mask,
+            op1_null_buffer.size(),
+            SHADER,
+            "merge_selected",
+            dispatch_size,
+        ))
+    } else {
+        None
+    };
+
+    let merged_buffer_2 = if let Some(op2_null_buffer) = operand_2_null_buffer {
+        let dispatch_size = op2_null_buffer.size().div_ceil(4).div_ceil(256) as u32;
+        Some(pipeline.apply_binary_function(
+            op2_null_buffer,
+            mask,
+            op2_null_buffer.size(),
+            SHADER,
+            "merge_not_selected",
+            dispatch_size,
+        ))
+    } else {
+        None
+    };
+
+    let merged_buffer = match (merged_buffer_1, merged_buffer_2) {
+        (Some(mb1), Some(mb2)) => {
+            let dispatch_size = mb1.size().div_ceil(4).div_ceil(256) as u32;
+            Some(pipeline.apply_binary_function(
+                &mb1,
+                &mb2,
+                mb1.size(),
+                SHADER,
+                "merge_or",
+                dispatch_size,
+            ))
+        }
+        (None, Some(mb)) | (Some(mb), None) => Some(mb),
+        (None, None) => None,
+    };
+
+    match (merged_buffer, mask_null_buffer) {
+        (Some(mb1), Some(mb2)) => {
+            let dispatch_size = mb1.size().div_ceil(4).div_ceil(256) as u32;
+            Some(pipeline.apply_binary_function(
+                &mb1,
+                mb2,
+                mb1.size(),
+                SHADER,
+                "merge_nulls",
+                dispatch_size,
+            ))
+        }
+        (None, Some(mb)) => Some(pipeline.clone_buffer(mb)),
         (Some(mb), None) => Some(mb),
         (None, None) => None,
     }
@@ -81,6 +150,45 @@ pub fn merge_dyn(
         }
         (ArrowArrayGPU::Float32ArrayGPU(op1), ArrowArrayGPU::Float32ArrayGPU(op2)) => {
             op1.merge(op2, mask).into()
+        }
+        _ => panic!(
+            "Merge Operation not supported between {:?} and {:?}",
+            operand_1.get_dtype(),
+            operand_2.get_dtype()
+        ),
+    }
+}
+
+pub fn merge_op_dyn(
+    operand_1: &ArrowArrayGPU,
+    operand_2: &ArrowArrayGPU,
+    mask: &BooleanArrayGPU,
+    pipeline: &mut ArrowComputePipeline,
+) -> ArrowArrayGPU {
+    match (operand_1, operand_2) {
+        (ArrowArrayGPU::Date32ArrayGPU(op1), ArrowArrayGPU::Date32ArrayGPU(op2)) => {
+            op1.merge_op(op2, mask, pipeline).into()
+        }
+        (ArrowArrayGPU::Int32ArrayGPU(op1), ArrowArrayGPU::Int32ArrayGPU(op2)) => {
+            op1.merge_op(op2, mask, pipeline).into()
+        }
+        (ArrowArrayGPU::Int16ArrayGPU(op1), ArrowArrayGPU::Int16ArrayGPU(op2)) => {
+            op1.merge_op(op2, mask, pipeline).into()
+        }
+        (ArrowArrayGPU::Int8ArrayGPU(op1), ArrowArrayGPU::Int8ArrayGPU(op2)) => {
+            op1.merge_op(op2, mask, pipeline).into()
+        }
+        (ArrowArrayGPU::UInt32ArrayGPU(op1), ArrowArrayGPU::UInt32ArrayGPU(op2)) => {
+            op1.merge_op(op2, mask, pipeline).into()
+        }
+        (ArrowArrayGPU::UInt16ArrayGPU(op1), ArrowArrayGPU::UInt16ArrayGPU(op2)) => {
+            op1.merge_op(op2, mask, pipeline).into()
+        }
+        (ArrowArrayGPU::UInt8ArrayGPU(op1), ArrowArrayGPU::UInt8ArrayGPU(op2)) => {
+            op1.merge_op(op2, mask, pipeline).into()
+        }
+        (ArrowArrayGPU::Float32ArrayGPU(op1), ArrowArrayGPU::Float32ArrayGPU(op2)) => {
+            op1.merge_op(op2, mask, pipeline).into()
         }
         _ => panic!(
             "Merge Operation not supported between {:?} and {:?}",

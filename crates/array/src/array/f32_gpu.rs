@@ -4,7 +4,7 @@ use wgpu::Buffer;
 
 use super::{
     gpu_device::GpuDevice, gpu_ops::f32_ops::*, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU,
-    ArrowType, NullBitBufferGpu,
+    ArrowComputePipeline, ArrowType, NullBitBufferGpu,
 };
 
 const F32_REDUCTION_SHADER: &str = include_str!("../../compute_shaders/f32/reduction.wgsl");
@@ -30,6 +30,30 @@ impl Float32ArrayGPU {
         Self {
             data,
             gpu_device,
+            phantom: std::marker::PhantomData,
+            len,
+            null_buffer,
+        }
+    }
+
+    pub fn broadcast_op(value: f32, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
+        let scalar_buffer = pipeline.device.create_scalar_buffer(&value);
+        let output_buffer_size = 4 * len as u64;
+        let dispatch_size = output_buffer_size.div_ceil(4).div_ceil(256);
+
+        let gpu_buffer = pipeline.apply_broadcast_function(
+            &scalar_buffer,
+            output_buffer_size,
+            F32_BROADCAST_SHADER,
+            "broadcast",
+            dispatch_size as u32,
+        );
+        let data = Arc::new(gpu_buffer);
+        let null_buffer = None;
+
+        Self {
+            data,
+            gpu_device: pipeline.device.clone(),
             phantom: std::marker::PhantomData,
             len,
             null_buffer,

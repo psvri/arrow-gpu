@@ -1,11 +1,11 @@
-use arrow_gpu_array::array::{ArrowArrayGPU, GpuDevice, UInt32ArrayGPU};
+use arrow_gpu_array::array::{ArrowArrayGPU, ArrowComputePipeline, GpuDevice, UInt32ArrayGPU};
 use wgpu::Buffer;
 
 use crate::Swizzle;
 
 pub(crate) const U32_TAKE_SHADER: &str = include_str!("../compute_shaders/32bit/take.wgsl");
 
-pub(crate) fn apply_take_function(
+pub(crate) fn apply_take_op(
     device: &GpuDevice,
     operand_1: &Buffer,
     operand_2: &Buffer,
@@ -13,6 +13,7 @@ pub(crate) fn apply_take_function(
     item_size: u64,
     shader: &str,
     entry_point: &str,
+    pipeline: &mut ArrowComputePipeline,
 ) -> Buffer {
     let compute_pipeline = device.create_compute_pipeline(shader, entry_point);
 
@@ -38,11 +39,10 @@ pub(crate) fn apply_take_function(
         ],
     });
 
-    let mut encoder = device.create_command_encoder(Some(entry_point));
     let dispatch_size = output_count;
 
     let query = device.compute_pass(
-        &mut encoder,
+        &mut pipeline.encoder,
         None,
         &compute_pipeline,
         &bind_group_array,
@@ -50,9 +50,26 @@ pub(crate) fn apply_take_function(
         dispatch_size.div_ceil(256) as u32,
     );
 
-    query.resolve(&mut encoder);
-    device.queue.submit(Some(encoder.finish()));
+    query.resolve(&mut pipeline.encoder);
+    pipeline.queries.push(query);
     new_values_buffer
+}
+
+pub fn take_op_dyn(
+    operand_1: &ArrowArrayGPU,
+    indexes: &UInt32ArrayGPU,
+    pipeline: &mut ArrowComputePipeline,
+) -> ArrowArrayGPU {
+    match operand_1 {
+        ArrowArrayGPU::Date32ArrayGPU(op1) => op1.take_op(indexes, pipeline).into(),
+        ArrowArrayGPU::UInt32ArrayGPU(op1) => op1.take_op(indexes, pipeline).into(),
+        ArrowArrayGPU::Int32ArrayGPU(op1) => op1.take_op(indexes, pipeline).into(),
+        ArrowArrayGPU::Float32ArrayGPU(op1) => op1.take_op(indexes, pipeline).into(),
+        _ => panic!(
+            "Take Operation not supported for {:?}",
+            operand_1.get_dtype(),
+        ),
+    }
 }
 
 pub fn take_dyn(operand_1: &ArrowArrayGPU, indexes: &UInt32ArrayGPU) -> ArrowArrayGPU {

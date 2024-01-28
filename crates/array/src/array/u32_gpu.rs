@@ -3,8 +3,8 @@ use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
 
 use super::{
-    gpu_device::GpuDevice, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowType,
-    NullBitBufferGpu,
+    gpu_device::GpuDevice, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowComputePipeline,
+    ArrowType, NullBitBufferGpu,
 };
 
 pub type UInt32ArrayGPU = PrimitiveArrayGpu<u32>;
@@ -43,6 +43,24 @@ impl UInt32ArrayGPU {
         )
     }
 
+    pub fn create_broadcast_buffer_op(
+        value: u32,
+        len: u64,
+        pipeline: &mut ArrowComputePipeline,
+    ) -> Buffer {
+        let scalar_buffer = &pipeline.device.create_scalar_buffer(&value);
+
+        let dispatch_size = len.div_ceil(256) as u32;
+
+        pipeline.apply_broadcast_function(
+            scalar_buffer,
+            4 * len,
+            U32_BROADCAST_SHADER,
+            "broadcast",
+            dispatch_size,
+        )
+    }
+
     pub fn broadcast(value: u32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let data = Arc::new(Self::create_broadcast_buffer(
             value,
@@ -54,6 +72,30 @@ impl UInt32ArrayGPU {
         Self {
             data,
             gpu_device,
+            phantom: std::marker::PhantomData,
+            len,
+            null_buffer,
+        }
+    }
+
+    pub fn broadcast_op(value: u32, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
+        let scalar_buffer = pipeline.device.create_scalar_buffer(&value);
+        let output_buffer_size = 4 * len as u64;
+        let dispatch_size = output_buffer_size.div_ceil(4).div_ceil(256);
+
+        let gpu_buffer = pipeline.apply_broadcast_function(
+            &scalar_buffer,
+            output_buffer_size,
+            U32_BROADCAST_SHADER,
+            "broadcast",
+            dispatch_size as u32,
+        );
+        let data = Arc::new(gpu_buffer);
+        let null_buffer = None;
+
+        Self {
+            data,
+            gpu_device: pipeline.device.clone(),
             phantom: std::marker::PhantomData,
             len,
             null_buffer,

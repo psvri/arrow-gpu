@@ -6,7 +6,10 @@ use wgpu::Buffer;
 use crate::kernels::broadcast::Broadcast;
 use crate::ArrowErrorGPU;
 
-use super::{ArrowArrayGPU, BooleanBufferBuilder, GpuDevice, NullBitBufferGpu};
+use super::{
+    ArrayUtils, ArrowArrayGPU, ArrowComputePipeline, BooleanBufferBuilder, GpuDevice,
+    NullBitBufferGpu,
+};
 
 pub struct BooleanArrayGPU {
     pub data: Arc<Buffer>,
@@ -120,6 +123,23 @@ impl BooleanArrayGPU {
 
         result_vec
     }
+
+    pub fn broadcast_op(value: bool, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
+        let buffer = if value {
+            BooleanBufferBuilder::new_set_with_capacity(len)
+        } else {
+            BooleanBufferBuilder::new_with_capacity(len)
+        };
+
+        let data = pipeline.device.create_gpu_buffer_with_data(&buffer.data);
+
+        Self {
+            data: Arc::new(data),
+            gpu_device: pipeline.device.clone(),
+            len,
+            null_buffer: None,
+        }
+    }
 }
 
 impl Debug for BooleanArrayGPU {
@@ -162,8 +182,6 @@ impl Broadcast<bool> for BooleanArrayGPU {
     type Output = BooleanArrayGPU;
 
     fn broadcast(value: bool, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
-        let null_buffer_builder = BooleanBufferBuilder::new_set_with_capacity(len);
-
         let buffer = if value {
             BooleanBufferBuilder::new_set_with_capacity(len)
         } else {
@@ -171,14 +189,19 @@ impl Broadcast<bool> for BooleanArrayGPU {
         };
 
         let data = gpu_device.create_gpu_buffer_with_data(&buffer.data);
-        let null_buffer = NullBitBufferGpu::new(gpu_device.clone(), &null_buffer_builder);
 
         Self {
             data: Arc::new(data),
             gpu_device,
             len,
-            null_buffer,
+            null_buffer: None,
         }
+    }
+}
+
+impl ArrayUtils for BooleanArrayGPU {
+    fn get_gpu_device(&self) -> Arc<GpuDevice> {
+        self.gpu_device.clone()
     }
 }
 

@@ -13,71 +13,55 @@ impl LogicalType for BooleanArrayGPU {
     const NOT_SHADER: &'static str = U32_NOT_SHADER;
 }
 
+macro_rules! apply_binary_function_op {
+    ($self: ident, $operand: ident, $shader: ident, $entry_point: ident, $pipeline: ident) => {
+        let dispatch_size = $self.data.size().div_ceil(4).div_ceil(256) as u32;
+
+        let new_buffer = $pipeline.apply_binary_function(
+            &$self.data,
+            &$operand.data,
+            $self.data.size(),
+            Self::$shader,
+            $entry_point,
+            dispatch_size,
+        );
+        let null_buffer = NullBitBufferGpu::merge_null_bit_buffer_op(
+            &$self.null_buffer,
+            &$operand.null_buffer,
+            $pipeline,
+        );
+
+        return Self {
+            data: Arc::new(new_buffer),
+            gpu_device: $self.gpu_device.clone(),
+            len: $self.len,
+            null_buffer,
+        };
+    };
+}
+
 impl Logical for BooleanArrayGPU {
-    fn bitwise_and(&self, operand: &Self) -> Self {
-        let new_buffer = self.gpu_device.apply_binary_function(
-            &self.data,
-            &operand.data,
-            4,
-            Self::SHADER,
-            AND_ENTRY_POINT,
-        );
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
+    fn bitwise_and_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self {
+        apply_binary_function_op!(self, operand, SHADER, AND_ENTRY_POINT, pipeline);
     }
 
-    fn bitwise_or(&self, operand: &Self) -> Self {
-        let new_buffer = self.gpu_device.apply_binary_function(
-            &self.data,
-            &operand.data,
-            4,
-            Self::SHADER,
-            OR_ENTRY_POINT,
-        );
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
+    fn bitwise_or_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self {
+        apply_binary_function_op!(self, operand, SHADER, OR_ENTRY_POINT, pipeline);
     }
 
-    fn bitwise_xor(&self, operand: &Self) -> Self {
-        let new_buffer = self.gpu_device.apply_binary_function(
-            &self.data,
-            &operand.data,
-            4,
-            Self::SHADER,
-            XOR_ENTRY_POINT,
-        );
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
+    fn bitwise_xor_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self {
+        apply_binary_function_op!(self, operand, SHADER, XOR_ENTRY_POINT, pipeline);
     }
 
-    fn bitwise_not(&self) -> Self {
-        let new_buffer = self.gpu_device.apply_unary_function(
+    fn bitwise_not_op(&self, pipeline: &mut ArrowComputePipeline) -> Self {
+        let dispatch_size = self.data.size().div_ceil(4).div_ceil(256) as u32;
+
+        let new_buffer = pipeline.apply_unary_function(
             &self.data,
             self.data.size(),
-            4,
             Self::NOT_SHADER,
             NOT_ENTRY_POINT,
+            dispatch_size,
         );
 
         Self {
@@ -88,42 +72,32 @@ impl Logical for BooleanArrayGPU {
         }
     }
 
-    fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self {
-        let new_buffer = self.gpu_device.apply_binary_function(
-            &self.data,
-            &operand.data,
-            4,
-            Self::SHIFT_SHADER,
+    fn bitwise_shl_op(
+        &self,
+        operand: &UInt32ArrayGPU,
+        pipeline: &mut ArrowComputePipeline,
+    ) -> Self {
+        apply_binary_function_op!(
+            self,
+            operand,
+            SHIFT_SHADER,
             SHIFT_LEFT_ENTRY_POINT,
+            pipeline
         );
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
     }
 
-    fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self {
-        let new_buffer = self.gpu_device.apply_binary_function(
-            &self.data,
-            &operand.data,
-            4,
-            Self::SHIFT_SHADER,
+    fn bitwise_shr_op(
+        &self,
+        operand: &UInt32ArrayGPU,
+        pipeline: &mut ArrowComputePipeline,
+    ) -> Self {
+        apply_binary_function_op!(
+            self,
+            operand,
+            SHIFT_SHADER,
             SHIFT_RIGHT_ENTRY_POINT,
+            pipeline
         );
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer);
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
     }
 }
 
