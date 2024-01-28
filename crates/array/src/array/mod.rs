@@ -4,6 +4,7 @@ use std::{any::Any, fmt::Debug};
 use wgpu::Buffer;
 
 pub(crate) mod boolean_gpu;
+pub(crate) mod compute_pipeline;
 pub(crate) mod date32_gpu;
 pub(crate) mod f32_gpu;
 pub(crate) mod gpu_device;
@@ -24,6 +25,7 @@ use crate::utils::ScalarArray;
 
 pub use self::gpu_device::GpuDevice;
 pub use boolean_gpu::BooleanArrayGPU;
+pub use compute_pipeline::ArrowComputePipeline;
 pub use date32_gpu::Date32ArrayGPU;
 pub use date32_gpu::Date32Type;
 pub use f32_gpu::Float32ArrayGPU;
@@ -83,13 +85,17 @@ impl_primitive_type!(i16, i16, 4);
 impl_primitive_type!(i8, i8, 1);
 impl_primitive_type!(Date32Type, i32, 4);
 
-pub trait ArrowArray: Any + Sync + Send + Debug {
+pub(crate) trait ArrowArray: Any + Sync + Send + Debug {
     fn as_any(&self) -> &dyn Any;
     fn get_data_type(&self) -> ArrowType;
     fn get_memory_used(&self) -> u64;
     fn get_gpu_device(&self) -> &GpuDevice;
     fn get_buffer(&self) -> &Buffer;
     fn get_null_bit_buffer(&self) -> Option<&NullBitBufferGpu>;
+}
+
+pub trait ArrayUtils {
+    fn get_gpu_device(&self) -> Arc<GpuDevice>;
 }
 
 #[derive(Debug)]
@@ -135,30 +141,30 @@ impl ArrowArrayGPU {
         }
     }
 
-    pub async fn get_raw_values(&self) -> ScalarArray {
+    pub fn get_raw_values(&self) -> ScalarArray {
         match self {
-            ArrowArrayGPU::Float32ArrayGPU(x) => x.raw_values().await.unwrap().into(),
-            ArrowArrayGPU::UInt16ArrayGPU(x) => x.raw_values().await.unwrap().into(),
-            ArrowArrayGPU::UInt32ArrayGPU(x) => x.raw_values().await.unwrap().into(),
-            ArrowArrayGPU::UInt8ArrayGPU(x) => x.raw_values().await.unwrap().into(),
-            ArrowArrayGPU::Int32ArrayGPU(x) => x.raw_values().await.unwrap().into(),
-            ArrowArrayGPU::Int16ArrayGPU(x) => x.raw_values().await.unwrap().into(),
-            ArrowArrayGPU::Int8ArrayGPU(x) => x.raw_values().await.unwrap().into(),
-            ArrowArrayGPU::Date32ArrayGPU(x) => x.raw_values().await.unwrap().into(),
-            ArrowArrayGPU::BooleanArrayGPU(x) => x.raw_values().await.unwrap().into(),
+            ArrowArrayGPU::Float32ArrayGPU(x) => x.raw_values().unwrap().into(),
+            ArrowArrayGPU::UInt16ArrayGPU(x) => x.raw_values().unwrap().into(),
+            ArrowArrayGPU::UInt32ArrayGPU(x) => x.raw_values().unwrap().into(),
+            ArrowArrayGPU::UInt8ArrayGPU(x) => x.raw_values().unwrap().into(),
+            ArrowArrayGPU::Int32ArrayGPU(x) => x.raw_values().unwrap().into(),
+            ArrowArrayGPU::Int16ArrayGPU(x) => x.raw_values().unwrap().into(),
+            ArrowArrayGPU::Int8ArrayGPU(x) => x.raw_values().unwrap().into(),
+            ArrowArrayGPU::Date32ArrayGPU(x) => x.raw_values().unwrap().into(),
+            ArrowArrayGPU::BooleanArrayGPU(x) => x.raw_values().unwrap().into(),
         }
     }
 
-    pub async fn clone_array(&self) -> ArrowArrayGPU {
+    pub fn clone_array(&self) -> ArrowArrayGPU {
         match self {
-            ArrowArrayGPU::Float32ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::UInt32ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::UInt16ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::UInt8ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::Int32ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::Int16ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::Int8ArrayGPU(x) => x.clone_array().await.into(),
-            ArrowArrayGPU::Date32ArrayGPU(x) => x.clone_array().await.into(),
+            ArrowArrayGPU::Float32ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::UInt32ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::UInt16ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::UInt8ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::Int32ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::Int16ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::Int8ArrayGPU(x) => x.clone_array().into(),
+            ArrowArrayGPU::Date32ArrayGPU(x) => x.clone_array().into(),
             ArrowArrayGPU::BooleanArrayGPU(_) => todo!(),
         }
     }
@@ -178,19 +184,32 @@ impl ArrowArrayGPU {
     }
 }
 
-pub async fn broadcast_dyn(
+pub fn broadcast_dyn(value: ScalarValue, len: usize, device: Arc<GpuDevice>) -> ArrowArrayGPU {
+    match value {
+        ScalarValue::F32(x) => Float32ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::U32(x) => UInt32ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::U16(x) => UInt16ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::U8(x) => UInt8ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::I32(x) => Int32ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::I16(x) => Int16ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::I8(x) => Int8ArrayGPU::broadcast(x, len, device).into(),
+        ScalarValue::BOOL(x) => BooleanArrayGPU::broadcast(x, len, device).into(),
+    }
+}
+
+pub fn broadcast_op_dyn(
     value: ScalarValue,
     len: usize,
-    device: Arc<GpuDevice>,
+    pipeline: &mut ArrowComputePipeline,
 ) -> ArrowArrayGPU {
     match value {
-        ScalarValue::F32(x) => Float32ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::U32(x) => UInt32ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::U16(x) => UInt16ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::U8(x) => UInt8ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::I32(x) => Int32ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::I16(x) => Int16ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::I8(x) => Int8ArrayGPU::broadcast(x, len, device).await.into(),
-        ScalarValue::BOOL(x) => BooleanArrayGPU::broadcast(x, len, device).await.into(),
+        ScalarValue::F32(x) => Float32ArrayGPU::broadcast_op(x, len, pipeline).into(),
+        ScalarValue::U32(x) => UInt32ArrayGPU::broadcast_op(x, len, pipeline).into(),
+        ScalarValue::U16(x) => UInt16ArrayGPU::broadcast_op(x, len, pipeline).into(),
+        ScalarValue::U8(x) => UInt8ArrayGPU::broadcast_op(x, len, pipeline).into(),
+        ScalarValue::I32(x) => Int32ArrayGPU::broadcast_op(x, len, pipeline).into(),
+        ScalarValue::I16(x) => Int16ArrayGPU::broadcast_op(x, len, pipeline).into(),
+        ScalarValue::I8(x) => Int8ArrayGPU::broadcast_op(x, len, pipeline).into(),
+        ScalarValue::BOOL(x) => BooleanArrayGPU::broadcast_op(x, len, pipeline).into(),
     }
 }

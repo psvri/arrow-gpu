@@ -8,7 +8,7 @@ impl SwizzleType for f32 {
 
 #[cfg(test)]
 mod test {
-    use crate::{*, put::put_dyn};
+    use crate::{put::put_dyn, *};
     use arrow_gpu_array::array::*;
 
     test_merge_op!(

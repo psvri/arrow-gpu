@@ -7,33 +7,40 @@ pub(crate) mod u32;
 pub use kernels::*;
 
 macro_rules! impl_arithmetic_op {
-    ($trait_name: ident, $array_type:ident, $trait_function: ident, $ty: ident, $ty_size: expr, $shader: ident, $entry_point: expr) => {
-        #[async_trait]
+    ($trait_name: ident, $array_type:ident, $trait_function: ident, $ty: ident, $shader: ident, $entry_point: expr) => {
         impl<T> $trait_name<PrimitiveArrayGpu<T>> for $ty
         where
             T: $array_type + ArrowPrimitiveType,
         {
             type Output = Self;
 
-            async fn $trait_function(&self, value: &PrimitiveArrayGpu<T>) -> Self::Output {
-                let new_buffer = self
-                    .gpu_device
-                    .apply_scalar_function(
-                        &self.data,
-                        &value.data,
-                        self.data.size(),
-                        $ty_size,
-                        $shader,
-                        $entry_point,
-                    )
-                    .await;
+            fn $trait_function(
+                &self,
+                value: &PrimitiveArrayGpu<T>,
+                pipeline: &mut ArrowComputePipeline,
+            ) -> Self::Output {
+                let dispatch_size = self.data.size().div_ceil(T::ITEM_SIZE).div_ceil(256) as u32;
+
+                let new_buffer = pipeline.apply_scalar_function(
+                    &self.data,
+                    &value.data,
+                    self.data.size(),
+                    $shader,
+                    $entry_point,
+                    dispatch_size,
+                );
+
+                let null_buffer = NullBitBufferGpu::clone_null_bit_buffer_pass(
+                    &self.null_buffer,
+                    &mut pipeline.encoder,
+                );
 
                 Self {
                     data: Arc::new(new_buffer),
                     gpu_device: self.gpu_device.clone(),
                     phantom: Default::default(),
                     len: self.len,
-                    null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+                    null_buffer,
                 }
             }
         }
@@ -43,23 +50,34 @@ macro_rules! impl_arithmetic_op {
 pub(crate) use impl_arithmetic_op;
 
 macro_rules! impl_arithmetic_array_op {
-    ($trait_name: ident, $array_type:ident, $trait_function: ident, $ty: ident, $ty_size: expr, $shader: ident, $entry_point: expr) => {
-        #[async_trait]
+    ($trait_name: ident, $array_type:ident, $trait_function: ident, $ty: ident, $shader: ident, $entry_point: expr) => {
         impl<T> $trait_name<PrimitiveArrayGpu<T>> for $ty
         where
             T: $array_type + ArrowPrimitiveType,
         {
             type Output = Self;
 
-            async fn $trait_function(&self, value: &PrimitiveArrayGpu<T>) -> Self::Output {
-                assert!(Arc::ptr_eq(&self.gpu_device, &value.gpu_device));
-                let new_data_buffer = self
-                    .gpu_device
-                    .apply_binary_function(&self.data, &value.data, $ty_size, $shader, $entry_point)
-                    .await;
-                let new_null_buffer =
-                    NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &value.null_buffer)
-                        .await;
+            fn $trait_function(
+                &self,
+                value: &PrimitiveArrayGpu<T>,
+                pipeline: &mut ArrowComputePipeline,
+            ) -> Self::Output {
+                let dispatch_size = self.data.size().div_ceil(T::ITEM_SIZE).div_ceil(256) as u32;
+
+                let new_data_buffer = pipeline.apply_binary_function(
+                    &self.data,
+                    &value.data,
+                    self.data.size(),
+                    $shader,
+                    $entry_point,
+                    dispatch_size,
+                );
+
+                let new_null_buffer = NullBitBufferGpu::merge_null_bit_buffer_op(
+                    &self.null_buffer,
+                    &value.null_buffer,
+                    pipeline,
+                );
 
                 Self {
                     data: Arc::new(new_data_buffer),

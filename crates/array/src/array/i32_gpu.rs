@@ -1,11 +1,10 @@
 use crate::{kernels::broadcast::Broadcast, ArrowErrorGPU};
-use async_trait::async_trait;
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
 
 use super::{
-    gpu_device::GpuDevice, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowPrimitiveType,
-    ArrowType, NullBitBufferGpu,
+    gpu_device::GpuDevice, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowComputePipeline,
+    ArrowPrimitiveType, ArrowType, NullBitBufferGpu,
 };
 
 const I32_BROADCAST_SHADER: &str = include_str!("../../compute_shaders/i32/broadcast.wgsl");
@@ -32,27 +31,50 @@ impl TryFrom<ArrowArrayGPU> for Int32ArrayGPU {
     }
 }
 
-#[async_trait]
 impl<T: ArrowPrimitiveType<NativeType = i32>> Broadcast<i32> for PrimitiveArrayGpu<T> {
     type Output = PrimitiveArrayGpu<T>;
 
-    async fn broadcast(value: i32, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
+    fn broadcast(value: i32, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
         let scalar_buffer = gpu_device.create_scalar_buffer(&value);
-        let gpu_buffer = gpu_device
-            .apply_broadcast_function(
-                &scalar_buffer,
-                4 * len as u64,
-                4,
-                I32_BROADCAST_SHADER,
-                "broadcast",
-            )
-            .await;
+        let gpu_buffer = gpu_device.apply_broadcast_function(
+            &scalar_buffer,
+            4 * len as u64,
+            4,
+            I32_BROADCAST_SHADER,
+            "broadcast",
+        );
         let data = Arc::new(gpu_buffer);
         let null_buffer = None;
 
         Self {
             data,
             gpu_device,
+            phantom: std::marker::PhantomData,
+            len,
+            null_buffer,
+        }
+    }
+}
+
+impl<T: ArrowPrimitiveType<NativeType = i32>> PrimitiveArrayGpu<T> {
+    pub fn broadcast_op(value: i32, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
+        let scalar_buffer = pipeline.device.create_scalar_buffer(&value);
+        let output_buffer_size = 4 * len as u64;
+        let dispatch_size = output_buffer_size.div_ceil(4).div_ceil(256);
+
+        let gpu_buffer = pipeline.apply_broadcast_function(
+            &scalar_buffer,
+            output_buffer_size,
+            I32_BROADCAST_SHADER,
+            "broadcast",
+            dispatch_size as u32,
+        );
+        let data = Arc::new(gpu_buffer);
+        let null_buffer = None;
+
+        Self {
+            data,
+            gpu_device: pipeline.device.clone(),
             phantom: std::marker::PhantomData,
             len,
             null_buffer,

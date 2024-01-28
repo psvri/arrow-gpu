@@ -9,7 +9,6 @@ pub(crate) mod u8;
 use std::sync::Arc;
 
 use arrow_gpu_array::array::*;
-use async_trait::async_trait;
 
 pub(crate) const AND_ENTRY_POINT: &str = "bitwise_and";
 pub(crate) const OR_ENTRY_POINT: &str = "bitwise_or";
@@ -24,316 +23,311 @@ pub trait LogicalType {
     const NOT_SHADER: &'static str;
 }
 
-#[async_trait]
-pub trait Logical {
-    async fn bitwise_and(&self, operand: &Self) -> Self;
-    async fn bitwise_or(&self, operand: &Self) -> Self;
-    async fn bitwise_xor(&self, operand: &Self) -> Self;
-    async fn bitwise_not(&self) -> Self;
-    async fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self;
-    async fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self;
+macro_rules! default_impl {
+    ($self: ident, $fn: ident) => {
+        let mut pipeline = ArrowComputePipeline::new($self.get_gpu_device(), None);
+        let output = Self::$fn(&$self, &mut pipeline);
+        pipeline.finish();
+        return output;
+    };
+    ($self: ident, $operand: ident, $fn: ident) => {
+        let mut pipeline = ArrowComputePipeline::new($self.get_gpu_device(), None);
+        let output = Self::$fn(&$self, $operand, &mut pipeline);
+        pipeline.finish();
+        return output;
+    };
 }
 
-#[async_trait]
+pub trait Logical: ArrayUtils + Sized {
+    fn bitwise_and(&self, operand: &Self) -> Self {
+        default_impl!(self, operand, bitwise_and_op);
+    }
+    fn bitwise_or(&self, operand: &Self) -> Self {
+        default_impl!(self, operand, bitwise_or_op);
+    }
+    fn bitwise_xor(&self, operand: &Self) -> Self {
+        default_impl!(self, operand, bitwise_xor_op);
+    }
+    fn bitwise_not(&self) -> Self {
+        default_impl!(self, bitwise_not_op);
+    }
+    fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self {
+        default_impl!(self, operand, bitwise_shl_op);
+    }
+    fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self {
+        default_impl!(self, operand, bitwise_shr_op);
+    }
+
+    fn bitwise_and_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
+    fn bitwise_or_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
+    fn bitwise_xor_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
+    fn bitwise_not_op(&self, pipeline: &mut ArrowComputePipeline) -> Self;
+    fn bitwise_shl_op(&self, operand: &UInt32ArrayGPU, pipeline: &mut ArrowComputePipeline)
+        -> Self;
+    fn bitwise_shr_op(&self, operand: &UInt32ArrayGPU, pipeline: &mut ArrowComputePipeline)
+        -> Self;
+}
+
 pub trait LogicalContains {
-    async fn any(&self) -> bool;
+    fn any(&self) -> bool;
 }
 
-#[async_trait]
+macro_rules! apply_binary_function_op {
+    ($self: ident, $operand: ident, $shader: ident, $entry_point: ident, $pipeline: ident) => {
+        let dispatch_size = $self
+            .data
+            .size()
+            .div_ceil(<T as ArrowPrimitiveType>::ITEM_SIZE)
+            .div_ceil(256) as u32;
+
+        let new_buffer = $pipeline.apply_binary_function(
+            &$self.data,
+            &$operand.data,
+            $self.data.size(),
+            T::$shader,
+            $entry_point,
+            dispatch_size,
+        );
+        let null_buffer = NullBitBufferGpu::merge_null_bit_buffer_op(
+            &$self.null_buffer,
+            &$operand.null_buffer,
+            $pipeline,
+        );
+
+        return Self {
+            data: Arc::new(new_buffer),
+            gpu_device: $self.gpu_device.clone(),
+            phantom: std::marker::PhantomData,
+            len: $self.len,
+            null_buffer,
+        };
+    };
+}
+
 impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
-    async fn bitwise_and(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                T::ITEM_SIZE,
-                T::SHADER,
-                AND_ENTRY_POINT,
-            )
-            .await;
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+    fn bitwise_and_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self {
+        apply_binary_function_op!(self, operand, SHADER, AND_ENTRY_POINT, pipeline);
+    }
+
+    fn bitwise_or_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self {
+        apply_binary_function_op!(self, operand, SHADER, OR_ENTRY_POINT, pipeline);
+    }
+
+    fn bitwise_xor_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self {
+        apply_binary_function_op!(self, operand, SHADER, XOR_ENTRY_POINT, pipeline);
+    }
+
+    fn bitwise_not_op(&self, pipeline: &mut ArrowComputePipeline) -> Self {
+        let dispatch_size = self
+            .data
+            .size()
+            .div_ceil(<T as ArrowPrimitiveType>::ITEM_SIZE)
+            .div_ceil(256) as u32;
+
+        let new_buffer = pipeline.apply_unary_function(
+            &self.data,
+            self.data.size(),
+            T::NOT_SHADER,
+            NOT_ENTRY_POINT,
+            dispatch_size,
+        );
+
+        let null_buffer =
+            NullBitBufferGpu::clone_null_bit_buffer_pass(&self.null_buffer, &mut pipeline.encoder);
 
         Self {
             data: Arc::new(new_buffer),
             gpu_device: self.gpu_device.clone(),
             phantom: std::marker::PhantomData,
             len: self.len,
-            null_buffer: new_null_buffer,
+            null_buffer,
         }
     }
 
-    async fn bitwise_or(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                T::ITEM_SIZE,
-                T::SHADER,
-                OR_ENTRY_POINT,
-            )
-            .await;
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: std::marker::PhantomData,
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
+    fn bitwise_shl_op(
+        &self,
+        operand: &UInt32ArrayGPU,
+        pipeline: &mut ArrowComputePipeline,
+    ) -> Self {
+        apply_binary_function_op!(
+            self,
+            operand,
+            SHIFT_SHADER,
+            SHIFT_LEFT_ENTRY_POINT,
+            pipeline
+        );
     }
 
-    async fn bitwise_xor(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                T::ITEM_SIZE,
-                T::SHADER,
-                XOR_ENTRY_POINT,
-            )
-            .await;
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: std::marker::PhantomData,
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
-    }
-
-    async fn bitwise_not(&self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size(),
-                T::ITEM_SIZE,
-                T::NOT_SHADER,
-                NOT_ENTRY_POINT,
-            )
-            .await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: std::marker::PhantomData,
-            len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
-        }
-    }
-
-    async fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                T::ITEM_SIZE,
-                T::SHIFT_SHADER,
-                SHIFT_LEFT_ENTRY_POINT,
-            )
-            .await;
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: std::marker::PhantomData,
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
-    }
-
-    async fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                T::ITEM_SIZE,
-                T::SHIFT_SHADER,
-                SHIFT_RIGHT_ENTRY_POINT,
-            )
-            .await;
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: std::marker::PhantomData,
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
+    fn bitwise_shr_op(
+        &self,
+        operand: &UInt32ArrayGPU,
+        pipeline: &mut ArrowComputePipeline,
+    ) -> Self {
+        apply_binary_function_op!(
+            self,
+            operand,
+            SHIFT_SHADER,
+            SHIFT_RIGHT_ENTRY_POINT,
+            pipeline
+        );
     }
 }
 
-pub async fn bitwise_and_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (data_1, data_2) {
-        (ArrowArrayGPU::Int32ArrayGPU(arr_1), ArrowArrayGPU::Int32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_and(arr_2).await.into()
+macro_rules! dyn_fn {
+    ($function:ident, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+        pub fn $function(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
+            let mut pipeline = ArrowComputePipeline::new(data_1.get_gpu_device(), None);
+            let result = $function_op(data_1, data_2, &mut pipeline);
+            pipeline.finish();
+            result
         }
-        (ArrowArrayGPU::UInt32ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_and(arr_2).await.into()
+
+        pub fn $function_op(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
+            match (data_1, data_2) {
+                $((ArrowArrayGPU::$y(arr_1), ArrowArrayGPU::$y(arr_2)) => arr_1.$op_2(arr_2, pipeline).into(),)+
+                _ => panic!(
+                    "Operation {} not supported for type {:?} {:?}",
+                    stringify!($function),
+                    data_1.get_dtype(),
+                    data_2.get_dtype(),
+                ),
+            }
         }
-        (ArrowArrayGPU::UInt16ArrayGPU(arr_1), ArrowArrayGPU::UInt16ArrayGPU(arr_2)) => {
-            arr_1.bitwise_and(arr_2).await.into()
-        }
-        (ArrowArrayGPU::Int16ArrayGPU(arr_1), ArrowArrayGPU::Int16ArrayGPU(arr_2)) => {
-            arr_1.bitwise_and(arr_2).await.into()
-        }
-        (ArrowArrayGPU::UInt8ArrayGPU(arr_1), ArrowArrayGPU::UInt8ArrayGPU(arr_2)) => {
-            arr_1.bitwise_and(arr_2).await.into()
-        }
-        (ArrowArrayGPU::Int8ArrayGPU(arr_1), ArrowArrayGPU::Int8ArrayGPU(arr_2)) => {
-            arr_1.bitwise_and(arr_2).await.into()
-        }
-        (ArrowArrayGPU::BooleanArrayGPU(arr_1), ArrowArrayGPU::BooleanArrayGPU(arr_2)) => {
-            arr_1.bitwise_and(arr_2).await.into()
-        }
-        _ => panic!(
-            "Operation bitwise_and_dyn not supported for type {:?}",
-            data_1.get_dtype()
-        ),
-    }
+    )
 }
 
-pub async fn bitwise_or_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (data_1, data_2) {
-        (ArrowArrayGPU::Int32ArrayGPU(arr_1), ArrowArrayGPU::Int32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_or(arr_2).await.into()
+dyn_fn!(
+    bitwise_and_dyn,
+    bitwise_and,
+    bitwise_and_op_dyn,
+    bitwise_and_op,
+    Int32ArrayGPU,
+    UInt32ArrayGPU,
+    UInt16ArrayGPU,
+    Int16ArrayGPU,
+    UInt8ArrayGPU,
+    Int8ArrayGPU,
+    BooleanArrayGPU
+);
+
+dyn_fn!(
+    bitwise_or_dyn,
+    bitwise_or,
+    bitwise_or_op_dyn,
+    bitwise_or_op,
+    Int32ArrayGPU,
+    UInt32ArrayGPU,
+    UInt16ArrayGPU,
+    Int16ArrayGPU,
+    UInt8ArrayGPU,
+    Int8ArrayGPU,
+    BooleanArrayGPU
+);
+
+dyn_fn!(
+    bitwise_xor_dyn,
+    bitwise_xor,
+    bitwise_xor_op_dyn,
+    bitwise_xor_op,
+    Int32ArrayGPU,
+    UInt32ArrayGPU,
+    UInt16ArrayGPU,
+    Int16ArrayGPU,
+    UInt8ArrayGPU,
+    Int8ArrayGPU,
+    BooleanArrayGPU
+);
+
+macro_rules! dyn_fn_sh {
+    ($function:ident, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+        pub fn $function(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
+            match (data_1, data_2) {
+                $((ArrowArrayGPU::$y(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => arr_1.$op_1(arr_2).into(),)+
+                _ => panic!(
+                    "Operation {} not supported for type {:?} {:?}",
+                    stringify!($function),
+                    data_1.get_dtype(),
+                    data_2.get_dtype(),
+                ),
+            }
         }
-        (ArrowArrayGPU::UInt32ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_or(arr_2).await.into()
+
+        pub fn $function_op(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
+            match (data_1, data_2) {
+                $((ArrowArrayGPU::$y(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => arr_1.$op_2(arr_2, pipeline).into(),)+
+                _ => panic!(
+                    "Operation {} not supported for type {:?} {:?}",
+                    stringify!($function),
+                    data_1.get_dtype(),
+                    data_2.get_dtype(),
+                ),
+            }
         }
-        (ArrowArrayGPU::UInt16ArrayGPU(arr_1), ArrowArrayGPU::UInt16ArrayGPU(arr_2)) => {
-            arr_1.bitwise_or(arr_2).await.into()
-        }
-        (ArrowArrayGPU::Int16ArrayGPU(arr_1), ArrowArrayGPU::Int16ArrayGPU(arr_2)) => {
-            arr_1.bitwise_or(arr_2).await.into()
-        }
-        (ArrowArrayGPU::UInt8ArrayGPU(arr_1), ArrowArrayGPU::UInt8ArrayGPU(arr_2)) => {
-            arr_1.bitwise_or(arr_2).await.into()
-        }
-        (ArrowArrayGPU::Int8ArrayGPU(arr_1), ArrowArrayGPU::Int8ArrayGPU(arr_2)) => {
-            arr_1.bitwise_or(arr_2).await.into()
-        }
-        (ArrowArrayGPU::BooleanArrayGPU(arr_1), ArrowArrayGPU::BooleanArrayGPU(arr_2)) => {
-            arr_1.bitwise_or(arr_2).await.into()
-        }
-        _ => panic!(
-            "Operation bitwise_or_dyn not supported for type {:?}",
-            data_1.get_dtype()
-        ),
-    }
+    )
 }
 
-pub async fn bitwise_xor_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (data_1, data_2) {
-        (ArrowArrayGPU::Int32ArrayGPU(arr_1), ArrowArrayGPU::Int32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_xor(arr_2).await.into()
+dyn_fn_sh!(
+    bitwise_shl_dyn,
+    bitwise_shl,
+    bitwise_shl_op_dyn,
+    bitwise_shl_op,
+    Int32ArrayGPU,
+    UInt32ArrayGPU,
+    UInt16ArrayGPU,
+    Int16ArrayGPU,
+    UInt8ArrayGPU,
+    Int8ArrayGPU
+);
+
+dyn_fn_sh!(
+    bitwise_shr_dyn,
+    bitwise_shr,
+    bitwise_shr_op_dyn,
+    bitwise_shr_op,
+    Int32ArrayGPU,
+    UInt32ArrayGPU,
+    UInt16ArrayGPU,
+    Int16ArrayGPU,
+    UInt8ArrayGPU,
+    Int8ArrayGPU
+);
+
+macro_rules! dyn_not {
+    ($function:ident, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+        pub fn $function(data_1: &ArrowArrayGPU) -> ArrowArrayGPU {
+            match (data_1) {
+                $(ArrowArrayGPU::$y(arr_1) => arr_1.$op_1().into(),)+
+                _ => panic!(
+                    "Operation {} not supported for type {:?}",
+                    stringify!($function),
+                    data_1.get_dtype(),
+                ),
+            }
         }
-        (ArrowArrayGPU::UInt32ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_xor(arr_2).await.into()
+
+        pub fn $function_op(data_1: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
+            match (data_1) {
+                $(ArrowArrayGPU::$y(arr_1) => arr_1.$op_2(pipeline).into(),)+
+                _ => panic!(
+                    "Operation {} not supported for type {:?}",
+                    stringify!($function),
+                    data_1.get_dtype(),
+                ),
+            }
         }
-        (ArrowArrayGPU::UInt16ArrayGPU(arr_1), ArrowArrayGPU::UInt16ArrayGPU(arr_2)) => {
-            arr_1.bitwise_xor(arr_2).await.into()
-        }
-        (ArrowArrayGPU::Int16ArrayGPU(arr_1), ArrowArrayGPU::Int16ArrayGPU(arr_2)) => {
-            arr_1.bitwise_xor(arr_2).await.into()
-        }
-        (ArrowArrayGPU::UInt8ArrayGPU(arr_1), ArrowArrayGPU::UInt8ArrayGPU(arr_2)) => {
-            arr_1.bitwise_xor(arr_2).await.into()
-        }
-        (ArrowArrayGPU::Int8ArrayGPU(arr_1), ArrowArrayGPU::Int8ArrayGPU(arr_2)) => {
-            arr_1.bitwise_xor(arr_2).await.into()
-        }
-        (ArrowArrayGPU::BooleanArrayGPU(arr_1), ArrowArrayGPU::BooleanArrayGPU(arr_2)) => {
-            arr_1.bitwise_xor(arr_2).await.into()
-        }
-        _ => panic!(
-            "Operation bitwise_xor_dyn not supported for type {:?}",
-            data_1.get_dtype()
-        ),
-    }
+    )
 }
 
-pub async fn bitwise_shl_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (data_1, data_2) {
-        (ArrowArrayGPU::Int32ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shl(arr_2).await.into()
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shl(arr_2).await.into()
-        }
-        (ArrowArrayGPU::UInt16ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shl(arr_2).await.into()
-        }
-        (ArrowArrayGPU::Int16ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shl(arr_2).await.into()
-        }
-        (ArrowArrayGPU::UInt8ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shl(arr_2).await.into()
-        }
-        (ArrowArrayGPU::Int8ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shl(arr_2).await.into()
-        }
-        _ => panic!(
-            "Operation bitwise_shl_dyn not supported for type {:?}",
-            data_1.get_dtype()
-        ),
-    }
-}
-
-pub async fn bitwise_shr_dyn(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (data_1, data_2) {
-        (ArrowArrayGPU::Int32ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shr(arr_2).await.into()
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shr(arr_2).await.into()
-        }
-        (ArrowArrayGPU::UInt16ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shr(arr_2).await.into()
-        }
-        (ArrowArrayGPU::Int16ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shr(arr_2).await.into()
-        }
-        (ArrowArrayGPU::UInt8ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shr(arr_2).await.into()
-        }
-        (ArrowArrayGPU::Int8ArrayGPU(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => {
-            arr_1.bitwise_shr(arr_2).await.into()
-        }
-        _ => panic!(
-            "Operation bitwise_shr_dyn not supported for type {:?}",
-            data_1.get_dtype()
-        ),
-    }
-}
-
-pub async fn bitwise_not_dyn(data_1: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match data_1 {
-        ArrowArrayGPU::Int32ArrayGPU(arr_1) => arr_1.bitwise_not().await.into(),
-        ArrowArrayGPU::UInt32ArrayGPU(arr_1) => arr_1.bitwise_not().await.into(),
-        ArrowArrayGPU::UInt16ArrayGPU(arr_1) => arr_1.bitwise_not().await.into(),
-        ArrowArrayGPU::Int16ArrayGPU(arr_1) => arr_1.bitwise_not().await.into(),
-        ArrowArrayGPU::UInt8ArrayGPU(arr_1) => arr_1.bitwise_not().await.into(),
-        ArrowArrayGPU::Int8ArrayGPU(arr_1) => arr_1.bitwise_not().await.into(),
-        ArrowArrayGPU::BooleanArrayGPU(arr_1) => arr_1.bitwise_not().await.into(),
-        _ => panic!(
-            "Operation bitwise_not_dyn not supported for type {:?}",
-            data_1.get_dtype()
-        ),
-    }
-}
+dyn_not!(
+    bitwise_not_dyn,
+    bitwise_not,
+    bitwise_not_op_dyn,
+    bitwise_not_op,
+    Int32ArrayGPU,
+    UInt32ArrayGPU,
+    UInt16ArrayGPU,
+    Int16ArrayGPU,
+    UInt8ArrayGPU,
+    Int8ArrayGPU,
+    BooleanArrayGPU
+);

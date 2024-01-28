@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use arrow_gpu_array::array::{types::*, *};
-use async_trait::async_trait;
 
 use crate::*;
 
@@ -13,9 +12,8 @@ const U16_SCALAR_SHADER: &str = concat!(
 impl_arithmetic_op!(
     ArrowScalarAdd,
     UInt16Type,
-    add_scalar,
+    add_scalar_op,
     UInt16ArrayGPU,
-    2,
     U16_SCALAR_SHADER,
     "u16_add"
 );

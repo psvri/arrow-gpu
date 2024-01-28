@@ -1,11 +1,10 @@
 use crate::{kernels::aggregate::ArrowSum, ArrowErrorGPU};
-use async_trait::async_trait;
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
 
 use super::{
     gpu_device::GpuDevice, gpu_ops::f32_ops::*, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU,
-    ArrowType, NullBitBufferGpu,
+    ArrowComputePipeline, ArrowType, NullBitBufferGpu,
 };
 
 const F32_REDUCTION_SHADER: &str = include_str!("../../compute_shaders/f32/reduction.wgsl");
@@ -16,23 +15,45 @@ pub type Float32ArrayGPU = PrimitiveArrayGpu<f32>;
 impl_unary_ops!(ArrowSum, sum, Float32ArrayGPU, f32, sum);
 
 impl Float32ArrayGPU {
-    pub async fn broadcast(value: f32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+    pub fn broadcast(value: f32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let scalar_buffer = &gpu_device.create_scalar_buffer(&value);
-        let gpu_buffer = gpu_device
-            .apply_broadcast_function(
-                scalar_buffer,
-                4 * len as u64,
-                4,
-                F32_BROADCAST_SHADER,
-                "broadcast",
-            )
-            .await;
+        let gpu_buffer = gpu_device.apply_broadcast_function(
+            scalar_buffer,
+            4 * len as u64,
+            4,
+            F32_BROADCAST_SHADER,
+            "broadcast",
+        );
         let data = Arc::new(gpu_buffer);
         let null_buffer = None;
 
         Self {
             data,
             gpu_device,
+            phantom: std::marker::PhantomData,
+            len,
+            null_buffer,
+        }
+    }
+
+    pub fn broadcast_op(value: f32, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
+        let scalar_buffer = pipeline.device.create_scalar_buffer(&value);
+        let output_buffer_size = 4 * len as u64;
+        let dispatch_size = output_buffer_size.div_ceil(4).div_ceil(256);
+
+        let gpu_buffer = pipeline.apply_broadcast_function(
+            &scalar_buffer,
+            output_buffer_size,
+            F32_BROADCAST_SHADER,
+            "broadcast",
+            dispatch_size as u32,
+        );
+        let data = Arc::new(gpu_buffer);
+        let null_buffer = None;
+
+        Self {
+            data,
+            gpu_device: pipeline.device.clone(),
             phantom: std::marker::PhantomData,
             len,
             null_buffer,
@@ -92,9 +113,9 @@ mod tests {
     use crate::array::primitive_array_gpu::test::*;
 
     #[ignore = "Not passing in CI but passes in local 🤔"]
-    #[tokio::test]
-    async fn test_f32_sum() {
-        let device = Arc::new(GpuDevice::new().await);
+    #[test]
+    fn test_f32_sum() {
+        let device = Arc::new(GpuDevice::new());
         let gpu_array = Float32ArrayGPU::from_slice(
             &(0..256 * 256)
                 .into_iter()
@@ -103,7 +124,7 @@ mod tests {
             device.clone(),
         );
 
-        assert_eq!(gpu_array.sum().await, 65536.0);
+        assert_eq!(gpu_array.sum(), 65536.0);
 
         // TODO fix this
         let cvec = (0..9_999)
@@ -112,22 +133,22 @@ mod tests {
             .collect::<Vec<f32>>();
         let total = (0..9_999u32).into_iter().sum::<u32>() as f32;
         let gpu_array = Float32ArrayGPU::from_slice(&cvec, device);
-        assert_eq!(gpu_array.sum().await, total);
+        assert_eq!(gpu_array.sum(), total);
     }
 
-    #[tokio::test]
-    async fn test_f32_array_from_optinal_vec() {
-        let device = Arc::new(GpuDevice::new().await);
+    #[test]
+    fn test_f32_array_from_optinal_vec() {
+        let device = Arc::new(GpuDevice::new());
         let gpu_array_1 = Float32ArrayGPU::from_optional_slice(
             &vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
             device.clone(),
         );
         assert_eq!(
-            gpu_array_1.raw_values().await.unwrap(),
+            gpu_array_1.raw_values().unwrap(),
             vec![0.0, 1.0, 0.0, 0.0, 4.0]
         );
         assert_eq!(
-            gpu_array_1.null_buffer.as_ref().unwrap().raw_values().await,
+            gpu_array_1.null_buffer.as_ref().unwrap().raw_values(),
             vec![0b00010011]
         );
         let gpu_array_2 = Float32ArrayGPU::from_optional_slice(
@@ -135,19 +156,18 @@ mod tests {
             device,
         );
         assert_eq!(
-            gpu_array_2.raw_values().await.unwrap(),
+            gpu_array_2.raw_values().unwrap(),
             vec![1.0, 2.0, 0.0, 4.0, 0.0]
         );
         assert_eq!(
-            gpu_array_2.null_buffer.as_ref().unwrap().raw_values().await,
+            gpu_array_2.null_buffer.as_ref().unwrap().raw_values(),
             vec![0b00001011]
         );
         let new_bit_buffer = NullBitBufferGpu::merge_null_bit_buffer(
             &gpu_array_2.null_buffer,
             &gpu_array_1.null_buffer,
-        )
-        .await;
-        assert_eq!(new_bit_buffer.unwrap().raw_values().await, vec![0b00000011]);
+        );
+        assert_eq!(new_bit_buffer.unwrap().raw_values(), vec![0b00000011]);
     }
 
     test_broadcast!(test_broadcast_f32, Float32ArrayGPU, 1.0);

@@ -7,10 +7,7 @@ edition = "2021"
 
 [dependencies]
 wgpu = { workspace = true }
-async-trait =  { workspace = true}
 arrow_gpu_array = { path = "../array" }
 
 [dev-dependencies]
 arrow_gpu_test_macros = {path = "../test_macros"}
-tokio = { workspace = true}
-pollster = { workspace = true }

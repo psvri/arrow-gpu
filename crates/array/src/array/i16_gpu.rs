@@ -3,24 +3,40 @@ use crate::ArrowErrorGPU;
 use std::sync::Arc;
 
 use super::{
-    gpu_device::GpuDevice, primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU, ArrowArrayGPU,
+    gpu_device::GpuDevice, primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU, ArrowArrayGPU, ArrowComputePipeline,
 };
 
 pub type Int16ArrayGPU = PrimitiveArrayGpu<i16>;
 
 impl Int16ArrayGPU {
-    pub async fn broadcast(value: i16, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
+    pub fn broadcast(value: i16, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
         let new_len = len.div_ceil(2);
         let broadcast_value = (value as u32) | ((value as u32) << 16);
         let gpu_buffer =
-            UInt32ArrayGPU::create_broadcast_buffer(broadcast_value, new_len as u64, &gpu_device)
-                .await;
+            UInt32ArrayGPU::create_broadcast_buffer(broadcast_value, new_len as u64, &gpu_device);
         let data = Arc::new(gpu_buffer);
         let null_buffer = None;
 
         Self {
             data,
             gpu_device,
+            phantom: std::marker::PhantomData,
+            len,
+            null_buffer,
+        }
+    }
+
+    pub fn broadcast_op(value: i16, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
+        let new_len = len.div_ceil(2);
+        let broadcast_value = (value as u32) | ((value as u32) << 16);
+        let gpu_buffer =
+            UInt32ArrayGPU::create_broadcast_buffer_op(broadcast_value, new_len as u64, pipeline);
+        let data = Arc::new(gpu_buffer);
+        let null_buffer = None;
+
+        Self {
+            data,
+            gpu_device: pipeline.device.clone(),
             phantom: std::marker::PhantomData,
             len,
             null_buffer,

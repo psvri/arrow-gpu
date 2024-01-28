@@ -1,19 +1,21 @@
 use std::sync::Arc;
 
 use crate::Cast;
-use arrow_gpu_array::array::{BooleanArrayGPU, Float32ArrayGPU, GpuDevice, NullBitBufferGpu};
-use async_trait::async_trait;
-use wgpu::{Buffer, Maintain};
+use arrow_gpu_array::array::{
+    ArrowComputePipeline, BooleanArrayGPU, Float32ArrayGPU, GpuDevice, NullBitBufferGpu,
+};
+use wgpu::Buffer;
 
 const BOOLEAN_CAST_F32_SHADER: &str = include_str!("../compute_shaders/boolean/cast_f32.wgsl");
 
-pub async fn apply_boolean_unary_function(
+pub fn apply_boolean_unary_function(
     gpu_device: &GpuDevice,
     original_values: &Buffer,
     new_buffer_size: u64,
     output_item_size: u64,
     shader: &str,
     entry_point: &str,
+    pipeline: &mut ArrowComputePipeline,
 ) -> Buffer {
     let compute_pipeline = gpu_device.create_compute_pipeline(shader, entry_point);
 
@@ -37,11 +39,10 @@ pub async fn apply_boolean_unary_function(
             ],
         });
 
-    let mut encoder = gpu_device.create_command_encoder(None);
     let dispatch_size = new_buffer_size.div_ceil(output_item_size);
 
     let query = gpu_device.compute_pass(
-        &mut encoder,
+        &mut pipeline.encoder,
         None,
         &compute_pipeline,
         &bind_group_array,
@@ -49,20 +50,13 @@ pub async fn apply_boolean_unary_function(
         dispatch_size.div_ceil(256) as u32,
     );
 
-    query.resolve(&mut encoder);
-    let submission_index = gpu_device.queue.submit(Some(encoder.finish()));
-    gpu_device
-        .device
-        .poll(Maintain::WaitForSubmissionIndex(submission_index));
-    query
-        .wait_for_results(&gpu_device.device, &gpu_device.queue)
-        .await;
+    query.resolve(&mut pipeline.encoder);
+    pipeline.queries.push(query);
     new_values_buffer
 }
 
-#[async_trait]
 impl Cast<Float32ArrayGPU> for BooleanArrayGPU {
-    async fn cast(&self) -> Float32ArrayGPU {
+    fn cast_op(&self, pipeline: &mut ArrowComputePipeline) -> Float32ArrayGPU {
         let new_buffer = apply_boolean_unary_function(
             &self.gpu_device,
             &self.data,
@@ -70,15 +64,15 @@ impl Cast<Float32ArrayGPU> for BooleanArrayGPU {
             4,
             BOOLEAN_CAST_F32_SHADER,
             "cast_f32",
-        )
-        .await;
+            pipeline,
+        );
 
         Float32ArrayGPU {
             data: Arc::new(new_buffer),
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         }
     }
 }

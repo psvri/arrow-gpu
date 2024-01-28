@@ -10,6 +10,4 @@ wgpu =  { workspace = true}
 pollster = { workspace = true}
 bytemuck = { workspace = true}
 futures-intrusive = { workspace = true}
-tokio = { workspace = true}
-async-trait =  { workspace = true}
 log =  { workspace = true}

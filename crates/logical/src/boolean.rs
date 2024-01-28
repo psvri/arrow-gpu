@@ -1,5 +1,4 @@
 use arrow_gpu_array::array::*;
-use async_trait::async_trait;
 
 use crate::{
     u32::{U32_LOGICAL_SHADER, U32_NOT_SHADER},
@@ -14,133 +13,103 @@ impl LogicalType for BooleanArrayGPU {
     const NOT_SHADER: &'static str = U32_NOT_SHADER;
 }
 
-#[async_trait]
+macro_rules! apply_binary_function_op {
+    ($self: ident, $operand: ident, $shader: ident, $entry_point: ident, $pipeline: ident) => {
+        let dispatch_size = $self.data.size().div_ceil(4).div_ceil(256) as u32;
+
+        let new_buffer = $pipeline.apply_binary_function(
+            &$self.data,
+            &$operand.data,
+            $self.data.size(),
+            Self::$shader,
+            $entry_point,
+            dispatch_size,
+        );
+        let null_buffer = NullBitBufferGpu::merge_null_bit_buffer_op(
+            &$self.null_buffer,
+            &$operand.null_buffer,
+            $pipeline,
+        );
+
+        return Self {
+            data: Arc::new(new_buffer),
+            gpu_device: $self.gpu_device.clone(),
+            len: $self.len,
+            null_buffer,
+        };
+    };
+}
+
 impl Logical for BooleanArrayGPU {
-    async fn bitwise_and(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(&self.data, &operand.data, 4, Self::SHADER, AND_ENTRY_POINT)
-            .await;
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
+    fn bitwise_and_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self {
+        apply_binary_function_op!(self, operand, SHADER, AND_ENTRY_POINT, pipeline);
+    }
+
+    fn bitwise_or_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self {
+        apply_binary_function_op!(self, operand, SHADER, OR_ENTRY_POINT, pipeline);
+    }
+
+    fn bitwise_xor_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self {
+        apply_binary_function_op!(self, operand, SHADER, XOR_ENTRY_POINT, pipeline);
+    }
+
+    fn bitwise_not_op(&self, pipeline: &mut ArrowComputePipeline) -> Self {
+        let dispatch_size = self.data.size().div_ceil(4).div_ceil(256) as u32;
+
+        let new_buffer = pipeline.apply_unary_function(
+            &self.data,
+            self.data.size(),
+            Self::NOT_SHADER,
+            NOT_ENTRY_POINT,
+            dispatch_size,
+        );
 
         Self {
             data: Arc::new(new_buffer),
             gpu_device: self.gpu_device.clone(),
             len: self.len,
-            null_buffer: new_null_buffer,
+            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer),
         }
     }
 
-    async fn bitwise_or(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(&self.data, &operand.data, 4, Self::SHADER, OR_ENTRY_POINT)
-            .await;
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
+    fn bitwise_shl_op(
+        &self,
+        operand: &UInt32ArrayGPU,
+        pipeline: &mut ArrowComputePipeline,
+    ) -> Self {
+        apply_binary_function_op!(
+            self,
+            operand,
+            SHIFT_SHADER,
+            SHIFT_LEFT_ENTRY_POINT,
+            pipeline
+        );
     }
 
-    async fn bitwise_xor(&self, operand: &Self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(&self.data, &operand.data, 4, Self::SHADER, XOR_ENTRY_POINT)
-            .await;
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
-    }
-
-    async fn bitwise_not(&self) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size(),
-                4,
-                Self::NOT_SHADER,
-                NOT_ENTRY_POINT,
-            )
-            .await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
-        }
-    }
-
-    async fn bitwise_shl(&self, operand: &UInt32ArrayGPU) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                4,
-                Self::SHIFT_SHADER,
-                SHIFT_LEFT_ENTRY_POINT,
-            )
-            .await;
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
-    }
-
-    async fn bitwise_shr(&self, operand: &UInt32ArrayGPU) -> Self {
-        let new_buffer = self
-            .gpu_device
-            .apply_binary_function(
-                &self.data,
-                &operand.data,
-                4,
-                Self::SHIFT_SHADER,
-                SHIFT_RIGHT_ENTRY_POINT,
-            )
-            .await;
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &operand.null_buffer).await;
-
-        Self {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
+    fn bitwise_shr_op(
+        &self,
+        operand: &UInt32ArrayGPU,
+        pipeline: &mut ArrowComputePipeline,
+    ) -> Self {
+        apply_binary_function_op!(
+            self,
+            operand,
+            SHIFT_SHADER,
+            SHIFT_RIGHT_ENTRY_POINT,
+            pipeline
+        );
     }
 }
 
-#[async_trait]
 impl LogicalContains for BooleanArrayGPU {
-    async fn any(&self) -> bool {
+    fn any(&self) -> bool {
         let new_buffer = self
             .gpu_device
-            .apply_unary_function(&self.data, 4, 4, ANY_SHADER, "any")
-            .await;
+            .apply_unary_function(&self.data, 4, 4, ANY_SHADER, "any");
 
         u32::from_le_bytes(
             self.gpu_device
                 .retrive_data(&new_buffer)
-                .await
                 .try_into()
                 .unwrap(),
         ) > 0
@@ -247,29 +216,28 @@ mod test {
         vec![false, false, true, false, true]
     );
 
-    #[tokio::test]
-    async fn test_any() {
+    #[test]
+    fn test_any() {
         use arrow_gpu_array::array::GpuDevice;
         use arrow_gpu_array::GPU_DEVICE;
-        use pollster::FutureExt;
         let device = GPU_DEVICE
-            .get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone())
+            .get_or_init(|| Arc::new(GpuDevice::new()))
             .clone();
         let data = vec![true, true, false, true, false];
         let gpu_array = BooleanArrayGPU::from_slice(&data, device.clone());
-        assert!(gpu_array.any().await);
+        assert!(gpu_array.any());
 
         let data = vec![true; 8192 * 2];
         let gpu_array = BooleanArrayGPU::from_slice(&data, device.clone());
-        assert!(gpu_array.any().await);
+        assert!(gpu_array.any());
 
         let mut data = vec![false; 8192 * 2];
         let gpu_array = BooleanArrayGPU::from_slice(&data, device.clone());
-        assert!(!gpu_array.any().await);
+        assert!(!gpu_array.any());
 
         let mut data_2 = vec![true; 8192 * 2];
         data_2.append(&mut data);
         let gpu_array = BooleanArrayGPU::from_slice(&data_2, device.clone());
-        assert!(gpu_array.any().await);
+        assert!(gpu_array.any());
     }
 }

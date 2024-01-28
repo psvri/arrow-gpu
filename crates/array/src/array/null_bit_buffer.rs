@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use wgpu::{util::align_to, Buffer};
+use wgpu::{util::align_to, Buffer, CommandEncoder};
 
 const LOGICAL_AND_SHADER: &str = include_str!("../../../logical/compute_shaders/u32/logical.wgsl");
 
-use super::gpu_device::GpuDevice;
+use super::{gpu_device::GpuDevice, ArrowComputePipeline};
 
 pub struct BooleanBufferBuilder {
     pub(crate) data: Vec<u8>,
@@ -119,37 +119,47 @@ impl NullBitBufferGpu {
         }
     }
 
-    pub async fn raw_values(&self) -> Vec<u8> {
-        let result = &self.gpu_device.retrive_data(&self.bit_buffer).await;
+    pub fn raw_values(&self) -> Vec<u8> {
+        let result = &self.gpu_device.retrive_data(&self.bit_buffer);
         let buffer_size = align_to(self.len, 8) / 8;
         result[0..buffer_size].to_vec()
     }
 
-    pub async fn clone_null_bit_buffer(data: &Option<Self>) -> Option<Self> {
-        match data {
-            None => None,
-            Some(null_bit_buffer) => Some({
-                NullBitBufferGpu {
-                    bit_buffer: Arc::new(null_bit_buffer.clone_buffer().await),
-                    len: null_bit_buffer.len,
-                    gpu_device: null_bit_buffer.gpu_device.clone(),
-                }
-            }),
-        }
+    pub fn clone_null_bit_buffer(data: &Option<Self>) -> Option<Self> {
+        data.as_ref().map(|null_bit_buffer| NullBitBufferGpu {
+            bit_buffer: Arc::new(null_bit_buffer.clone_buffer()),
+            len: null_bit_buffer.len,
+            gpu_device: null_bit_buffer.gpu_device.clone(),
+        })
     }
 
-    async fn clone_buffer(&self) -> Buffer {
-        self.gpu_device.clone_buffer(&self.bit_buffer).await
+    pub fn clone_null_bit_buffer_pass(
+        data: &Option<Self>,
+        encoder: &mut CommandEncoder,
+    ) -> Option<Self> {
+        data.as_ref().map(|null_bit_buffer| NullBitBufferGpu {
+            bit_buffer: Arc::new(null_bit_buffer.clone_buffer_pass(encoder)),
+            len: null_bit_buffer.len,
+            gpu_device: null_bit_buffer.gpu_device.clone(),
+        })
     }
 
-    pub async fn merge_null_bit_buffer(
+    fn clone_buffer(&self) -> Buffer {
+        self.gpu_device.clone_buffer(&self.bit_buffer)
+    }
+
+    fn clone_buffer_pass(&self, encoder: &mut CommandEncoder) -> Buffer {
+        self.gpu_device.clone_buffer_pass(&self.bit_buffer, encoder)
+    }
+
+    pub fn merge_null_bit_buffer(
         left: &Option<NullBitBufferGpu>,
         right: &Option<NullBitBufferGpu>,
     ) -> Option<NullBitBufferGpu> {
         match (left, right) {
             (None, None) => None,
             (Some(x), None) | (None, Some(x)) => Some({
-                let buffer = x.clone_buffer().await;
+                let buffer = x.clone_buffer();
                 Self {
                     bit_buffer: buffer.into(),
                     len: x.len,
@@ -160,17 +170,53 @@ impl NullBitBufferGpu {
                 assert_eq!(left.bit_buffer.size(), right.bit_buffer.size());
                 assert_eq!(left.len, right.len);
                 assert!(Arc::ptr_eq(&left.gpu_device, &right.gpu_device));
-                let new_bit_buffer = left
-                    .gpu_device
-                    .apply_scalar_function(
-                        &left.bit_buffer,
-                        &right.bit_buffer,
-                        left.bit_buffer.size(),
-                        4,
-                        LOGICAL_AND_SHADER,
-                        "bitwise_and",
-                    )
-                    .await;
+                let new_bit_buffer = left.gpu_device.apply_scalar_function(
+                    &left.bit_buffer,
+                    &right.bit_buffer,
+                    left.bit_buffer.size(),
+                    4,
+                    LOGICAL_AND_SHADER,
+                    "bitwise_and",
+                );
+                let len = left.len;
+                let gpu_device = left.gpu_device.clone();
+
+                Some(Self {
+                    bit_buffer: Arc::new(new_bit_buffer),
+                    len,
+                    gpu_device,
+                })
+            }
+        }
+    }
+
+    pub fn merge_null_bit_buffer_op(
+        left: &Option<NullBitBufferGpu>,
+        right: &Option<NullBitBufferGpu>,
+        pipeline: &mut ArrowComputePipeline,
+    ) -> Option<NullBitBufferGpu> {
+        match (left, right) {
+            (None, None) => None,
+            (Some(x), None) | (None, Some(x)) => Some({
+                let buffer = x.clone_buffer_pass(&mut pipeline.encoder);
+                Self {
+                    bit_buffer: buffer.into(),
+                    len: x.len,
+                    gpu_device: x.gpu_device.clone(),
+                }
+            }),
+            (Some(left), Some(right)) => {
+                assert_eq!(left.bit_buffer.size(), right.bit_buffer.size());
+                assert_eq!(left.len, right.len);
+                assert!(Arc::ptr_eq(&left.gpu_device, &right.gpu_device));
+                let new_bit_buffer = left.gpu_device.apply_scalar_function(
+                    &left.bit_buffer,
+                    &right.bit_buffer,
+                    left.bit_buffer.size(),
+                    4,
+                    LOGICAL_AND_SHADER,
+                    "bitwise_and",
+                );
                 let len = left.len;
                 let gpu_device = left.gpu_device.clone();
 

@@ -1,260 +1,293 @@
 use std::sync::Arc;
 
 use arrow_gpu_array::array::{
-    ArrowArrayGPU, ArrowPrimitiveType, GpuDevice, NullBitBufferGpu, PrimitiveArrayGpu,
+    ArrayUtils, ArrowArrayGPU, ArrowComputePipeline, ArrowPrimitiveType, GpuDevice,
+    NullBitBufferGpu, PrimitiveArrayGpu,
 };
-use async_trait::async_trait;
 use wgpu::Buffer;
 
-#[async_trait]
-pub trait ArrowScalarAdd<Rhs> {
+macro_rules! default_impl {
+    ($self: ident, $operand: ident, $fn: ident) => {
+        let mut pipeline = ArrowComputePipeline::new($self.get_gpu_device(), None);
+        let output = Self::$fn(&$self, $operand, &mut pipeline);
+        pipeline.finish();
+        return output;
+    };
+}
+
+pub trait ArrowScalarAdd<Rhs>: ArrayUtils {
     type Output;
 
-    async fn add_scalar(&self, value: &Rhs) -> Self::Output;
+    fn add_scalar(&self, value: &Rhs) -> Self::Output {
+        default_impl!(self, value, add_scalar_op);
+    }
+
+    fn add_scalar_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
-#[async_trait]
-pub trait ArrowScalarSub<Rhs> {
+pub trait ArrowScalarSub<Rhs>: ArrayUtils {
     type Output;
 
-    async fn sub_scalar(&self, value: &Rhs) -> Self::Output;
+    fn sub_scalar(&self, value: &Rhs) -> Self::Output {
+        default_impl!(self, value, sub_scalar_op);
+    }
+
+    fn sub_scalar_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
-#[async_trait]
-pub trait ArrowScalarMul<Rhs> {
+pub trait ArrowScalarMul<Rhs>: ArrayUtils {
     type Output;
 
-    async fn mul_scalar(&self, value: &Rhs) -> Self::Output;
+    fn mul_scalar(&self, value: &Rhs) -> Self::Output {
+        default_impl!(self, value, mul_scalar_op);
+    }
+
+    fn mul_scalar_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
-#[async_trait]
-pub trait ArrowScalarDiv<Rhs> {
+pub trait ArrowScalarDiv<Rhs>: ArrayUtils {
     type Output;
 
-    async fn div_scalar(&self, value: &Rhs) -> Self::Output;
+    fn div_scalar(&self, value: &Rhs) -> Self::Output {
+        default_impl!(self, value, div_scalar_op);
+    }
+
+    fn div_scalar_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
-#[async_trait]
-pub trait ArrowScalarRem<Rhs> {
+pub trait ArrowScalarRem<Rhs>: ArrayUtils {
     type Output;
 
-    async fn rem_scalar(&self, value: &Rhs) -> Self::Output;
+    fn rem_scalar(&self, value: &Rhs) -> Self::Output {
+        default_impl!(self, value, rem_scalar_op);
+    }
+
+    fn rem_scalar_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
-pub async fn add_scalar_dyn(data: &ArrowArrayGPU, value: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (data, value) {
-        (ArrowArrayGPU::Float32ArrayGPU(arr), ArrowArrayGPU::Float32ArrayGPU(scalar)) => {
-            arr.add_scalar(scalar).await.into()
+macro_rules! dyn_fn {
+    ($function:ident, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*,$([$x: ident, $z: ident]),*) => {
+        pub fn $function(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
+            let mut pipeline = ArrowComputePipeline::new(data_1.get_gpu_device(), None);
+            let result = $function_op(data_1, data_2, &mut pipeline);
+            pipeline.finish();
+            result
         }
-        (ArrowArrayGPU::Int32ArrayGPU(arr), ArrowArrayGPU::Int32ArrayGPU(scalar)) => {
-            arr.add_scalar(scalar).await.into()
+
+        pub fn $function_op(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
+            match (data_1, data_2) {
+                $((ArrowArrayGPU::$y(arr_1), ArrowArrayGPU::$y(arr_2)) => arr_1.$op_2(arr_2, pipeline).into(),)+
+                $((ArrowArrayGPU::$x(arr_1), ArrowArrayGPU::$z(arr_2)) => arr_1.$op_2(arr_2, pipeline).into(),)*
+                _ => panic!(
+                    "Operation {} not supported for type {:?} {:?}",
+                    stringify!($function),
+                    data_1.get_dtype(),
+                    data_2.get_dtype(),
+                ),
+            }
         }
-        (ArrowArrayGPU::Date32ArrayGPU(arr), ArrowArrayGPU::Date32ArrayGPU(scalar)) => {
-            arr.add_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(arr), ArrowArrayGPU::UInt32ArrayGPU(scalar)) => {
-            arr.add_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::UInt16ArrayGPU(arr), ArrowArrayGPU::UInt16ArrayGPU(scalar)) => {
-            arr.add_scalar(scalar).await.into()
-        }
-        _ => panic!("Operation not supported"),
+    };
+    ($([$dyn: ident, $array: ident, $scalar: ident, $dyn_op: ident, $array_op: ident, $scalar_op: ident]),*) => {
+        $(
+            pub fn $dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
+                let mut pipeline = ArrowComputePipeline::new(input1.get_gpu_device(), None);
+                let result = $dyn_op(input1, input2, &mut pipeline);
+                pipeline.finish();
+                result
+            }
+
+            pub fn $dyn_op(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
+                match (input1.len(), input2.len()) {
+                    (x, y) if (x == 1 && y == 1) || (x != 1 && y != 1) => $array_op(input1, input2, pipeline),
+                    (_, 1) => $scalar_op(input1, input2, pipeline),
+                    (1, _) => $scalar_op(input2, input1, pipeline),
+                    _ => unreachable!(),
+                }
+            }
+        )+
     }
 }
 
-pub async fn sub_scalar_dyn(data: &ArrowArrayGPU, value: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (data, value) {
-        (ArrowArrayGPU::Float32ArrayGPU(arr), ArrowArrayGPU::Float32ArrayGPU(scalar)) => {
-            arr.sub_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::Int32ArrayGPU(arr), ArrowArrayGPU::Int32ArrayGPU(scalar)) => {
-            arr.sub_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(arr), ArrowArrayGPU::UInt32ArrayGPU(scalar)) => {
-            arr.sub_scalar(scalar).await.into()
-        }
-        _ => panic!("Operation not supported"),
-    }
-}
+dyn_fn!(
+    add_scalar_dyn,
+    add_scalar,
+    add_scalar_op_dyn,
+    add_scalar_op,
+    Float32ArrayGPU,
+    Int32ArrayGPU,
+    Date32ArrayGPU,
+    UInt32ArrayGPU,
+    UInt16ArrayGPU,
+);
 
-pub async fn mul_scalar_dyn(data: &ArrowArrayGPU, value: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (data, value) {
-        (ArrowArrayGPU::Float32ArrayGPU(arr), ArrowArrayGPU::Float32ArrayGPU(scalar)) => {
-            arr.mul_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::Int32ArrayGPU(arr), ArrowArrayGPU::Int32ArrayGPU(scalar)) => {
-            arr.mul_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(arr), ArrowArrayGPU::UInt32ArrayGPU(scalar)) => {
-            arr.mul_scalar(scalar).await.into()
-        }
-        _ => panic!("Operation not supported"),
-    }
-}
+dyn_fn!(
+    sub_scalar_dyn,
+    sub_scalar,
+    sub_scalar_op_dyn,
+    sub_scalar_op,
+    Float32ArrayGPU,
+    Int32ArrayGPU,
+    UInt32ArrayGPU,
+);
 
-pub async fn div_scalar_dyn(data: &ArrowArrayGPU, value: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (data, value) {
-        (ArrowArrayGPU::Float32ArrayGPU(arr), ArrowArrayGPU::Float32ArrayGPU(scalar)) => {
-            arr.div_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::Int32ArrayGPU(arr), ArrowArrayGPU::Int32ArrayGPU(scalar)) => {
-            arr.div_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(arr), ArrowArrayGPU::UInt32ArrayGPU(scalar)) => {
-            arr.div_scalar(scalar).await.into()
-        }
-        _ => panic!("Operation not supported"),
-    }
-}
+dyn_fn!(
+    mul_scalar_dyn,
+    mul_scalar,
+    mul_scalar_op_dyn,
+    mul_scalar_op,
+    Float32ArrayGPU,
+    Int32ArrayGPU,
+    UInt32ArrayGPU,
+);
 
-pub async fn rem_scalar_dyn(data: &ArrowArrayGPU, value: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (data, value) {
-        (ArrowArrayGPU::Float32ArrayGPU(arr), ArrowArrayGPU::Float32ArrayGPU(scalar)) => {
-            arr.rem_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(arr), ArrowArrayGPU::UInt32ArrayGPU(scalar)) => {
-            arr.rem_scalar(scalar).await.into()
-        }
-        /*(ArrowArrayGPU::UInt16ArrayGPU(arr), ArrowArrayGPU::UInt16ArrayGPU(scalar)) => {
-            arr.add_scalar(scalar).await.into()
-        }*/
-        (ArrowArrayGPU::Int32ArrayGPU(arr), ArrowArrayGPU::Int32ArrayGPU(scalar)) => {
-            arr.rem_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::Int32ArrayGPU(arr), ArrowArrayGPU::Date32ArrayGPU(scalar)) => {
-            arr.rem_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::Date32ArrayGPU(arr), ArrowArrayGPU::Date32ArrayGPU(scalar)) => {
-            arr.rem_scalar(scalar).await.into()
-        }
-        (ArrowArrayGPU::Date32ArrayGPU(arr), ArrowArrayGPU::Int32ArrayGPU(scalar)) => {
-            arr.rem_scalar(scalar).await.into()
-        }
-        _ => panic!("Operation not supported"),
-    }
-}
+dyn_fn!(
+    div_scalar_dyn,
+    div_scalar,
+    div_scalar_op_dyn,
+    div_scalar_op,
+    Float32ArrayGPU,
+    Int32ArrayGPU,
+    UInt32ArrayGPU,
+);
 
-#[async_trait]
-pub trait ArrowAdd<Rhs> {
+dyn_fn!(
+    rem_scalar_dyn,
+    rem_scalar,
+    rem_scalar_op_dyn,
+    rem_scalar_op,
+    Float32ArrayGPU,
+    Int32ArrayGPU,
+    UInt32ArrayGPU,
+    Date32ArrayGPU,
+    [Int32ArrayGPU, Date32ArrayGPU],
+    [Date32ArrayGPU, Int32ArrayGPU]
+);
+
+pub trait ArrowAdd<Rhs>: ArrayUtils {
     type Output;
 
-    async fn add(&self, value: &Rhs) -> Self::Output;
+    fn add(&self, value: &Rhs) -> Self::Output {
+        default_impl!(self, value, add_op);
+    }
+
+    fn add_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
-#[async_trait]
-pub trait ArrowDiv<Rhs> {
+pub trait ArrowSub<Rhs>: ArrayUtils {
     type Output;
 
-    async fn div(&self, value: &Rhs) -> Self::Output;
+    fn sub(&self, value: &Rhs) -> Self::Output {
+        default_impl!(self, value, sub_op);
+    }
+
+    fn sub_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
-#[async_trait]
-pub trait ArrowMul<Rhs> {
+pub trait ArrowMul<Rhs>: ArrayUtils {
     type Output;
 
-    async fn mul(&self, value: &Rhs) -> Self::Output;
+    fn mul(&self, value: &Rhs) -> Self::Output {
+        default_impl!(self, value, mul_op);
+    }
+
+    fn mul_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
-#[async_trait]
-pub trait ArrowSub<Rhs> {
+pub trait ArrowDiv<Rhs>: ArrayUtils {
     type Output;
 
-    async fn sub(&self, value: &Rhs) -> Self::Output;
-}
-
-pub async fn add_array_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (input1, input2) {
-        (ArrowArrayGPU::Float32ArrayGPU(arr1), ArrowArrayGPU::Float32ArrayGPU(arr2)) => {
-            arr1.add(arr2).await.into()
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(arr1), ArrowArrayGPU::UInt32ArrayGPU(arr2)) => {
-            arr1.add(arr2).await.into()
-        }
-        (ArrowArrayGPU::Int32ArrayGPU(arr1), ArrowArrayGPU::Int32ArrayGPU(arr2)) => {
-            arr1.add(arr2).await.into()
-        }
-        (ArrowArrayGPU::Int32ArrayGPU(arr1), ArrowArrayGPU::Date32ArrayGPU(arr2)) => {
-            arr1.add(arr2).await.into()
-        }
-        (ArrowArrayGPU::Date32ArrayGPU(arr1), ArrowArrayGPU::Date32ArrayGPU(arr2)) => {
-            arr1.add(arr2).await.into()
-        }
-        (ArrowArrayGPU::Date32ArrayGPU(arr1), ArrowArrayGPU::Int32ArrayGPU(arr2)) => {
-            arr1.add(arr2).await.into()
-        }
-        _ => panic!("Operation not supported"),
+    fn div(&self, value: &Rhs) -> Self::Output {
+        default_impl!(self, value, div_op);
     }
+
+    fn div_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
-pub async fn sub_array_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (input1, input2) {
-        (ArrowArrayGPU::Float32ArrayGPU(arr1), ArrowArrayGPU::Float32ArrayGPU(arr2)) => {
-            arr1.sub(arr2).await.into()
-        }
-        _ => panic!("Operation not supported"),
-    }
-}
+dyn_fn!(
+    add_array_dyn,
+    add,
+    add_array_op_dyn,
+    add_op,
+    Float32ArrayGPU,
+    UInt32ArrayGPU,
+    Int32ArrayGPU,
+    Date32ArrayGPU,
+    [Int32ArrayGPU, Date32ArrayGPU],
+    [Date32ArrayGPU, Int32ArrayGPU]
+);
 
-pub async fn mul_array_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (input1, input2) {
-        (ArrowArrayGPU::Float32ArrayGPU(arr1), ArrowArrayGPU::Float32ArrayGPU(arr2)) => {
-            arr1.mul(arr2).await.into()
-        }
-        _ => panic!("Operation not supported"),
-    }
-}
+dyn_fn!(
+    sub_array_dyn,
+    sub,
+    sub_array_op_dyn,
+    sub_op,
+    Float32ArrayGPU,
+);
 
-pub async fn div_array_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (input1, input2) {
-        (ArrowArrayGPU::Float32ArrayGPU(arr1), ArrowArrayGPU::Float32ArrayGPU(arr2)) => {
-            arr1.div(arr2).await.into()
-        }
-        _ => panic!("Operation not supported"),
-    }
-}
+dyn_fn!(
+    mul_array_dyn,
+    mul,
+    mul_array_op_dyn,
+    mul_op,
+    Float32ArrayGPU,
+);
 
-pub async fn add_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (input1.len(), input2.len()) {
-        (x, y) if (x == 1 && y == 1) || (x != 1 && y != 1) => add_array_dyn(input1, input2).await,
-        (_, 1) => add_scalar_dyn(input1, input2).await,
-        (1, _) => add_scalar_dyn(input2, input1).await,
-        _ => unreachable!(),
-    }
-}
+dyn_fn!(
+    div_array_dyn,
+    div,
+    div_array_op_dyn,
+    div_op,
+    Float32ArrayGPU,
+);
 
-pub async fn sub_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (input1.len(), input2.len()) {
-        (x, y) if (x == 1 && y == 1) || (x != 1 && y != 1) => sub_array_dyn(input1, input2).await,
-        (_, 1) => sub_scalar_dyn(input1, input2).await,
-        (1, _) => sub_scalar_dyn(input2, input1).await,
-        _ => unreachable!(),
-    }
-}
+dyn_fn!(
+    [
+        add_dyn,
+        add_array_dyn,
+        add_scalar_dyn,
+        add_op_dyn,
+        add_array_op_dyn,
+        add_scalar_op_dyn
+    ],
+    [
+        sub_dyn,
+        sub_array_dyn,
+        sub_scalar_dyn,
+        sub_op_dyn,
+        sub_array_op_dyn,
+        sub_scalar_op_dyn
+    ],
+    [
+        mul_dyn,
+        mul_array_dyn,
+        mul_scalar_dyn,
+        mul_op_dyn,
+        mul_array_op_dyn,
+        mul_scalar_op_dyn
+    ],
+    [
+        div_dyn,
+        div_array_dyn,
+        div_scalar_dyn,
+        div_op_dyn,
+        div_array_op_dyn,
+        div_scalar_op_dyn
+    ]
+);
 
-pub async fn mul_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (input1.len(), input2.len()) {
-        (x, y) if (x == 1 && y == 1) || (x != 1 && y != 1) => mul_array_dyn(input1, input2).await,
-        (_, 1) => mul_scalar_dyn(input1, input2).await,
-        (1, _) => mul_scalar_dyn(input2, input1).await,
-        _ => unreachable!(),
-    }
-}
-
-pub async fn div_dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match (input1.len(), input2.len()) {
-        (x, y) if (x == 1 && y == 1) || (x != 1 && y != 1) => div_array_dyn(input1, input2).await,
-        (_, 1) => div_scalar_dyn(input1, input2).await,
-        (1, _) => div_scalar_dyn(input2, input1).await,
-        _ => unreachable!(),
-    }
-}
-
-#[async_trait]
-pub trait Neg {
+pub trait Neg: ArrayUtils {
     type OutputType;
-    async fn neg(&self) -> Self::OutputType;
+    fn neg(&self) -> Self::OutputType {
+        let mut pipeline = ArrowComputePipeline::new(self.get_gpu_device(), None);
+        let output = self.neg_op(&mut pipeline);
+        pipeline.finish();
+        output
+    }
+
+    fn neg_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
 }
 
+// TODO rework this into macro probably
 pub trait NegUnaryType {
     type OutputType;
     const SHADER: &'static str;
@@ -268,35 +301,51 @@ pub trait NegUnaryType {
     ) -> Self::OutputType;
 }
 
-#[async_trait]
 impl<T: NegUnaryType + ArrowPrimitiveType> Neg for PrimitiveArrayGpu<T> {
     type OutputType = T::OutputType;
 
-    async fn neg(&self) -> Self::OutputType {
-        let new_buffer = self.gpu_device.apply_unary_function(
+    fn neg_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
+        let dispatch_size = self.data.size().div_ceil(T::ITEM_SIZE).div_ceil(256) as u32;
+
+        let new_buffer = pipeline.apply_unary_function(
             &self.data,
-            &self.data.size() * <T as NegUnaryType>::BUFFER_SIZE_MULTIPLIER,
-            <T as ArrowPrimitiveType>::ITEM_SIZE,
+            self.data.size() * <T as NegUnaryType>::BUFFER_SIZE_MULTIPLIER,
             T::SHADER,
             "neg",
+            dispatch_size,
         );
-        let new_null_buffer = NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer);
+        let new_null_buffer =
+            NullBitBufferGpu::clone_null_bit_buffer_pass(&self.null_buffer, &mut pipeline.encoder);
 
-        return <T as NegUnaryType>::create_new(
-            Arc::new(new_buffer.await),
+        <T as NegUnaryType>::create_new(
+            Arc::new(new_buffer),
             self.gpu_device.clone(),
             self.len,
-            new_null_buffer.await,
-        );
+            new_null_buffer,
+        )
     }
 }
 
-pub async fn neg_dyn(input: &ArrowArrayGPU) -> ArrowArrayGPU {
-    match input {
-        ArrowArrayGPU::Float32ArrayGPU(x) => x.neg().await.into(),
-        _ => panic!(
-            "Operation negation not supported for type {:?}",
-            input.get_dtype()
-        ),
-    }
+macro_rules! dyn_neg {
+    ($function:ident, $function_op:ident, $( $y:ident ),*) => {
+        pub fn $function(data_1: &ArrowArrayGPU) -> ArrowArrayGPU {
+            let mut pipeline = ArrowComputePipeline::new(data_1.get_gpu_device(), None);
+            let result = $function_op(data_1, &mut pipeline);
+            pipeline.finish();
+            result
+        }
+
+        pub fn $function_op(data_1: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
+            match (data_1) {
+                $(ArrowArrayGPU::$y(arr_1) => arr_1.neg_op(pipeline).into(),)+
+                _ => panic!(
+                    "Operation {} not supported for type {:?}",
+                    stringify!($function),
+                    data_1.get_dtype(),
+                ),
+            }
+        }
+    };
 }
+
+dyn_neg!(neg_dyn, neg_op_dyn, Float32ArrayGPU);

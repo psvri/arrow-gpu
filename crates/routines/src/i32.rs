@@ -1,6 +1,6 @@
 use arrow_gpu_array::array::Date32Type;
 
-use crate::{merge::U32_MERGE_SHADER, take::U32_TAKE_SHADER, SwizzleType, put::U32_PUT_SHADER};
+use crate::{merge::U32_MERGE_SHADER, put::U32_PUT_SHADER, take::U32_TAKE_SHADER, SwizzleType};
 
 impl SwizzleType for i32 {
     const MERGE_SHADER: &'static str = U32_MERGE_SHADER;

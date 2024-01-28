@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use arrow_gpu_array::array::{types::UInt32Type, *};
-use async_trait::async_trait;
 
 use crate::impl_arithmetic_op;
 use crate::*;
@@ -12,9 +11,8 @@ const U32_ARRAY_SHADER: &str = include_str!("../compute_shaders/u32/array.wgsl")
 impl_arithmetic_op!(
     ArrowScalarAdd,
     UInt32Type,
-    add_scalar,
+    add_scalar_op,
     UInt32ArrayGPU,
-    4,
     U32_SCALAR_SHADER,
     "u32_add"
 );
@@ -22,9 +20,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarSub,
     UInt32Type,
-    sub_scalar,
+    sub_scalar_op,
     UInt32ArrayGPU,
-    4,
     U32_SCALAR_SHADER,
     "u32_sub"
 );
@@ -32,9 +29,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarMul,
     UInt32Type,
-    mul_scalar,
+    mul_scalar_op,
     UInt32ArrayGPU,
-    4,
     U32_SCALAR_SHADER,
     "u32_mul"
 );
@@ -42,9 +38,8 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarDiv,
     UInt32Type,
-    div_scalar,
+    div_scalar_op,
     UInt32ArrayGPU,
-    4,
     U32_SCALAR_SHADER,
     "u32_div"
 );
@@ -52,42 +47,17 @@ impl_arithmetic_op!(
 impl_arithmetic_op!(
     ArrowScalarRem,
     UInt32Type,
-    rem_scalar,
+    rem_scalar_op,
     UInt32ArrayGPU,
-    4,
     U32_SCALAR_SHADER,
     "u32_rem"
 );
 
-/*#[async_trait]
-impl ArrowAdd<UInt32ArrayGPU> for UInt32ArrayGPU {
-    type Output = Self;
-
-    async fn add(&self, value: &UInt32ArrayGPU) -> Self::Output {
-        assert!(Arc::ptr_eq(&self.gpu_device, &value.gpu_device));
-        let new_data_buffer = self
-            .gpu_device
-            .apply_binary_function(&self.data, &value.data, 4, U32_ARRAY_SHADER, "add_u32")
-            .await;
-        let new_null_buffer =
-            NullBitBufferGpu::merge_null_bit_buffer(&self.null_buffer, &value.null_buffer).await;
-
-        Self {
-            data: Arc::new(new_data_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: new_null_buffer,
-        }
-    }
-}*/
-
 impl_arithmetic_array_op!(
     ArrowAdd,
     UInt32Type,
-    add,
+    add_op,
     UInt32ArrayGPU,
-    4,
     U32_ARRAY_SHADER,
     "add_u32"
 );

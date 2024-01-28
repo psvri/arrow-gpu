@@ -1,9 +1,7 @@
-use std::sync::Arc;
-
-use arrow_gpu_array::array::*;
-use async_trait::async_trait;
-
+use crate::impl_cast;
 use crate::Cast;
+use arrow_gpu_array::array::*;
+use std::sync::Arc;
 
 const U8_CAST_U16_SHADER: &str = concat!(
     include_str!("../../../compute_shaders/u8/utils.wgsl"),
@@ -18,146 +16,52 @@ const U8_CAST_F32_SHADER: &str = concat!(
     include_str!("../compute_shaders/u8/cast_f32.wgsl")
 );
 
-#[async_trait]
-impl Cast<Int8ArrayGPU> for UInt8ArrayGPU {
+impl_cast!(Int8ArrayGPU, UInt8ArrayGPU);
 
-    async fn cast(&self) -> Int8ArrayGPU {
-        let new_buffer = self.gpu_device.clone_buffer(&self.data).await;
+impl_cast!(
+    Int16ArrayGPU,
+    UInt8ArrayGPU,
+    U8_CAST_U16_SHADER,
+    "cast_u16",
+    1,
+    2
+);
 
-        Int8ArrayGPU {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
-        }
-    }
-}
+impl_cast!(
+    Int32ArrayGPU,
+    UInt8ArrayGPU,
+    U8_CAST_U32_SHADER,
+    "cast_u32",
+    1,
+    4
+);
 
-#[async_trait]
-impl Cast<Int16ArrayGPU> for UInt8ArrayGPU {
+impl_cast!(
+    UInt16ArrayGPU,
+    UInt8ArrayGPU,
+    U8_CAST_U16_SHADER,
+    "cast_u16",
+    1,
+    2
+);
 
-    async fn cast(&self) -> Int16ArrayGPU {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 2,
-                1,
-                U8_CAST_U16_SHADER,
-                "cast_u16",
-            )
-            .await;
+impl_cast!(
+    UInt32ArrayGPU,
+    UInt8ArrayGPU,
+    U8_CAST_U32_SHADER,
+    "cast_u32",
+    1,
+    4
+);
 
-        Int16ArrayGPU {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
-        }
-    }
-}
-
-#[async_trait]
-impl Cast<Int32ArrayGPU> for UInt8ArrayGPU {
-
-    async fn cast(&self) -> Int32ArrayGPU {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 4,
-                1,
-                U8_CAST_U32_SHADER,
-                "cast_u32",
-            )
-            .await;
-
-        Int32ArrayGPU {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
-        }
-    }
-}
-
-#[async_trait]
-impl Cast<UInt16ArrayGPU> for UInt8ArrayGPU {
-
-    async fn cast(&self) -> UInt16ArrayGPU {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 2,
-                1,
-                U8_CAST_U16_SHADER,
-                "cast_u16",
-            )
-            .await;
-
-        UInt16ArrayGPU {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
-        }
-    }
-}
-
-#[async_trait]
-impl Cast<UInt32ArrayGPU> for UInt8ArrayGPU {
-
-    async fn cast(&self) -> UInt32ArrayGPU {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 4,
-                1,
-                U8_CAST_U32_SHADER,
-                "cast_u32",
-            )
-            .await;
-
-        UInt32ArrayGPU {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
-        }
-    }
-}
-
-#[async_trait]
-impl Cast<Float32ArrayGPU> for UInt8ArrayGPU {
-
-    async fn cast(&self) -> Float32ArrayGPU {
-        let new_buffer = self
-            .gpu_device
-            .apply_unary_function(
-                &self.data,
-                self.data.size() * 4,
-                1,
-                U8_CAST_F32_SHADER,
-                "cast_f32",
-            )
-            .await;
-
-        Float32ArrayGPU {
-            data: Arc::new(new_buffer),
-            gpu_device: self.gpu_device.clone(),
-            phantom: Default::default(),
-            len: self.len,
-            null_buffer: NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer).await,
-        }
-    }
-}
+impl_cast!(
+    Float32ArrayGPU,
+    UInt8ArrayGPU,
+    U8_CAST_F32_SHADER,
+    "cast_f32",
+    1,
+    4
+);
 
 #[cfg(test)]
 mod tests {

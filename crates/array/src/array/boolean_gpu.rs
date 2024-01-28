@@ -1,14 +1,15 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
-use async_trait::async_trait;
-use pollster::FutureExt;
 use wgpu::Buffer;
 
 use crate::kernels::broadcast::Broadcast;
 use crate::ArrowErrorGPU;
 
-use super::{ArrowArrayGPU, BooleanBufferBuilder, GpuDevice, NullBitBufferGpu};
+use super::{
+    ArrayUtils, ArrowArrayGPU, ArrowComputePipeline, BooleanBufferBuilder, GpuDevice,
+    NullBitBufferGpu,
+};
 
 pub struct BooleanArrayGPU {
     pub data: Arc<Buffer>,
@@ -87,8 +88,8 @@ impl BooleanArrayGPU {
         }
     }
 
-    pub async fn raw_values(&self) -> Option<Vec<bool>> {
-        let result = self.gpu_device.retrive_data(&self.data).await;
+    pub fn raw_values(&self) -> Option<Vec<bool>> {
+        let result = self.gpu_device.retrive_data(&self.data);
         let result: Vec<u8> = bytemuck::cast_slice(&result).to_vec();
         let mut bool_result = Vec::<bool>::with_capacity(self.len);
         for i in 0..self.len {
@@ -97,14 +98,14 @@ impl BooleanArrayGPU {
         Some(bool_result)
     }
 
-    pub async fn values(&self) -> Vec<Option<bool>> {
-        let primitive_values = self.raw_values().await.unwrap();
+    pub fn values(&self) -> Vec<Option<bool>> {
+        let primitive_values = self.raw_values().unwrap();
         let mut result_vec = Vec::with_capacity(self.len);
 
         // TODO rework this
         match &self.null_buffer {
             Some(null_bit_buffer) => {
-                let null_values = null_bit_buffer.raw_values().await;
+                let null_values = null_bit_buffer.raw_values();
                 for (pos, val) in primitive_values.iter().enumerate() {
                     if (null_values[pos / 8] & 1 << (pos % 8)) != 0 {
                         result_vec.push(Some(*val))
@@ -122,6 +123,23 @@ impl BooleanArrayGPU {
 
         result_vec
     }
+
+    pub fn broadcast_op(value: bool, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
+        let buffer = if value {
+            BooleanBufferBuilder::new_set_with_capacity(len)
+        } else {
+            BooleanBufferBuilder::new_with_capacity(len)
+        };
+
+        let data = pipeline.device.create_gpu_buffer_with_data(&buffer.data);
+
+        Self {
+            data: Arc::new(data),
+            gpu_device: pipeline.device.clone(),
+            len,
+            null_buffer: None,
+        }
+    }
 }
 
 impl Debug for BooleanArrayGPU {
@@ -134,7 +152,7 @@ impl Debug for BooleanArrayGPU {
             f,
             "Array of length {} contains {:?}",
             self.len,
-            self.values().block_on()
+            self.values()
         )?;
         write!(f, "}}")
     }
@@ -160,13 +178,10 @@ impl TryFrom<ArrowArrayGPU> for BooleanArrayGPU {
     }
 }
 
-#[async_trait]
 impl Broadcast<bool> for BooleanArrayGPU {
     type Output = BooleanArrayGPU;
 
-    async fn broadcast(value: bool, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
-        let null_buffer_builder = BooleanBufferBuilder::new_set_with_capacity(len);
-
+    fn broadcast(value: bool, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
         let buffer = if value {
             BooleanBufferBuilder::new_set_with_capacity(len)
         } else {
@@ -174,14 +189,19 @@ impl Broadcast<bool> for BooleanArrayGPU {
         };
 
         let data = gpu_device.create_gpu_buffer_with_data(&buffer.data);
-        let null_buffer = NullBitBufferGpu::new(gpu_device.clone(), &null_buffer_builder);
 
         Self {
             data: Arc::new(data),
             gpu_device,
             len,
-            null_buffer,
+            null_buffer: None,
         }
+    }
+}
+
+impl ArrayUtils for BooleanArrayGPU {
+    fn get_gpu_device(&self) -> Arc<GpuDevice> {
+        self.gpu_device.clone()
     }
 }
 
@@ -191,16 +211,16 @@ mod tests {
 
     use super::*;
 
-    #[tokio::test]
-    async fn test_boolean_values() {
-        let gpu_device = GpuDevice::new().await;
+    #[test]
+    fn test_boolean_values() {
+        let gpu_device = GpuDevice::new();
         let values = vec![Some(true), Some(true), Some(false), None];
         let array = BooleanArrayGPU::from_optional_slice(&values, Arc::new(gpu_device));
 
-        let raw_values = array.raw_values().await.unwrap();
+        let raw_values = array.raw_values().unwrap();
         assert_eq!(raw_values, vec![true, true, false, false]);
 
-        let gpu_values = array.values().await;
+        let gpu_values = array.values();
         assert_eq!(gpu_values, values);
     }
 

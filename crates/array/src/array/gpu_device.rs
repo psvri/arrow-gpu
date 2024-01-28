@@ -2,9 +2,10 @@ use std::borrow::Cow;
 
 use bytemuck::Pod;
 use log::info;
+use pollster::FutureExt;
 use wgpu::{
-    util::DeviceExt, Adapter, BindGroup, Buffer, ComputePipeline, Device, Maintain, Queue,
-    ShaderModule,
+    util::DeviceExt, Adapter, BindGroup, BindGroupDescriptor, Buffer, ComputePipeline, Device,
+    Queue, ShaderModule,
 };
 
 use super::RustNativeType;
@@ -57,7 +58,7 @@ impl CmpQuery {
         );
     }
 
-    pub async fn wait_for_results(&self, device: &wgpu::Device, queue: &wgpu::Queue) {
+    pub fn wait_for_results(&self, device: &wgpu::Device, queue: &wgpu::Queue) {
         self.destination_buffer
             .slice(..)
             .map_async(wgpu::MapMode::Read, |_| ());
@@ -88,7 +89,7 @@ pub struct GpuDevice {
 }
 
 impl GpuDevice {
-    pub async fn new() -> GpuDevice {
+    pub fn new() -> GpuDevice {
         let instance = wgpu::Instance::default();
 
         let adapter = instance
@@ -97,19 +98,19 @@ impl GpuDevice {
                 compatible_surface: None,
                 force_fallback_adapter: false,
             })
-            .await
+            .block_on()
             .unwrap();
 
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
-                    features: wgpu::Features::TIMESTAMP_QUERY,
-                    limits: wgpu::Limits::downlevel_defaults(),
+                    required_features: wgpu::Features::TIMESTAMP_QUERY,
+                    required_limits: wgpu::Limits::downlevel_defaults(),
                 },
                 None,
             )
-            .await
+            .block_on()
             .unwrap();
 
         info!("{:?}", device);
@@ -117,17 +118,17 @@ impl GpuDevice {
         Self { device, queue }
     }
 
-    pub async fn from_adapter(adapter: Adapter) -> GpuDevice {
+    pub fn from_adapter(adapter: Adapter) -> GpuDevice {
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
-                    features: wgpu::Features::empty(),
-                    limits: wgpu::Limits::downlevel_defaults(),
+                    required_features: wgpu::Features::empty(),
+                    required_limits: wgpu::Limits::downlevel_defaults(),
                 },
                 None,
             )
-            .await
+            .block_on()
             .unwrap();
 
         Self { device, queue }
@@ -176,7 +177,6 @@ impl GpuDevice {
         query
     }
 
-    #[inline]
     pub fn create_shader_module(&self, shader: &str) -> ShaderModule {
         self.device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -185,7 +185,6 @@ impl GpuDevice {
             })
     }
 
-    #[inline]
     pub fn create_compute_pipeline(&self, shader: &str, entry_point: &str) -> ComputePipeline {
         let cs_module = self.create_shader_module(shader);
         self.device
@@ -197,7 +196,6 @@ impl GpuDevice {
             })
     }
 
-    #[inline]
     pub fn create_gpu_buffer_with_data(&self, data: &[impl RustNativeType]) -> Buffer {
         self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -238,22 +236,27 @@ impl GpuDevice {
             })
     }
 
-    pub async fn clone_buffer(&self, buffer: &Buffer) -> Buffer {
+    pub fn clone_buffer(&self, buffer: &Buffer) -> Buffer {
         let staging_buffer = self.create_empty_buffer(buffer.size());
 
         let mut encoder = self.create_command_encoder(None);
 
         encoder.copy_buffer_to_buffer(buffer, 0, &staging_buffer, 0, buffer.size());
 
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-
-        self.device
-            .poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
+        self.queue.submit(Some(encoder.finish()));
 
         staging_buffer
     }
 
-    pub async fn retrive_data(&self, data: &Buffer) -> Vec<u8> {
+    pub fn clone_buffer_pass(&self, buffer: &Buffer, encoder: &mut wgpu::CommandEncoder) -> Buffer {
+        let staging_buffer = self.create_empty_buffer(buffer.size());
+
+        encoder.copy_buffer_to_buffer(buffer, 0, &staging_buffer, 0, buffer.size());
+
+        staging_buffer
+    }
+
+    pub fn retrive_data(&self, data: &Buffer) -> Vec<u8> {
         let size = data.size() as wgpu::BufferAddress;
 
         let staging_buffer = self.create_retrive_buffer(size);
@@ -270,7 +273,7 @@ impl GpuDevice {
         self.device
             .poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
 
-        if let Some(Ok(())) = receiver.receive().await {
+        if let Some(Ok(())) = receiver.receive().block_on() {
             // Gets contents of buffer
             let data = buffer_slice.get_mapped_range();
             // Since contents are got in bytes, this converts these bytes back to u32
@@ -288,7 +291,7 @@ impl GpuDevice {
         }
     }
 
-    pub async fn apply_unary_function(
+    pub fn apply_unary_function(
         &self,
         original_values: &Buffer,
         new_buffer_size: u64,
@@ -329,14 +332,12 @@ impl GpuDevice {
         );
 
         query.resolve(&mut encoder);
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-        self.device
-            .poll(Maintain::WaitForSubmissionIndex(submission_index));
-        query.wait_for_results(&self.device, &self.queue).await;
+        self.queue.submit(Some(encoder.finish()));
+
         new_values_buffer
     }
 
-    pub async fn apply_scalar_function(
+    pub fn apply_scalar_function(
         &self,
         original_values: &Buffer,
         scalar_value: &Buffer,
@@ -381,14 +382,12 @@ impl GpuDevice {
             dispatch_size.div_ceil(256) as u32,
         );
 
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-        self.device
-            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        self.queue.submit(Some(encoder.finish()));
 
         new_values_buffer
     }
 
-    pub async fn apply_binary_function(
+    pub fn apply_binary_function(
         &self,
         operand_1: &Buffer,
         operand_2: &Buffer,
@@ -432,14 +431,12 @@ impl GpuDevice {
             dispatch_size.div_ceil(256) as u32,
         );
 
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-        self.device
-            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        self.queue.submit(Some(encoder.finish()));
 
         new_values_buffer
     }
 
-    pub async fn apply_ternary_function(
+    pub fn apply_ternary_function(
         &self,
         operand_1: &Buffer,
         operand_2: &Buffer,
@@ -488,14 +485,12 @@ impl GpuDevice {
             dispatch_size.div_ceil(256) as u32,
         );
 
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-        self.device
-            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        self.queue.submit(Some(encoder.finish()));
 
         new_values_buffer
     }
 
-    pub async fn apply_broadcast_function(
+    pub fn apply_broadcast_function(
         &self,
         scalar_value: &Buffer,
         output_buffer_size: u64,
@@ -535,10 +530,12 @@ impl GpuDevice {
             dispatch_size.div_ceil(256) as u32,
         );
 
-        let submission_index = self.queue.submit(Some(encoder.finish()));
-        self.device
-            .poll(Maintain::WaitForSubmissionIndex(submission_index));
+        self.queue.submit(Some(encoder.finish()));
 
         new_values_buffer
+    }
+
+    pub fn create_bind_group(&self, desc: &BindGroupDescriptor) -> BindGroup {
+        self.device.create_bind_group(desc)
     }
 }
