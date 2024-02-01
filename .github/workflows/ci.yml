@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Environment
         run: ${{ matrix.setup_env }}
         shell: bash
@@ -54,7 +54,7 @@ jobs:
           cargo llvm-cov clean --workspace
           cargo llvm-cov nextest --features=profile --lcov --output-path lcov.info --status-level all --no-fail-fast
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           files: lcov.info
