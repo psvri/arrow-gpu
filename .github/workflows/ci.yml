@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     paths-ignore:
-      - 'docs/**'
+      - "docs/**"
 
 jobs:
   test-build:
@@ -21,9 +21,9 @@ jobs:
               sudo apt-get install -f -y libegl1-mesa-dev
               sudo apt-get install -f -y mesa-vulkan-drivers
               rustup update
-          - os: macos-latest
-            name: Darwin
-            run_test: false # macos vm doesn't have software metal api
+          - os: macos-14
+            name: Mac M1
+            run_test: true
             run_build: true
             setup_env: |
               rustup update
@@ -32,7 +32,7 @@ jobs:
             run_test: true
             setup_env: |
               rustup update
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
