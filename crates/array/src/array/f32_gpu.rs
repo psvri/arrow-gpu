@@ -1,11 +1,11 @@
+use super::{
+    gpu_ops::f32_ops::*, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowType,
+    NullBitBufferGpu,
+};
+use crate::gpu_utils::*;
 use crate::{kernels::aggregate::ArrowSum, ArrowErrorGPU};
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
-
-use super::{
-    gpu_device::GpuDevice, gpu_ops::f32_ops::*, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU,
-    ArrowComputePipeline, ArrowType, NullBitBufferGpu,
-};
 
 const F32_REDUCTION_SHADER: &str = include_str!("../../compute_shaders/f32/reduction.wgsl");
 const F32_BROADCAST_SHADER: &str = include_str!("../../compute_shaders/f32/broadcast.wgsl");

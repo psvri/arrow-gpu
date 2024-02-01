@@ -163,6 +163,7 @@ macro_rules! test_unary_op_float {
         #[test]
         fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
+            use arrow_gpu_array::gpu_utils::GpuDevice;
             let device = GPU_DEVICE.get_or_init(||Arc::new(GpuDevice::new()));
             let data = $input;
             let gpu_array = $input_ty::from_slice(&data, device.clone());

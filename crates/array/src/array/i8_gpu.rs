@@ -1,10 +1,7 @@
+use super::{primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU, ArrowArrayGPU};
+use crate::gpu_utils::*;
 use crate::ArrowErrorGPU;
 use std::sync::Arc;
-
-use super::{
-    gpu_device::GpuDevice, primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU, ArrowArrayGPU,
-    ArrowComputePipeline,
-};
 
 pub type Int8ArrayGPU = PrimitiveArrayGpu<i8>;
 

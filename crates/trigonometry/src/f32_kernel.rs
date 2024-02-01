@@ -1,7 +1,6 @@
-use std::sync::Arc;
-
 use arrow_gpu_array::array::*;
-
+use arrow_gpu_array::gpu_utils::*;
+use std::sync::Arc;
 use wgpu::Buffer;
 
 use crate::{HyperbolicType, TrigonometricType};

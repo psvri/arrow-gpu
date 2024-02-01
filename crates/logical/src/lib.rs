@@ -9,6 +9,7 @@ pub(crate) mod u8;
 use std::sync::Arc;
 
 use arrow_gpu_array::array::*;
+use arrow_gpu_array::gpu_utils::*;
 
 pub(crate) const AND_ENTRY_POINT: &str = "bitwise_and";
 pub(crate) const OR_ENTRY_POINT: &str = "bitwise_or";

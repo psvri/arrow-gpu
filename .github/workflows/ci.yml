@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     paths-ignore:
-      - 'docs/**'
+      - "docs/**"
 
 jobs:
   test-build:
@@ -15,24 +15,23 @@ jobs:
         include:
           - os: ubuntu-latest
             name: Linux
-            run_test: true
+            with_profiling: true
             setup_env: |
               sudo apt-get update
               sudo apt-get install -f -y libegl1-mesa-dev
               sudo apt-get install -f -y mesa-vulkan-drivers
               rustup update
-          - os: macos-latest
-            name: Darwin
-            run_test: false # macos vm doesn't have software metal api
-            run_build: true
+          - os: macos-14
+            name: Mac M1
+            with_profiling: false
             setup_env: |
               rustup update
           - os: windows-latest
             name: Windows
-            run_test: true
+            with_profiling: true
             setup_env: |
               rustup update
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -45,17 +44,17 @@ jobs:
           tool: nextest,cargo-llvm-cov
       - uses: Swatinem/rust-cache@v2
       - name: rust cargo tests
-        if: matrix.run_test
+        if: ${{!matrix.with_profiling}}
         run: |
           cargo llvm-cov clean --workspace
           cargo llvm-cov nextest  --lcov --output-path lcov.info --status-level all --no-fail-fast
+      - name: rust cargo tests with profiling
+        if: matrix.with_profiling
+        run: |
+          cargo llvm-cov clean --workspace
+          cargo llvm-cov nextest --features=profile --lcov --output-path lcov.info --status-level all --no-fail-fast
       - name: Upload coverage reports to Codecov
-        if: matrix.run_test
         uses: codecov/codecov-action@v3
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           files: lcov.info
-      - name: rust cargo build
-        if: matrix.run_build
-        run: |
-          cargo build

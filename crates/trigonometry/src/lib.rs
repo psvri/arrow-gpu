@@ -1,12 +1,13 @@
+use arrow_gpu_array::array::*;
+use arrow_gpu_array::gpu_utils::*;
+use std::sync::Arc;
+use wgpu::Buffer;
+
 pub(crate) mod f32_kernel;
 pub(crate) mod i16_kernel;
 pub(crate) mod i8_kernel;
 pub(crate) mod u16_kernel;
 pub(crate) mod u8_kernel;
-use std::sync::Arc;
-use wgpu::Buffer;
-
-use arrow_gpu_array::array::*;
 
 macro_rules! default_impl {
     ($self: ident, $fn: ident) => {
@@ -170,5 +171,4 @@ dyn_fn!(
         Int16ArrayGPU,
         Int8ArrayGPU
     ]
-    
 );

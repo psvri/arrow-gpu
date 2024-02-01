@@ -11,3 +11,6 @@ pollster = { workspace = true}
 bytemuck = { workspace = true}
 futures-intrusive = { workspace = true}
 log =  { workspace = true}
+
+[features]
+profile = []

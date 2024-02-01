@@ -14,3 +14,15 @@ arrow_gpu_compare = { path = "../compare" }
 arrow_gpu_logical = { path = "../logical" }
 arrow_gpu_routines = { path = "../routines" }
 arrow_gpu_trigonometry = { path = "../trigonometry" }
+
+[features]
+profile = [
+    "arrow_gpu_arithmetic/profile",
+    "arrow_gpu_array/profile",
+    "arrow_gpu_math/profile",
+    "arrow_gpu_cast/profile",
+    "arrow_gpu_compare/profile",
+    "arrow_gpu_logical/profile",
+    "arrow_gpu_routines/profile",
+    "arrow_gpu_trigonometry/profile",
+]

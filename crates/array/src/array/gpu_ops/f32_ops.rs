@@ -1,7 +1,6 @@
 use super::*;
+use crate::gpu_utils::GpuDevice;
 use wgpu::Buffer;
-
-use crate::array::gpu_device::GpuDevice;
 
 const F32_REDUCTION_SHADER: &str = include_str!("../../../compute_shaders/f32/reduction.wgsl");
 

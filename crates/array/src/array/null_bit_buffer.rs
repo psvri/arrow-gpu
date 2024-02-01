@@ -4,7 +4,7 @@ use wgpu::{util::align_to, Buffer, CommandEncoder};
 
 const LOGICAL_AND_SHADER: &str = include_str!("../../../logical/compute_shaders/u32/logical.wgsl");
 
-use super::{gpu_device::GpuDevice, ArrowComputePipeline};
+use crate::gpu_utils::*;
 
 pub struct BooleanBufferBuilder {
     pub(crate) data: Vec<u8>,
@@ -139,6 +139,17 @@ impl NullBitBufferGpu {
     ) -> Option<Self> {
         data.as_ref().map(|null_bit_buffer| NullBitBufferGpu {
             bit_buffer: Arc::new(null_bit_buffer.clone_buffer_pass(encoder)),
+            len: null_bit_buffer.len,
+            gpu_device: null_bit_buffer.gpu_device.clone(),
+        })
+    }
+
+    pub fn clone_null_bit_buffer_op(
+        data: &Option<Self>,
+        pipeline: &mut ArrowComputePipeline,
+    ) -> Option<Self> {
+        data.as_ref().map(|null_bit_buffer| NullBitBufferGpu {
+            bit_buffer: Arc::new(null_bit_buffer.clone_buffer_pass(&mut pipeline.encoder)),
             len: null_bit_buffer.len,
             gpu_device: null_bit_buffer.gpu_device.clone(),
         })

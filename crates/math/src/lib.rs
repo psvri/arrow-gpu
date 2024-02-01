@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use arrow_gpu_array::array::{
-    ArrayUtils, ArrowArrayGPU, ArrowComputePipeline, ArrowPrimitiveType, GpuDevice,
+    ArrayUtils, ArrowArrayGPU, ArrowPrimitiveType,
     NullBitBufferGpu, PrimitiveArrayGpu,
 };
+use arrow_gpu_array::gpu_utils::*;
 use wgpu::Buffer;
 
 pub(crate) mod f32;
