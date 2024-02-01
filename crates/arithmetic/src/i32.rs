@@ -1,6 +1,6 @@
-use std::sync::Arc;
-
 use arrow_gpu_array::array::{types::Int32Type, *};
+use arrow_gpu_array::gpu_utils::*;
+use std::sync::Arc;
 
 use crate::impl_arithmetic_op;
 use crate::*;

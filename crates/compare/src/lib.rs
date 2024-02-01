@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use arrow_gpu_array::array::{
-    ArrayUtils, ArrowArrayGPU, ArrowComputePipeline, ArrowPrimitiveType, BooleanArrayGPU,
-    NullBitBufferGpu, PrimitiveArrayGpu,
+    ArrayUtils, ArrowArrayGPU, ArrowPrimitiveType, BooleanArrayGPU, NullBitBufferGpu,
+    PrimitiveArrayGpu,
 };
+use arrow_gpu_array::gpu_utils::*;
 
 pub(crate) mod f32;
 pub(crate) mod i16;

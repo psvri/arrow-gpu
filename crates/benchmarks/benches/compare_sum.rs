@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use arrow::array::Float32Array;
 use arrow::compute::kernels::aggregate::sum;
-use arrow_gpu::{array::*, kernels::aggregate::ArrowSum};
+use arrow_gpu::{array::*, gpu_utils::*, kernels::aggregate::ArrowSum};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 fn bench_cpu_f32_add(data: &mut Float32Array) -> f32 {

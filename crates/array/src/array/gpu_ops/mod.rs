@@ -1,6 +1,6 @@
 pub mod f32_ops;
 
-use super::gpu_device::GpuDevice;
+use crate::gpu_utils::GpuDevice;
 use wgpu::{util::align_to, Buffer, Maintain};
 
 pub(crate) fn reduction_op(

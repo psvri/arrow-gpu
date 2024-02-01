@@ -1,7 +1,7 @@
 use super::ArrayUtils;
-use super::{gpu_device::GpuDevice, NullBitBufferGpu};
+use super::NullBitBufferGpu;
 use crate::array::{ArrowPrimitiveType, BooleanBufferBuilder};
-
+use crate::gpu_utils::*;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use std::sync::Arc;

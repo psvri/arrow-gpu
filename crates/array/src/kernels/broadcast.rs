@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::array::gpu_device::GpuDevice;
+use crate::gpu_utils::GpuDevice;
 
 pub trait Broadcast<Rhs> {
     type Output;

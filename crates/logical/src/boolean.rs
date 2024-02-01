@@ -1,4 +1,5 @@
 use arrow_gpu_array::array::*;
+use arrow_gpu_array::gpu_utils::*;
 
 use crate::{
     u32::{U32_LOGICAL_SHADER, U32_NOT_SHADER},
@@ -218,7 +219,6 @@ mod test {
 
     #[test]
     fn test_any() {
-        use arrow_gpu_array::array::GpuDevice;
         use arrow_gpu_array::GPU_DEVICE;
         let device = GPU_DEVICE
             .get_or_init(|| Arc::new(GpuDevice::new()))

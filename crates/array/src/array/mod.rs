@@ -1,13 +1,15 @@
+use crate::gpu_utils::*;
+use crate::kernels::broadcast::Broadcast;
+use crate::kernels::ScalarValue;
+use crate::utils::ScalarArray;
 use bytemuck::Pod;
 use std::sync::Arc;
 use std::{any::Any, fmt::Debug};
 use wgpu::Buffer;
 
 pub(crate) mod boolean_gpu;
-pub(crate) mod compute_pipeline;
 pub(crate) mod date32_gpu;
 pub(crate) mod f32_gpu;
-pub(crate) mod gpu_device;
 pub mod gpu_ops;
 pub(crate) mod i16_gpu;
 pub(crate) mod i32_gpu;
@@ -19,13 +21,7 @@ pub(crate) mod u16_gpu;
 pub(crate) mod u32_gpu;
 pub(crate) mod u8_gpu;
 
-use crate::kernels::broadcast::Broadcast;
-use crate::kernels::ScalarValue;
-use crate::utils::ScalarArray;
-
-pub use self::gpu_device::GpuDevice;
 pub use boolean_gpu::BooleanArrayGPU;
-pub use compute_pipeline::ArrowComputePipeline;
 pub use date32_gpu::Date32ArrayGPU;
 pub use date32_gpu::Date32Type;
 pub use f32_gpu::Float32ArrayGPU;

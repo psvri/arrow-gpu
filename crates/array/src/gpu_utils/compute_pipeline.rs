@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use wgpu::{Buffer, CommandEncoder};
 
-use super::{gpu_device::CmpQuery, GpuDevice};
+use super::{CmpQuery, GpuDevice};
 
 pub struct ArrowComputePipeline {
     pub device: Arc<GpuDevice>,

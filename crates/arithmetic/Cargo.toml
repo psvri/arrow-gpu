@@ -11,3 +11,6 @@ arrow_gpu_array = { path = "../array" }
 
 [dev-dependencies]
 arrow_gpu_test_macros = {path = "../test_macros"}
+
+[features]
+profile = ["arrow_gpu_array/profile"]

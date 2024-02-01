@@ -1,7 +1,9 @@
-use crate::{FloatMathUnaryType, MathUnaryType};
 use arrow_gpu_array::array::*;
+use arrow_gpu_array::gpu_utils::*;
 use std::sync::*;
 use wgpu::Buffer;
+
+use crate::{FloatMathUnaryType, MathUnaryType};
 
 const FLOATUNARY_SHADER: &str = include_str!("../compute_shaders/f32/floatunary.wgsl");
 

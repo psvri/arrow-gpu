@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use arrow_gpu_array::array::{
-    ArrayUtils, ArrowArrayGPU, ArrowComputePipeline, ArrowPrimitiveType, GpuDevice,
-    NullBitBufferGpu, PrimitiveArrayGpu,
+    ArrayUtils, ArrowArrayGPU, ArrowPrimitiveType, NullBitBufferGpu, PrimitiveArrayGpu,
 };
+use arrow_gpu_array::gpu_utils::*;
+use std::sync::Arc;
 use wgpu::Buffer;
 
 macro_rules! default_impl {
@@ -210,52 +209,17 @@ dyn_fn!(
     [Date32ArrayGPU, Int32ArrayGPU]
 );
 
-dyn_fn!(
-    sub_array_dyn,
-    sub_array_op_dyn,
-    sub_op,
-    Float32ArrayGPU,
-);
+dyn_fn!(sub_array_dyn, sub_array_op_dyn, sub_op, Float32ArrayGPU,);
+
+dyn_fn!(mul_array_dyn, mul_array_op_dyn, mul_op, Float32ArrayGPU,);
+
+dyn_fn!(div_array_dyn, div_array_op_dyn, div_op, Float32ArrayGPU,);
 
 dyn_fn!(
-    mul_array_dyn,
-    mul_array_op_dyn,
-    mul_op,
-    Float32ArrayGPU,
-);
-
-dyn_fn!(
-    div_array_dyn,
-    div_array_op_dyn,
-    div_op,
-    Float32ArrayGPU,
-);
-
-dyn_fn!(
-    [
-        add_dyn,
-        add_op_dyn,
-        add_array_op_dyn,
-        add_scalar_op_dyn
-    ],
-    [
-        sub_dyn,
-        sub_op_dyn,
-        sub_array_op_dyn,
-        sub_scalar_op_dyn
-    ],
-    [
-        mul_dyn,
-        mul_op_dyn,
-        mul_array_op_dyn,
-        mul_scalar_op_dyn
-    ],
-    [
-        div_dyn,
-        div_op_dyn,
-        div_array_op_dyn,
-        div_scalar_op_dyn
-    ]
+    [add_dyn, add_op_dyn, add_array_op_dyn, add_scalar_op_dyn],
+    [sub_dyn, sub_op_dyn, sub_array_op_dyn, sub_scalar_op_dyn],
+    [mul_dyn, mul_op_dyn, mul_array_op_dyn, mul_scalar_op_dyn],
+    [div_dyn, div_op_dyn, div_array_op_dyn, div_scalar_op_dyn]
 );
 
 pub trait Neg: ArrayUtils {

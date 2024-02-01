@@ -1,4 +1,5 @@
-use arrow_gpu_array::array::{ArrowArrayGPU, ArrowComputePipeline, BooleanArrayGPU, GpuDevice};
+use arrow_gpu_array::array::{ArrowArrayGPU, BooleanArrayGPU};
+use arrow_gpu_array::gpu_utils::*;
 use wgpu::Buffer;
 
 pub(crate) const U32_MERGE_SHADER: &str = include_str!("../compute_shaders/32bit/merge.wgsl");
@@ -22,11 +23,9 @@ pub fn merge_null_buffers(
 ) -> Option<Buffer> {
     const SHADER: &str = include_str!("../compute_shaders/u32/merge_null_buffer.wgsl");
 
-    let merged_buffer_1 = if let Some(op1_null_buffer) = operand_1_null_buffer {
-        Some(device.apply_binary_function(op1_null_buffer, mask, 4, SHADER, "merge_selected"))
-    } else {
-        None
-    };
+    let merged_buffer_1 = operand_1_null_buffer.map(|op1_null_buffer| {
+        device.apply_binary_function(op1_null_buffer, mask, 4, SHADER, "merge_selected")
+    });
 
     let merged_buffer_2 = operand_2_null_buffer.map(|op2_null_buffer| {
         device.apply_binary_function(op2_null_buffer, mask, 4, SHADER, "merge_not_selected")
@@ -205,7 +204,7 @@ mod test {
         ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $mask: expr, $output: expr) => {
             #[test]
             fn $fn_name() {
-                use arrow_gpu_array::array::GpuDevice;
+                use arrow_gpu_array::gpu_utils::GpuDevice;
                 use arrow_gpu_array::GPU_DEVICE;
                 let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
                 let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
@@ -218,7 +217,7 @@ mod test {
         ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr,  $mask: expr, $output: expr) => {
             #[test]
             fn $fn_name() {
-                use arrow_gpu_array::array::GpuDevice;
+                use arrow_gpu_array::gpu_utils::GpuDevice;
                 use arrow_gpu_array::GPU_DEVICE;
                 let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
                 let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());

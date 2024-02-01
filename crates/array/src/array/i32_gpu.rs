@@ -1,11 +1,11 @@
+use super::{
+    primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowComputePipeline, ArrowPrimitiveType,
+    ArrowType, NullBitBufferGpu,
+};
+use crate::gpu_utils::*;
 use crate::{kernels::broadcast::Broadcast, ArrowErrorGPU};
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
-
-use super::{
-    gpu_device::GpuDevice, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowComputePipeline,
-    ArrowPrimitiveType, ArrowType, NullBitBufferGpu,
-};
 
 const I32_BROADCAST_SHADER: &str = include_str!("../../compute_shaders/i32/broadcast.wgsl");
 

@@ -1,9 +1,8 @@
+use arrow_gpu_array::array::{Float32ArrayGPU, NullBitBufferGpu, UInt8ArrayGPU};
+use arrow_gpu_array::gpu_utils::*;
 use std::sync::Arc;
 
 use crate::Cast;
-use arrow_gpu_array::array::{
-    ArrowComputePipeline, Float32ArrayGPU, NullBitBufferGpu, UInt8ArrayGPU,
-};
 
 const F32_CAST_U8_SHADER: &str = include_str!("../compute_shaders/f32/cast_u8.wgsl");
 

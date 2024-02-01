@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
 use crate::Cast;
-use arrow_gpu_array::array::{
-    ArrowComputePipeline, BooleanArrayGPU, Float32ArrayGPU, GpuDevice, NullBitBufferGpu,
-};
+use arrow_gpu_array::array::{BooleanArrayGPU, Float32ArrayGPU, NullBitBufferGpu};
+use arrow_gpu_array::gpu_utils::*;
 use wgpu::Buffer;
 
 const BOOLEAN_CAST_F32_SHADER: &str = include_str!("../compute_shaders/boolean/cast_f32.wgsl");

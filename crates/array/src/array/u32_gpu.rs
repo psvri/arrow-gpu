@@ -1,11 +1,8 @@
+use super::{primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowType, NullBitBufferGpu};
+use crate::gpu_utils::*;
 use crate::ArrowErrorGPU;
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
-
-use super::{
-    gpu_device::GpuDevice, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowComputePipeline,
-    ArrowType, NullBitBufferGpu,
-};
 
 pub type UInt32ArrayGPU = PrimitiveArrayGpu<u32>;
 

@@ -1,13 +1,15 @@
+use arrow_gpu_array::array::*;
+use arrow_gpu_array::gpu_utils::*;
+
 pub(crate) mod boolean_cast;
 pub(crate) mod f32_cast;
 pub(crate) mod i16_cast;
 pub(crate) mod i8_cast;
 pub(crate) mod u16_cast;
+pub(crate) mod u32_cast;
 pub(crate) mod u8_cast;
 
 pub use boolean_cast::*;
-
-use arrow_gpu_array::array::*;
 
 pub trait Cast<T>: ArrayUtils {
     fn cast(&self) -> T {
@@ -18,6 +20,17 @@ pub trait Cast<T>: ArrayUtils {
     }
 
     fn cast_op(&self, pipeline: &mut ArrowComputePipeline) -> T;
+}
+
+pub trait BitCast<T>: ArrayUtils {
+    fn bitcast(&self) -> T {
+        let mut pipeline = ArrowComputePipeline::new(self.get_gpu_device(), None);
+        let results = self.bitcast_op(&mut pipeline);
+        pipeline.finish();
+        results
+    }
+
+    fn bitcast_op(&self, pipeline: &mut ArrowComputePipeline) -> T;
 }
 
 macro_rules! impl_cast {
@@ -127,6 +140,7 @@ mod tests {
             #[test]
             fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
+                use arrow_gpu_array::gpu_utils::*;
                 let device = GPU_DEVICE.get_or_init(|| std::sync::Arc::new(GpuDevice::new()).clone());
                 let data = $input;
                 let gpu_array = $input_ty::from_slice(&data, device.clone());
