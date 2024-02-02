@@ -3,19 +3,32 @@ use std::sync::Arc;
 use arrow_gpu_array::array::{ArrayUtils, Float32ArrayGPU, NullBitBufferGpu, UInt32ArrayGPU};
 use arrow_gpu_array::gpu_utils::*;
 
-use crate::BitCast;
+use crate::{impl_bitcast, BitCast};
 
-impl BitCast<Float32ArrayGPU> for UInt32ArrayGPU {
-    fn bitcast_op(&self, pipeline: &mut ArrowComputePipeline) -> Float32ArrayGPU {
-        let data = pipeline.clone_buffer(&self.data);
-        let null_buffer = NullBitBufferGpu::clone_null_bit_buffer_op(&self.null_buffer, pipeline);
-        let data = Arc::new(data);
-        Float32ArrayGPU {
-            data,
-            gpu_device: self.get_gpu_device(),
-            phantom: std::marker::PhantomData,
-            len: self.len,
-            null_buffer,
-        }
-    }
+impl_bitcast!(Float32ArrayGPU, UInt32ArrayGPU);
+
+#[cfg(test)]
+mod test {
+    use crate::bitcast_dyn;
+    use crate::tests::test_bitcast_op;
+    use crate::ArrowType;
+    use crate::BitCast;
+    use arrow_gpu_array::array::{Float32ArrayGPU, UInt32ArrayGPU};
+
+    test_bitcast_op!(
+        test_bitcast_u32_to_f32,
+        UInt32ArrayGPU,
+        Float32ArrayGPU,
+        vec![0, 1, 10, 5713, 57130, u32::MIN, u32::MAX],
+        Float32Type,
+        vec![
+            0.0,
+            f32::from_bits(1),
+            f32::from_bits(10),
+            f32::from_bits(5713),
+            f32::from_bits(57130),
+            f32::from_bits(u32::MIN),
+            f32::from_bits(u32::MAX)
+        ]
+    );
 }

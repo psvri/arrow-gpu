@@ -279,4 +279,21 @@ impl ArrowComputePipeline {
 
         staging_buffer
     }
+
+    pub fn copy_buffer_to_buffer(
+        &mut self,
+        source: &Buffer,
+        source_offset: u64,
+        destination: &Buffer,
+        destination_offset: u64,
+        copy_size: u64,
+    ) {
+        self.encoder.copy_buffer_to_buffer(
+            source,
+            source_offset,
+            destination,
+            destination_offset,
+            copy_size,
+        )
+    }
 }
