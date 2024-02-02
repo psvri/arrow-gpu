@@ -83,6 +83,27 @@ macro_rules! impl_cast {
 }
 pub(crate) use impl_cast;
 
+macro_rules! impl_bitcast {
+    ($into_ty: ident, $for_ty: ident) => {
+        impl BitCast<$into_ty> for $for_ty {
+            fn bitcast_op(&self, pipeline: &mut ArrowComputePipeline) -> $into_ty {
+                let data = pipeline.clone_buffer(&self.data);
+                let null_buffer =
+                    NullBitBufferGpu::clone_null_bit_buffer_op(&self.null_buffer, pipeline);
+                let data = Arc::new(data);
+                $into_ty {
+                    data,
+                    gpu_device: self.get_gpu_device(),
+                    phantom: std::marker::PhantomData,
+                    len: self.len,
+                    null_buffer,
+                }
+            }
+        }
+    };
+}
+pub(crate) use impl_bitcast;
+
 macro_rules! dyn_cast {
     ($function:ident, $function_op:ident, $( [$from:ident, $into_ty:ident, $into: ident] ),*) => (
         pub fn $function(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
@@ -132,6 +153,34 @@ dyn_cast!(
     [BooleanArrayGPU, Float32Type, Float32ArrayGPU]
 );
 
+macro_rules! dyn_bitcast {
+    ($function:ident, $function_op:ident, $( [$from:ident, $into_ty:ident, $into: ident] ),*) => (
+        pub fn $function(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
+            let mut pipeline = ArrowComputePipeline::new(from.get_gpu_device(), None);
+            let result = $function_op(from, into, &mut pipeline);
+            pipeline.finish();
+            result
+        }
+
+        pub fn $function_op(from: &ArrowArrayGPU, into: &ArrowType, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
+            match (from, into) {
+                $((ArrowArrayGPU::$from(x), ArrowType::$into_ty) => BitCast::<$into>::bitcast_op(x, pipeline).into(),)+
+                _ => panic!(
+                    "Casting not supported for type {:?} {:?}",
+                    from.get_dtype(),
+                    into,
+                ),
+            }
+        }
+    )
+}
+
+dyn_bitcast!(
+    bitcast_dyn,
+    bitcast_op_dyn,
+    [UInt32ArrayGPU, Float32Type, Float32ArrayGPU]
+);
+
 #[cfg(test)]
 mod tests {
     macro_rules! test_cast_op {
@@ -159,4 +208,35 @@ mod tests {
         };
     }
     pub(crate) use test_cast_op;
+
+    macro_rules! test_bitcast_op {
+        ($(#[$m:meta])* $fn_name: ident, $input_ty: ident, $output_ty: ident, $input: expr, $cast_type: ident, $output: expr) => {
+            $(#[$m])*
+            #[test]
+            fn $fn_name() {
+                use arrow_gpu_array::GPU_DEVICE;
+                use arrow_gpu_array::gpu_utils::*;
+                let device = GPU_DEVICE.get_or_init(|| std::sync::Arc::new(GpuDevice::new()).clone());
+                let data = $input;
+                let gpu_array = $input_ty::from_slice(&data, device.clone());
+                let new_gpu_array: $output_ty =
+                    <$input_ty as BitCast<$output_ty>>::bitcast(&gpu_array);
+                let new_values = new_gpu_array.raw_values().unwrap();
+                for (index, new_value) in new_values.iter().enumerate() {
+                    assert_eq!($output[index].to_bits(), new_value.to_bits());
+                }
+
+
+                let new_gpu_array = bitcast_dyn(&gpu_array.into(), &ArrowType::$cast_type);
+                let new_values = $output_ty::try_from(new_gpu_array)
+                    .unwrap()
+                    .raw_values()
+                    .unwrap();
+                for (index, new_value) in new_values.iter().enumerate() {
+                    assert_eq!($output[index].to_bits(), new_value.to_bits());
+                }
+            }
+        };
+    }
+    pub(crate) use test_bitcast_op;
 }
