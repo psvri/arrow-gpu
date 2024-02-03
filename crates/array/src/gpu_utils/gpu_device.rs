@@ -1,6 +1,7 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Debug, sync::Arc};
 
 use bytemuck::Pod;
+use hashbrown::Equivalent;
 use log::info;
 use pollster::FutureExt;
 use wgpu::{
@@ -10,12 +11,33 @@ use wgpu::{
 
 use crate::array::RustNativeType;
 
-use super::CmpQuery;
+use super::{append_hashmap::AppendHashMap, CmpQuery};
 
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Hash)]
+struct PiepelineEntry {
+    shader: String,
+    entry_point: String,
+}
+
+impl Equivalent<PiepelineEntry> for (&str, &str) {
+    fn equivalent(&self, key: &PiepelineEntry) -> bool {
+        self.0 == key.shader && self.1 == key.entry_point
+    }
+}
+
 pub struct GpuDevice {
     pub device: Device,
     pub queue: Queue,
+    pipeline_cache: AppendHashMap<PiepelineEntry, ComputePipeline>,
+}
+
+impl Debug for GpuDevice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GpuDevice")
+            .field("device", &self.device)
+            .field("queue", &self.queue)
+            .finish()
+    }
 }
 
 impl GpuDevice {
@@ -51,7 +73,11 @@ impl GpuDevice {
 
         info!("{:?}", device);
 
-        Self { device, queue }
+        Self {
+            device,
+            queue,
+            pipeline_cache: AppendHashMap::new(),
+        }
     }
 
     pub fn from_adapter(adapter: Adapter) -> GpuDevice {
@@ -67,7 +93,11 @@ impl GpuDevice {
             .block_on()
             .unwrap();
 
-        Self { device, queue }
+        Self {
+            device,
+            queue,
+            pipeline_cache: AppendHashMap::new(),
+        }
     }
 
     pub fn create_command_encoder(&self, label: Option<&str>) -> wgpu::CommandEncoder {
@@ -106,15 +136,27 @@ impl GpuDevice {
             })
     }
 
-    pub fn create_compute_pipeline(&self, shader: &str, entry_point: &str) -> ComputePipeline {
-        let cs_module = self.create_shader_module(shader);
-        self.device
-            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                label: None,
-                layout: None,
-                module: &cs_module,
-                entry_point,
-            })
+    pub fn create_compute_pipeline(&self, shader: &str, entry_point: &str) -> Arc<ComputePipeline> {
+        if let Some(pipeline) = self.pipeline_cache.get(&(shader, entry_point)) {
+            pipeline
+        } else {
+            let cs_module = self.create_shader_module(shader);
+            let pipeline = self
+                .device
+                .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                    label: None,
+                    layout: None,
+                    module: &cs_module,
+                    entry_point,
+                });
+            self.pipeline_cache.insert(
+                PiepelineEntry {
+                    shader: shader.into(),
+                    entry_point: entry_point.into(),
+                },
+                pipeline,
+            )
+        }
     }
 
     pub fn create_gpu_buffer_with_data(&self, data: &[impl RustNativeType]) -> Buffer {

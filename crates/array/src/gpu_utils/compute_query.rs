@@ -1,5 +1,6 @@
 use wgpu::ComputePassDescriptor;
 
+#[cfg(feature = "profile")]
 const NUM_QUERIES: u64 = 2;
 
 #[cfg(feature = "profile")]
@@ -93,11 +94,11 @@ pub struct CmpQuery {}
 
 #[cfg(not(feature = "profile"))]
 impl CmpQuery {
-    pub fn new(device: &wgpu::Device) -> Self {
+    pub fn new(_device: &wgpu::Device) -> Self {
         Self {}
     }
 
-    pub fn resolve(&self, encoder: &mut wgpu::CommandEncoder) {}
+    pub fn resolve(&self, _encoder: &mut wgpu::CommandEncoder) {}
 
     pub fn create_compute_pass_descriptor<'a>(
         &'a self,
@@ -109,5 +110,5 @@ impl CmpQuery {
         }
     }
 
-    pub fn wait_for_results(&self, device: &wgpu::Device, queue: &wgpu::Queue) {}
+    pub fn wait_for_results(&self, _device: &wgpu::Device, _queue: &wgpu::Queue) {}
 }
