@@ -179,20 +179,22 @@ impl TryFrom<ArrowArrayGPU> for BooleanArrayGPU {
 }
 
 impl Broadcast<bool> for BooleanArrayGPU {
-    type Output = BooleanArrayGPU;
-
-    fn broadcast(value: bool, len: usize, gpu_device: Arc<GpuDevice>) -> Self::Output {
+    fn broadcast_op(
+        value: bool,
+        len: usize,
+        pipeline: &mut ArrowComputePipeline,
+    ) -> BooleanArrayGPU {
         let buffer = if value {
             BooleanBufferBuilder::new_set_with_capacity(len)
         } else {
             BooleanBufferBuilder::new_with_capacity(len)
         };
 
-        let data = gpu_device.create_gpu_buffer_with_data(&buffer.data);
+        let data = pipeline.device.create_gpu_buffer_with_data(&buffer.data);
 
         Self {
             data: Arc::new(data),
-            gpu_device,
+            gpu_device: pipeline.device.clone(),
             len,
             null_buffer: None,
         }
