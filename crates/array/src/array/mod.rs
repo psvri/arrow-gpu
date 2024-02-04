@@ -10,7 +10,6 @@ use wgpu::Buffer;
 pub(crate) mod boolean_gpu;
 pub(crate) mod date32_gpu;
 pub(crate) mod f32_gpu;
-pub mod gpu_ops;
 pub(crate) mod i16_gpu;
 pub(crate) mod i32_gpu;
 pub(crate) mod i8_gpu;

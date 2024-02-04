@@ -98,7 +98,8 @@ pub(crate) use impl_arithmetic_array_op;
 #[cfg(test)]
 mod test {
     macro_rules! test_sum {
-        ($test_name: ident, $ty: ident, $base: expr, $size: expr, $output: expr) => {
+        ($(#[$m:meta])* $test_name: ident, $ty: ident, $base: expr, $size: expr, $output: expr) => {
+            $(#[$m])*
             #[test]
             fn $test_name() {
                 use arrow_gpu_array::{
