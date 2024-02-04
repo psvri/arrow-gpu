@@ -1,10 +1,12 @@
+pub(crate) mod aggregate_kernels;
+pub(crate) mod arithmetic_kernels;
 pub(crate) mod f32;
 pub(crate) mod i32;
-pub(crate) mod kernels;
 pub(crate) mod u16;
 pub(crate) mod u32;
 
-pub use kernels::*;
+pub use arithmetic_kernels::*;
+pub use aggregate_kernels::*;
 
 macro_rules! impl_arithmetic_op {
     ($trait_name: ident, $array_type:ident, $trait_function: ident, $ty: ident, $shader: ident, $entry_point: expr) => {
