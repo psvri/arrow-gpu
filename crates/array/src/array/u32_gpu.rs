@@ -1,5 +1,7 @@
+use super::ArrowPrimitiveType;
 use super::{primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowType, NullBitBufferGpu};
 use crate::gpu_utils::*;
+use crate::kernels::broadcast::Broadcast;
 use crate::ArrowErrorGPU;
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
@@ -57,35 +59,21 @@ impl UInt32ArrayGPU {
             dispatch_size,
         )
     }
+}
 
-    pub fn broadcast(value: u32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
-        let data = Arc::new(Self::create_broadcast_buffer(
-            value,
-            len as u64,
-            &gpu_device,
-        ));
-        let null_buffer = None;
-
-        Self {
-            data,
-            gpu_device,
-            phantom: std::marker::PhantomData,
-            len,
-            null_buffer,
-        }
-    }
-
-    pub fn broadcast_op(value: u32, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
+impl<T: ArrowPrimitiveType<NativeType = u32>> Broadcast<u32> for PrimitiveArrayGpu<T> {
+    fn broadcast_op(
+        value: u32,
+        len: usize,
+        pipeline: &mut ArrowComputePipeline,
+    ) -> PrimitiveArrayGpu<T> {
         let scalar_buffer = pipeline.device.create_scalar_buffer(&value);
-        let output_buffer_size = 4 * len as u64;
-        let dispatch_size = output_buffer_size.div_ceil(4).div_ceil(256);
-
         let gpu_buffer = pipeline.apply_broadcast_function(
             &scalar_buffer,
-            output_buffer_size,
+            4 * len as u64,
             U32_BROADCAST_SHADER,
             "broadcast",
-            dispatch_size as u32,
+            len as u32,
         );
         let data = Arc::new(gpu_buffer);
         let null_buffer = None;

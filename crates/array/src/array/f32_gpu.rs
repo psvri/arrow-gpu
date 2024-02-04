@@ -3,6 +3,7 @@ use super::{
     NullBitBufferGpu,
 };
 use crate::gpu_utils::*;
+use crate::kernels::broadcast::Broadcast;
 use crate::{kernels::aggregate::ArrowSum, ArrowErrorGPU};
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
@@ -14,29 +15,8 @@ pub type Float32ArrayGPU = PrimitiveArrayGpu<f32>;
 
 impl_unary_ops!(ArrowSum, sum, Float32ArrayGPU, f32, sum);
 
-impl Float32ArrayGPU {
-    pub fn broadcast(value: f32, len: usize, gpu_device: Arc<GpuDevice>) -> Self {
-        let scalar_buffer = &gpu_device.create_scalar_buffer(&value);
-        let gpu_buffer = gpu_device.apply_broadcast_function(
-            scalar_buffer,
-            4 * len as u64,
-            4,
-            F32_BROADCAST_SHADER,
-            "broadcast",
-        );
-        let data = Arc::new(gpu_buffer);
-        let null_buffer = None;
-
-        Self {
-            data,
-            gpu_device,
-            phantom: std::marker::PhantomData,
-            len,
-            null_buffer,
-        }
-    }
-
-    pub fn broadcast_op(value: f32, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
+impl Broadcast<f32> for Float32ArrayGPU {
+    fn broadcast_op(value: f32, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
         let scalar_buffer = pipeline.device.create_scalar_buffer(&value);
         let output_buffer_size = 4 * len as u64;
         let dispatch_size = output_buffer_size.div_ceil(4).div_ceil(256);

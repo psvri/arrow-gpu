@@ -15,7 +15,7 @@ impl<K: Eq + Hash, V> AppendHashMap<K, V> {
         Q: Hash + Equivalent<K>,
     {
         let map = self.map.read().unwrap();
-        map.get(key).map(|v| v.clone())
+        map.get(key).cloned()
     }
 
     pub fn insert(&self, k: K, v: V) -> Arc<V> {
