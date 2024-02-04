@@ -6,12 +6,12 @@ var<storage, read> input_data: array<u32>;
 @binding(1)
 var<storage, read_write> output_data: array<u32>;
 
-const wg_size = 256u;
+const wg_size = 128u;
 
 var<workgroup> shared_data: array<u32, wg_size>;
 
 @compute
-@workgroup_size(256)
+@workgroup_size(128)
 fn sum(
     @builtin(global_invocation_id) global_id: vec3<u32>,
     @builtin(local_invocation_id) local_id: vec3<u32>,
@@ -21,11 +21,17 @@ fn sum(
         return;
     }
 
-    shared_data[local_id.x] = input_data[global_id.x];
+    var tid = local_id.x;
+    var i = wg_id.x * (wg_size * 2) + tid;
+    if (i + wg_size) < arrayLength(&input_data) {
+        shared_data[tid] = input_data[i] + input_data[i + wg_size];
+    } else {
+        shared_data[tid] = input_data[i] ;
+    }
     workgroupBarrier();
 
     for (var s = wg_size / 2u; s > 0u; s >>= 1u) {
-        if (local_id.x < s) && (global_id.x + s < arrayLength(&input_data)) {
+        if (local_id.x < s) && (i < arrayLength(&input_data)) {
             shared_data[local_id.x] += shared_data[local_id.x + s];
         }
         workgroupBarrier();
