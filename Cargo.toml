@@ -25,3 +25,6 @@ bytemuck = "1.14.1"
 futures-intrusive = "0.5.0"
 log =  { version =  "0.4.20" }
 hashbrown = "0.14.3"
+
+[profile.bench]
+debug = 1

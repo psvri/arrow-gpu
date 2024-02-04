@@ -10,7 +10,7 @@ arrow_gpu = { path = "../arrow" }
 
 [dev-dependencies]
 env_logger = "0.11.1"
-criterion = "0.5.1"
+criterion = {version="0.5.1", default-features=false, features=["rayon"]}
 arrow = "49.0.0"
 pollster = {workspace = true}
 
