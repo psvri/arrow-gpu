@@ -24,11 +24,9 @@ fn sum(
     shared_data[local_id.x] = input_data[global_id.x];
     workgroupBarrier();
 
-    for (var s = 1u; s < wg_size; s *= 2u) {
-        var index = 2u * s * local_id.x;
-
-        if (index < wg_size) && (global_id.x + s < arrayLength(&input_data)) {
-            shared_data[index] += shared_data[index + s];
+    for (var s = wg_size / 2u; s > 0u; s >>= 1u) {
+        if (local_id.x < s) && (global_id.x + s < arrayLength(&input_data)) {
+            shared_data[local_id.x] += shared_data[local_id.x + s];
         }
         workgroupBarrier();
     }
