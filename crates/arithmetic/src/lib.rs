@@ -1,10 +1,12 @@
+pub(crate) mod aggregate_kernels;
+pub(crate) mod arithmetic_kernels;
 pub(crate) mod f32;
 pub(crate) mod i32;
-pub(crate) mod kernels;
 pub(crate) mod u16;
 pub(crate) mod u32;
 
-pub use kernels::*;
+pub use aggregate_kernels::*;
+pub use arithmetic_kernels::*;
 
 macro_rules! impl_arithmetic_op {
     ($trait_name: ident, $array_type:ident, $trait_function: ident, $ty: ident, $shader: ident, $entry_point: expr) => {
@@ -92,3 +94,24 @@ macro_rules! impl_arithmetic_array_op {
 }
 
 pub(crate) use impl_arithmetic_array_op;
+
+#[cfg(test)]
+mod test {
+    macro_rules! test_sum {
+        ($(#[$m:meta])* $test_name: ident, $ty: ident, $base: expr, $size: expr, $output: expr) => {
+            $(#[$m])*
+            #[test]
+            fn $test_name() {
+                use arrow_gpu_array::{
+                    gpu_utils::GpuDevice, kernels::broadcast::Broadcast, GPU_DEVICE,
+                };
+                let device = GPU_DEVICE
+                    .get_or_init(|| Arc::new(GpuDevice::new()))
+                    .clone();
+                let array = $ty::broadcast($base, $size, device);
+                assert_eq!(array.sum().raw_values().unwrap(), vec![$output]);
+            }
+        };
+    }
+    pub(crate) use test_sum;
+}

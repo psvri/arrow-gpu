@@ -1,19 +1,13 @@
-use super::{
-    gpu_ops::f32_ops::*, primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowType,
-    NullBitBufferGpu,
-};
+use super::{primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowType, NullBitBufferGpu};
 use crate::gpu_utils::*;
 use crate::kernels::broadcast::Broadcast;
-use crate::{kernels::aggregate::ArrowSum, ArrowErrorGPU};
+use crate::ArrowErrorGPU;
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
 
-const F32_REDUCTION_SHADER: &str = include_str!("../../compute_shaders/f32/reduction.wgsl");
 const F32_BROADCAST_SHADER: &str = include_str!("../../compute_shaders/f32/broadcast.wgsl");
 
 pub type Float32ArrayGPU = PrimitiveArrayGpu<f32>;
-
-impl_unary_ops!(ArrowSum, sum, Float32ArrayGPU, f32, sum);
 
 impl Broadcast<f32> for Float32ArrayGPU {
     fn broadcast_op(value: f32, len: usize, pipeline: &mut ArrowComputePipeline) -> Self {
@@ -91,30 +85,6 @@ impl ArrowArray for Float32ArrayGPU {
 mod tests {
     use super::*;
     use crate::array::primitive_array_gpu::test::*;
-
-    #[ignore = "Not passing in CI but passes in local 🤔"]
-    #[test]
-    fn test_f32_sum() {
-        let device = Arc::new(GpuDevice::new());
-        let gpu_array = Float32ArrayGPU::from_slice(
-            &(0..256 * 256)
-                .into_iter()
-                .map(|_| 1.0)
-                .collect::<Vec<f32>>(),
-            device.clone(),
-        );
-
-        assert_eq!(gpu_array.sum(), 65536.0);
-
-        // TODO fix this
-        let cvec = (0..9_999)
-            .into_iter()
-            .map(|x| x as f32)
-            .collect::<Vec<f32>>();
-        let total = (0..9_999u32).into_iter().sum::<u32>() as f32;
-        let gpu_array = Float32ArrayGPU::from_slice(&cvec, device);
-        assert_eq!(gpu_array.sum(), total);
-    }
 
     #[test]
     fn test_f32_array_from_optinal_vec() {
