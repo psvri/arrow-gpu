@@ -9,4 +9,5 @@
     - [Swizzle](./kernels/swizzle.md)
     - [Compare](./kernels/compare.md)
     - [Math](./kernels/math.md)
+    - [Reduction](./kernels/reduction.md)
 - [Blank Tables](./blank_tables.md)
