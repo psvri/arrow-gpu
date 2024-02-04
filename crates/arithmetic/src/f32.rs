@@ -10,6 +10,10 @@ const F32_SCALAR_SHADER: &str = include_str!("../compute_shaders/f32/scalar.wgsl
 const F32_ARRAY_SHADER: &str = include_str!("../compute_shaders/f32/array.wgsl");
 const F32_NEG_SHADER: &str = include_str!("../compute_shaders/f32/neg.wgsl");
 
+impl Sum32Bit for f32 {
+    const SHADER: &'static str = include_str!("../compute_shaders/f32/aggregate.wgsl");
+}
+
 impl_arithmetic_op!(
     ArrowScalarAdd,
     Float32Type,
@@ -116,9 +120,9 @@ impl NegUnaryType for f32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::rem_scalar_dyn;
-
     use super::*;
+    use crate::rem_scalar_dyn;
+    use crate::test::test_sum;
     use arrow_gpu_test_macros::*;
 
     test_float_scalar_op!(
@@ -258,5 +262,21 @@ mod tests {
         neg,
         neg_dyn,
         vec![0.0, -1.0, -2.0, -3.0, 1.0, 2.0, 3.0]
+    );
+
+    test_sum!(
+        test_f32_sum,
+        Float32ArrayGPU,
+        5.0,
+        256 * 256,
+        256.0 * 256.0 * 5.0
+    );
+
+    test_sum!(
+        test_f32_sum_large,
+        Float32ArrayGPU,
+        5.0,
+        4 * 1024 * 1024,
+        4.0 * 1024.0 * 1024.0 * 5.0
     );
 }

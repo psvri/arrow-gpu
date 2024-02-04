@@ -8,6 +8,10 @@ use crate::*;
 const I32_SCALAR_SHADER: &str = include_str!("../compute_shaders/i32/scalar.wgsl");
 const I32_ARRAY_SHADER: &str = include_str!("../compute_shaders/i32/array.wgsl");
 
+impl Sum32Bit for i32 {
+    const SHADER: &'static str = include_str!("../compute_shaders/i32/aggregate.wgsl");
+}
+
 impl_arithmetic_op!(
     ArrowScalarAdd,
     Int32Type,
@@ -118,9 +122,9 @@ impl_arithmetic_array_op!(
 
 #[cfg(test)]
 mod tests {
-    use crate::rem_scalar_dyn;
-
     use super::*;
+    use crate::rem_scalar_dyn;
+    use crate::test::test_sum;
     use arrow_gpu_test_macros::{test_array_op, test_scalar_op};
 
     test_scalar_op!(
@@ -250,5 +254,21 @@ mod tests {
         vec![Some(0i32), Some(1), None, None, Some(4)],
         vec![Some(1i32), Some(2), None, Some(4), None],
         vec![Some(1), Some(3), None, None, None]
+    );
+
+    test_sum!(
+        test_i32_sum,
+        Int32ArrayGPU,
+        -5,
+        256 * 256,
+        256 * 256 * -5
+    );
+
+    test_sum!(
+        test_i32_sum_large,
+        Int32ArrayGPU,
+        -5,
+        4 * 1024 * 1024,
+        4 * 1024 * 1024 * -5
     );
 }

@@ -43,7 +43,7 @@ impl<T: ArrowPrimitiveType<NativeType = i32>> Broadcast<i32> for PrimitiveArrayG
             4 * len as u64,
             I32_BROADCAST_SHADER,
             "broadcast",
-            len as u32,
+            len.div_ceil(256) as u32,
         );
         let data = Arc::new(gpu_buffer);
         let null_buffer = None;
