@@ -137,20 +137,6 @@ impl<T: ArrowPrimitiveType> ArrayUtils for PrimitiveArrayGpu<T> {
     }
 }
 
-macro_rules! impl_unary_ops {
-    ($trait_name: ident, $trait_function: ident, $for_ty: ident, $out_ty: ident, $op: ident) => {
-        impl $trait_name for $for_ty {
-            type Output = $out_ty;
-
-            fn $trait_function(&self) -> Self::Output {
-                $op(&self.gpu_device, &self.data, self.len)
-            }
-        }
-    };
-}
-
-pub(crate) use impl_unary_ops;
-
 #[cfg(test)]
 pub mod test {
     macro_rules! test_broadcast {

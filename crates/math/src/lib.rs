@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use arrow_gpu_array::array::{
-    ArrayUtils, ArrowArrayGPU, ArrowPrimitiveType,
-    NullBitBufferGpu, PrimitiveArrayGpu,
+    ArrayUtils, ArrowArrayGPU, ArrowPrimitiveType, NullBitBufferGpu, PrimitiveArrayGpu,
 };
 use arrow_gpu_array::gpu_utils::*;
 use wgpu::Buffer;

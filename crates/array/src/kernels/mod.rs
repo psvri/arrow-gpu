@@ -1,6 +1,5 @@
 use crate::array::ArrowArrayGPU;
 
-pub mod aggregate;
 pub mod broadcast;
 
 #[derive(Debug)]
