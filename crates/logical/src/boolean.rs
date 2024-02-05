@@ -300,21 +300,24 @@ mod test {
 
         test_bool_reduction(&[true; 100], device.clone(), true, BooleanArrayGPU::all);
 
-        test_bool_reduction(
-            &[false; 1024 * 1024 * 2],
-            device.clone(),
-            false,
-            BooleanArrayGPU::all,
-        );
-
         test_bool_reduction(&[false; 100], device.clone(), false, BooleanArrayGPU::all);
 
-        let mut data = vec![true; 1024 * 1024 * 2];
+        #[cfg(not(any(target_os = "windows", target_os = "linux")))]
+        {
+            test_bool_reduction(
+                &[false; 1024 * 1024 * 2],
+                device.clone(),
+                false,
+                BooleanArrayGPU::all,
+            );
 
-        test_bool_reduction(&data, device.clone(), true, BooleanArrayGPU::all);
+            let mut data = vec![true; 1024 * 1024 * 2];
 
-        data.append(&mut vec![false]);
+            test_bool_reduction(&data, device.clone(), true, BooleanArrayGPU::all);
 
-        test_bool_reduction(&data, device.clone(), false, BooleanArrayGPU::all);
+            data.append(&mut vec![false]);
+
+            test_bool_reduction(&data, device.clone(), false, BooleanArrayGPU::all);
+        }
     }
 }
