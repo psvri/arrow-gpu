@@ -387,6 +387,7 @@ dependencies = [
 name = "arrow_gpu_logical"
 version = "0.1.0"
 dependencies = [
+ "arrow_gpu_arithmetic",
  "arrow_gpu_array",
  "arrow_gpu_test_macros",
  "wgpu",
