@@ -71,6 +71,7 @@ pub trait Logical: ArrayUtils + Sized {
 
 pub trait LogicalContains {
     fn any(&self) -> bool;
+    fn all(&self) -> bool;
 }
 
 macro_rules! apply_binary_function_op {

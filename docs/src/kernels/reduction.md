@@ -9,3 +9,9 @@
 | UInt16 |  |
 | UInt32 | ✓ |
 | Float32 | ✓ |
+
+## Boolean Reductions
+
+| | Any | All |
+|-|-|-|
+| Bool | ✓ | ✓ |
