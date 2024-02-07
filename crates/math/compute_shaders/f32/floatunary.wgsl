@@ -42,3 +42,13 @@ fn log2_(@builtin(global_invocation_id) global_id: vec3<u32>) {
 fn abs_(@builtin(global_invocation_id) global_id: vec3<u32>) {
     new_values[global_id.x] = abs(original_values[global_id.x]);
 }
+
+@compute
+@workgroup_size(256)
+fn cbrt_(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    if original_values[global_id.x] < 0 {
+        new_values[global_id.x] = -pow(-original_values[global_id.x], 1.0 / 3.0);
+    } else {
+        new_values[global_id.x] = pow(original_values[global_id.x], 1.0 / 3.0);
+    }
+}

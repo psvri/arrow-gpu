@@ -106,6 +106,28 @@ mod tests {
             target_os = "windows",
             ignore = "Not passing in CI but passes in local 🤔"
         )]
+        test_f32_cbrt,
+        Float32ArrayGPU,
+        Float32ArrayGPU,
+        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        cbrt,
+        cbrt_dyn,
+        vec![
+            0.0f32.cbrt(),
+            1.0f32.cbrt(),
+            2.0f32.cbrt(),
+            3.0f32.cbrt(),
+            (-1.0f32).cbrt(),
+            (-2.0f32).cbrt(),
+            (-3.0f32).cbrt()
+        ]
+    );
+
+    test_unary_op_float!(
+        #[cfg_attr(
+            target_os = "windows",
+            ignore = "Not passing in CI but passes in local 🤔"
+        )]
         test_f32_exp,
         Float32ArrayGPU,
         Float32ArrayGPU,

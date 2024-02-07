@@ -51,9 +51,13 @@ pub trait Trigonometric: ArrayUtils {
     fn sin(&self) -> Self::Output {
         default_impl!(self, sin_op);
     }
+    fn acos(&self) -> Self::Output {
+        default_impl!(self, acos_op);
+    }
 
     fn cos_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output;
     fn sin_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output;
+    fn acos_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
 pub trait TrigonometricType {
@@ -118,6 +122,10 @@ impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArray
     fn sin_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output {
         apply_unary_function_op!(self, TrigonometricType, "sin_{}", pipeline);
     }
+
+    fn acos_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output {
+        apply_unary_function_op!(self, TrigonometricType, "acos_{}", pipeline);
+    }
 }
 
 macro_rules! dyn_fn {
@@ -170,5 +178,11 @@ dyn_fn!(
         UInt8ArrayGPU,
         Int16ArrayGPU,
         Int8ArrayGPU
+    ],
+    [
+        acos_dyn,
+        acos_op_dyn,
+        acos_op,
+        Float32ArrayGPU
     ]
 );
