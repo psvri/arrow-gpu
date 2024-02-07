@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    paths-ignore:
+      - "docs/**"
+
+jobs:
+  test-build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Linux
+            with_profiling: true
+            setup_env: |
+              sudo apt-get update
+              sudo apt-get install -f -y libegl1-mesa-dev
+              sudo apt-get install -f -y mesa-vulkan-drivers
+              rustup update
+          - os: macos-14
+            name: Mac M1
+            with_profiling: false
+            setup_env: |
+              rustup update
+          - os: windows-latest
+            name: Windows
+            with_profiling: true
+            setup_env: |
+              rustup update
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Environment
+        run: ${{ matrix.setup_env }}
+        shell: bash
+      - name: Set up cargo nexttest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest,cargo-llvm-cov
+      - uses: Swatinem/rust-cache@v2
+      - name: rust cargo tests
+        if: ${{!matrix.with_profiling}}
+        run: |
+          cargo llvm-cov clean --workspace
+          cargo llvm-cov nextest  --lcov --output-path lcov.info --status-level all --no-fail-fast
+      - name: rust cargo tests with profiling
+        if: matrix.with_profiling
+        run: |
+          cargo llvm-cov clean --workspace
+          cargo llvm-cov nextest --features=profile --lcov --output-path lcov.info --status-level all --no-fail-fast
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
