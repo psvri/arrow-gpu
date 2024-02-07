@@ -15,6 +15,12 @@ fn cos_f32(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
 @compute
 @workgroup_size(256)
+fn acos_f32(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    new_values[global_id.x] = acos(original_values[global_id.x]);
+}
+
+@compute
+@workgroup_size(256)
 fn sin_f32(@builtin(global_invocation_id) global_id: vec3<u32>) {
     new_values[global_id.x] = sin(original_values[global_id.x]);
 }

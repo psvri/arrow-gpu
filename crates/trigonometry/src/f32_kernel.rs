@@ -112,4 +112,22 @@ mod tests {
             -3.0f32.sin()
         ]
     );
+
+    test_unary_op_float!(
+        test_f32_acos,
+        Float32ArrayGPU,
+        Float32ArrayGPU,
+        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        acos,
+        acos_dyn,
+        vec![
+            0.0f32.acos(),
+            1.0f32.acos(),
+            2.0f32.acos(),
+            3.0f32.acos(),
+            (-1.0f32).acos(),
+            (-2.0f32).acos(),
+            (-3.0f32).acos()
+        ]
+    );
 }

@@ -10,6 +10,7 @@ pub(crate) mod f32;
 
 const ABS_ENTRY_POINT: &str = "abs_";
 const SQRT_ENTRY_POINT: &str = "sqrt_";
+const CBRT_ENTRY_POINT: &str = "cbrt_";
 const EXP_ENTRY_POINT: &str = "exp_";
 const EXP2_ENTRY_POINT: &str = "exp2_";
 const LOG_ENTRY_POINT: &str = "log_";
@@ -52,6 +53,9 @@ pub trait FloatMathUnary: ArrayUtils {
     fn sqrt(&self) -> Self::OutputType {
         default_impl!(self, sqrt_op);
     }
+    fn cbrt(&self) -> Self::OutputType {
+        default_impl!(self, cbrt_op);
+    }
     fn exp(&self) -> Self::OutputType {
         default_impl!(self, exp_op);
     }
@@ -66,6 +70,7 @@ pub trait FloatMathUnary: ArrayUtils {
     }
 
     fn sqrt_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+    fn cbrt_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
     fn exp_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
     fn exp2_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
     fn log_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
@@ -129,6 +134,10 @@ impl<T: FloatMathUnaryType + ArrowPrimitiveType> FloatMathUnary for PrimitiveArr
         apply_unary_function_op!(self, FloatMathUnaryType, SQRT_ENTRY_POINT, pipeline);
     }
 
+    fn cbrt_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
+        apply_unary_function_op!(self, FloatMathUnaryType, CBRT_ENTRY_POINT, pipeline);
+    }
+
     fn exp_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
         apply_unary_function_op!(self, FloatMathUnaryType, EXP_ENTRY_POINT, pipeline);
     }
@@ -169,6 +178,7 @@ macro_rules! dyn_fn {
 dyn_fn!(
     [abs_dyn, abs_op_dyn, abs_op, Float32ArrayGPU],
     [sqrt_dyn, sqrt_op_dyn, sqrt_op, Float32ArrayGPU],
+    [cbrt_dyn, cbrt_op_dyn, cbrt_op, Float32ArrayGPU],
     [exp_dyn, exp_op_dyn, exp_op, Float32ArrayGPU],
     [exp2_dyn, exp2_op_dyn, exp2_op, Float32ArrayGPU],
     [log_dyn, log_op_dyn, log_op, Float32ArrayGPU],
