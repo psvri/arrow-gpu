@@ -124,16 +124,25 @@ mod test {
         ]
     );
 
-    // TODO test for cases with null
     test_take_op!(
         test_take_i32,
         Int32ArrayGPU,
         UInt32ArrayGPU,
         Int32ArrayGPU,
         take,
-        vec![0, 1, 2, 3],
+        take_dyn,
+        vec![Some(0), Some(1), None, Some(3)],
         vec![0, 1, 2, 3, 0, 1, 2, 3],
-        vec![0, 1, 2, 3, 0, 1, 2, 3]
+        vec![
+            Some(0),
+            Some(1),
+            None,
+            Some(3),
+            Some(0),
+            Some(1),
+            None,
+            Some(3)
+        ]
     );
 
     // TODO test for cases with null

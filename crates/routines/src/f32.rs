@@ -8,7 +8,7 @@ impl SwizzleType for f32 {
 
 #[cfg(test)]
 mod test {
-    use crate::{put::put_dyn, *};
+    use crate::*;
     use arrow_gpu_array::array::*;
 
     test_merge_op!(
@@ -64,16 +64,25 @@ mod test {
         ]
     );
 
-    // TODO test for cases with null
     test_take_op!(
         test_take_f32,
         Float32ArrayGPU,
         UInt32ArrayGPU,
         Float32ArrayGPU,
         take,
-        vec![0.0, 1.0, 2.0, 3.0],
+        take_dyn,
+        vec![Some(0.0), Some(1.0), None, Some(3.0)],
         vec![0, 1, 2, 3, 0, 1, 2, 3],
-        vec![0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0, 3.0]
+        vec![
+            Some(0.0),
+            Some(1.0),
+            None,
+            Some(3.0),
+            Some(0.0),
+            Some(1.0),
+            None,
+            Some(3.0)
+        ]
     );
 
     // TODO test for cases with null

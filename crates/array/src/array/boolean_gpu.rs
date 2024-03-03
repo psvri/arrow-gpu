@@ -51,28 +51,23 @@ impl BooleanArrayGPU {
     //TODO write test case
     pub fn from_slice(value: &[bool], gpu_device: Arc<GpuDevice>) -> Self {
         let mut buffer = BooleanBufferBuilder::new_with_capacity(value.len());
-        let mut null_buffer_builder = BooleanBufferBuilder::new_with_capacity(value.len());
 
         for (index, val) in value.iter().enumerate() {
             match val {
                 true => {
                     buffer.set_bit(index);
-                    null_buffer_builder.set_bit(index);
                 }
-                false => {
-                    null_buffer_builder.set_bit(index);
-                }
+                false => {}
             }
         }
 
         let data = gpu_device.create_gpu_buffer_with_data(&buffer.data);
-        let null_buffer = NullBitBufferGpu::new(gpu_device.clone(), &null_buffer_builder);
 
         Self {
             data: Arc::new(data),
             gpu_device,
             len: value.len(),
-            null_buffer,
+            null_buffer: None,
         }
     }
 

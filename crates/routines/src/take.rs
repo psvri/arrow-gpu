@@ -10,15 +10,15 @@ pub(crate) fn apply_take_op(
     device: &GpuDevice,
     operand_1: &Buffer,
     operand_2: &Buffer,
-    output_count: u64,
-    item_size: u64,
+    dispatch_size: u64,
+    output_size: u64,
     shader: &str,
     entry_point: &str,
     pipeline: &mut ArrowComputePipeline,
 ) -> Buffer {
     let compute_pipeline = device.create_compute_pipeline(shader, entry_point);
 
-    let new_values_buffer = device.create_empty_buffer(output_count * item_size);
+    let new_values_buffer = device.create_empty_buffer(output_size);
 
     let bind_group_layout = compute_pipeline.get_bind_group_layout(0);
     let bind_group_array = device.device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -40,8 +40,6 @@ pub(crate) fn apply_take_op(
         ],
     });
 
-    let dispatch_size = output_count;
-
     let query = device.compute_pass(
         &mut pipeline.encoder,
         None,
@@ -56,34 +54,42 @@ pub(crate) fn apply_take_op(
     new_values_buffer
 }
 
+pub fn take_dyn(operand_1: &ArrowArrayGPU, indexes: &UInt32ArrayGPU) -> ArrowArrayGPU {
+    let mut pipeline = ArrowComputePipeline::new(operand_1.get_gpu_device(), Some("take"));
+    let result = take_op_dyn(operand_1, indexes, &mut pipeline);
+    pipeline.finish();
+    result
+}
+
+macro_rules! take_op_dyn_arms {
+    ($operand_1: ident, $indexes: ident, $pipeline:ident, $($arr: ident),*) => {
+        match $operand_1 {
+            $(ArrowArrayGPU::$arr(op1) => {
+                op1.take_op($indexes, $pipeline).into()
+            })*
+            _ => panic!(
+                "Take Operation not supported for {:?}",
+                $operand_1.get_dtype(),
+            ),
+        }
+    };
+}
+
 pub fn take_op_dyn(
     operand_1: &ArrowArrayGPU,
     indexes: &UInt32ArrayGPU,
     pipeline: &mut ArrowComputePipeline,
 ) -> ArrowArrayGPU {
-    match operand_1 {
-        ArrowArrayGPU::Date32ArrayGPU(op1) => op1.take_op(indexes, pipeline).into(),
-        ArrowArrayGPU::UInt32ArrayGPU(op1) => op1.take_op(indexes, pipeline).into(),
-        ArrowArrayGPU::Int32ArrayGPU(op1) => op1.take_op(indexes, pipeline).into(),
-        ArrowArrayGPU::Float32ArrayGPU(op1) => op1.take_op(indexes, pipeline).into(),
-        _ => panic!(
-            "Take Operation not supported for {:?}",
-            operand_1.get_dtype(),
-        ),
-    }
-}
-
-pub fn take_dyn(operand_1: &ArrowArrayGPU, indexes: &UInt32ArrayGPU) -> ArrowArrayGPU {
-    match operand_1 {
-        ArrowArrayGPU::Date32ArrayGPU(op1) => op1.take(indexes).into(),
-        ArrowArrayGPU::UInt32ArrayGPU(op1) => op1.take(indexes).into(),
-        ArrowArrayGPU::Int32ArrayGPU(op1) => op1.take(indexes).into(),
-        ArrowArrayGPU::Float32ArrayGPU(op1) => op1.take(indexes).into(),
-        _ => panic!(
-            "Take Operation not supported for {:?}",
-            operand_1.get_dtype(),
-        ),
-    }
+    take_op_dyn_arms!(
+        operand_1,
+        indexes,
+        pipeline,
+        Date32ArrayGPU,
+        UInt32ArrayGPU,
+        Int32ArrayGPU,
+        Float32ArrayGPU,
+        BooleanArrayGPU
+    )
 }
 
 #[cfg(test)]
@@ -109,10 +115,9 @@ mod tests {
             fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
                 use arrow_gpu_array::gpu_utils::GpuDevice;
-                use pollster::FutureExt;
-                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new().block_on()).clone());
-                let gpu_array_1 = $operand1_type::from_optional_vec(&$input_1, device.clone());
-                let gpu_array_2 = $operand2_type::from_optional_vec(&$input_2, device);
+                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
+                let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
+                let gpu_array_2 = $operand2_type::from_slice(&$input_2, device.clone());
                 let new_gpu_array = gpu_array_1.$operation(&gpu_array_2);
                 assert_eq!(new_gpu_array.values(), $output);
 

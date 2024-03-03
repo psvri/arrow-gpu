@@ -3,10 +3,12 @@ use arrow_gpu_array::array::{
     UInt32ArrayGPU,
 };
 use arrow_gpu_array::gpu_utils::*;
+use bool::take_null_buffer;
 use put::apply_put_op;
 use std::sync::Arc;
 use take::apply_take_op;
 
+pub(crate) mod bool;
 pub(crate) mod f32;
 pub(crate) mod i16;
 pub(crate) mod i32;
@@ -122,14 +124,13 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
             &self.data,
             &indexes.data,
             indexes.len as u64,
-            T::ITEM_SIZE,
+            (indexes.len as u64 * T::ITEM_SIZE) as u64,
             T::TAKE_SHADER,
             "take",
             pipeline,
         );
 
-        let null_buffer =
-            NullBitBufferGpu::clone_null_bit_buffer_pass(&self.null_buffer, &mut pipeline.encoder);
+        let null_buffer = take_null_buffer(self.null_buffer.as_ref(), indexes, pipeline);
 
         Self {
             data: Arc::new(new_buffer),

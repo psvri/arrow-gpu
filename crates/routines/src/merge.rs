@@ -125,37 +125,25 @@ pub fn merge_dyn(
     operand_2: &ArrowArrayGPU,
     mask: &BooleanArrayGPU,
 ) -> ArrowArrayGPU {
-    match (operand_1, operand_2) {
-        (ArrowArrayGPU::Date32ArrayGPU(op1), ArrowArrayGPU::Date32ArrayGPU(op2)) => {
-            op1.merge(op2, mask).into()
+    let mut pipeline = ArrowComputePipeline::new(operand_1.get_gpu_device(), Some("merge"));
+    let results = merge_op_dyn(operand_1, operand_2, mask, &mut pipeline);
+    pipeline.finish();
+    results
+}
+
+macro_rules! merge_op_dyn_arms {
+    ($operand_1: ident, $operand_2: ident, $mask: ident, $pipeline:ident, $($arr: ident),*) => {
+        match ($operand_1, $operand_2) {
+            $((ArrowArrayGPU::$arr(op1), ArrowArrayGPU::$arr(op2)) => {
+                op1.merge_op(op2, $mask, $pipeline).into()
+            })*
+            _ => panic!(
+                "Merge Operation not supported between {:?} and {:?}",
+                $operand_1.get_dtype(),
+                $operand_2.get_dtype()
+            ),
         }
-        (ArrowArrayGPU::Int32ArrayGPU(op1), ArrowArrayGPU::Int32ArrayGPU(op2)) => {
-            op1.merge(op2, mask).into()
-        }
-        (ArrowArrayGPU::Int16ArrayGPU(op1), ArrowArrayGPU::Int16ArrayGPU(op2)) => {
-            op1.merge(op2, mask).into()
-        }
-        (ArrowArrayGPU::Int8ArrayGPU(op1), ArrowArrayGPU::Int8ArrayGPU(op2)) => {
-            op1.merge(op2, mask).into()
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(op1), ArrowArrayGPU::UInt32ArrayGPU(op2)) => {
-            op1.merge(op2, mask).into()
-        }
-        (ArrowArrayGPU::UInt16ArrayGPU(op1), ArrowArrayGPU::UInt16ArrayGPU(op2)) => {
-            op1.merge(op2, mask).into()
-        }
-        (ArrowArrayGPU::UInt8ArrayGPU(op1), ArrowArrayGPU::UInt8ArrayGPU(op2)) => {
-            op1.merge(op2, mask).into()
-        }
-        (ArrowArrayGPU::Float32ArrayGPU(op1), ArrowArrayGPU::Float32ArrayGPU(op2)) => {
-            op1.merge(op2, mask).into()
-        }
-        _ => panic!(
-            "Merge Operation not supported between {:?} and {:?}",
-            operand_1.get_dtype(),
-            operand_2.get_dtype()
-        ),
-    }
+    };
 }
 
 pub fn merge_op_dyn(
@@ -164,37 +152,21 @@ pub fn merge_op_dyn(
     mask: &BooleanArrayGPU,
     pipeline: &mut ArrowComputePipeline,
 ) -> ArrowArrayGPU {
-    match (operand_1, operand_2) {
-        (ArrowArrayGPU::Date32ArrayGPU(op1), ArrowArrayGPU::Date32ArrayGPU(op2)) => {
-            op1.merge_op(op2, mask, pipeline).into()
-        }
-        (ArrowArrayGPU::Int32ArrayGPU(op1), ArrowArrayGPU::Int32ArrayGPU(op2)) => {
-            op1.merge_op(op2, mask, pipeline).into()
-        }
-        (ArrowArrayGPU::Int16ArrayGPU(op1), ArrowArrayGPU::Int16ArrayGPU(op2)) => {
-            op1.merge_op(op2, mask, pipeline).into()
-        }
-        (ArrowArrayGPU::Int8ArrayGPU(op1), ArrowArrayGPU::Int8ArrayGPU(op2)) => {
-            op1.merge_op(op2, mask, pipeline).into()
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(op1), ArrowArrayGPU::UInt32ArrayGPU(op2)) => {
-            op1.merge_op(op2, mask, pipeline).into()
-        }
-        (ArrowArrayGPU::UInt16ArrayGPU(op1), ArrowArrayGPU::UInt16ArrayGPU(op2)) => {
-            op1.merge_op(op2, mask, pipeline).into()
-        }
-        (ArrowArrayGPU::UInt8ArrayGPU(op1), ArrowArrayGPU::UInt8ArrayGPU(op2)) => {
-            op1.merge_op(op2, mask, pipeline).into()
-        }
-        (ArrowArrayGPU::Float32ArrayGPU(op1), ArrowArrayGPU::Float32ArrayGPU(op2)) => {
-            op1.merge_op(op2, mask, pipeline).into()
-        }
-        _ => panic!(
-            "Merge Operation not supported between {:?} and {:?}",
-            operand_1.get_dtype(),
-            operand_2.get_dtype()
-        ),
-    }
+    merge_op_dyn_arms!(
+        operand_1,
+        operand_2,
+        mask,
+        pipeline,
+        Date32ArrayGPU,
+        Int32ArrayGPU,
+        Int16ArrayGPU,
+        Int8ArrayGPU,
+        UInt32ArrayGPU,
+        UInt16ArrayGPU,
+        UInt8ArrayGPU,
+        Float32ArrayGPU,
+        BooleanArrayGPU
+    )
 }
 
 #[cfg(test)]
