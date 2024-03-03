@@ -12,7 +12,7 @@ pub(crate) fn apply_put_op(
     dst_buffer: &Buffer,
     src_indexes: &Buffer,
     dst_indexes: &Buffer,
-    indexes_count: u64,
+    dispatch_size: u64,
     shader: &str,
     entry_point: &str,
     pipeline: &mut ArrowComputePipeline,
@@ -43,8 +43,6 @@ pub(crate) fn apply_put_op(
         ],
     });
 
-    let dispatch_size = indexes_count;
-
     let query = device.compute_pass(
         &mut pipeline.encoder,
         None,
@@ -63,25 +61,25 @@ pub fn put_dyn(
     dst: &mut ArrowArrayGPU,
     dst_indexes: &UInt32ArrayGPU,
 ) {
-    match (src, dst) {
-        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowArrayGPU::Float32ArrayGPU(y)) => {
-            x.put(src_indexes, y, dst_indexes)
+    let mut pipeline = ArrowComputePipeline::new(src.get_gpu_device(), Some("put"));
+    let result = put_op_dyn(src, src_indexes, dst, dst_indexes, &mut pipeline);
+    pipeline.finish();
+    result
+}
+
+macro_rules! put_op_dyn_arms {
+    ($operand_1: ident, $operand_2: ident, $src_indexes: ident, $dst_indexes: ident, $pipeline:ident, $($arr: ident),*) => {
+        match ($operand_1, $operand_2) {
+            $((ArrowArrayGPU::$arr(op1), ArrowArrayGPU::$arr(op2)) => {
+                op1.put_op($src_indexes, op2, $dst_indexes, $pipeline).into()
+            })*
+            (x, y) => panic!(
+                "Put Operation not supported for {:?} and {:?}",
+                x.get_dtype(),
+                y.get_dtype(),
+            ),
         }
-        (ArrowArrayGPU::Int32ArrayGPU(x), ArrowArrayGPU::Int32ArrayGPU(y)) => {
-            x.put(src_indexes, y, dst_indexes)
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(x), ArrowArrayGPU::UInt32ArrayGPU(y)) => {
-            x.put(src_indexes, y, dst_indexes)
-        }
-        (ArrowArrayGPU::Date32ArrayGPU(x), ArrowArrayGPU::Date32ArrayGPU(y)) => {
-            x.put(src_indexes, y, dst_indexes)
-        }
-        (x, y) => panic!(
-            "Put Operation not supported for {:?} and {:?}",
-            x.get_dtype(),
-            y.get_dtype(),
-        ),
-    }
+    };
 }
 
 pub fn put_op_dyn(
@@ -91,25 +89,18 @@ pub fn put_op_dyn(
     dst_indexes: &UInt32ArrayGPU,
     pipeline: &mut ArrowComputePipeline,
 ) {
-    match (src, dst) {
-        (ArrowArrayGPU::Float32ArrayGPU(x), ArrowArrayGPU::Float32ArrayGPU(y)) => {
-            x.put_op(src_indexes, y, dst_indexes, pipeline)
-        }
-        (ArrowArrayGPU::Int32ArrayGPU(x), ArrowArrayGPU::Int32ArrayGPU(y)) => {
-            x.put_op(src_indexes, y, dst_indexes, pipeline)
-        }
-        (ArrowArrayGPU::UInt32ArrayGPU(x), ArrowArrayGPU::UInt32ArrayGPU(y)) => {
-            x.put_op(src_indexes, y, dst_indexes, pipeline)
-        }
-        (ArrowArrayGPU::Date32ArrayGPU(x), ArrowArrayGPU::Date32ArrayGPU(y)) => {
-            x.put_op(src_indexes, y, dst_indexes, pipeline)
-        }
-        (x, y) => panic!(
-            "Put Operation not supported for {:?} and {:?}",
-            x.get_dtype(),
-            y.get_dtype(),
-        ),
-    }
+    put_op_dyn_arms!(
+        src,
+        dst,
+        src_indexes,
+        dst_indexes,
+        pipeline,
+        Float32ArrayGPU,
+        Int32ArrayGPU,
+        UInt32ArrayGPU,
+        Date32ArrayGPU,
+        BooleanArrayGPU
+    );
 }
 
 #[cfg(test)]

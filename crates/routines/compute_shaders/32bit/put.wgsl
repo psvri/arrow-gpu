@@ -17,7 +17,7 @@ var<storage, read> dst_indexes: array<u32>;
 @compute
 @workgroup_size(256)
 fn put(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    if (global_id.x < arrayLength(&src_indexes)) {
+    if global_id.x < arrayLength(&src_indexes) {
         dst_values[dst_indexes[global_id.x]] = src_values[src_indexes[global_id.x]];
     }
 }

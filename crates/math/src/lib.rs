@@ -7,6 +7,7 @@ use arrow_gpu_array::gpu_utils::*;
 use wgpu::Buffer;
 
 pub(crate) mod f32;
+pub(crate) mod i32;
 
 const ABS_ENTRY_POINT: &str = "abs_";
 const SQRT_ENTRY_POINT: &str = "sqrt_";
@@ -176,7 +177,7 @@ macro_rules! dyn_fn {
 }
 
 dyn_fn!(
-    [abs_dyn, abs_op_dyn, abs_op, Float32ArrayGPU],
+    [abs_dyn, abs_op_dyn, abs_op, Float32ArrayGPU, Int32ArrayGPU],
     [sqrt_dyn, sqrt_op_dyn, sqrt_op, Float32ArrayGPU],
     [cbrt_dyn, cbrt_op_dyn, cbrt_op, Float32ArrayGPU],
     [exp_dyn, exp_op_dyn, exp_op, Float32ArrayGPU],
