@@ -197,7 +197,8 @@ macro_rules! test_unary_op_float {
 
 #[macro_export]
 macro_rules! test_float_array_op {
-    ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $output: expr) => {
+    ($(#[$m:meta])* $fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $output: expr) => {
+        $(#[$m])*
         #[test]
         fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
@@ -216,7 +217,8 @@ macro_rules! test_float_array_op {
             }
         }
     };
-    ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr, $output: expr) => {
+    ($(#[$m:meta])* $fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr, $output: expr) => {
+        $(#[$m])*
         #[test]
         fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
