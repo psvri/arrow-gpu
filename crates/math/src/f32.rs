@@ -235,11 +235,11 @@ mod tests {
         ]
     );
 
-    #[cfg_attr(
-        any(target_os = "macos", target_os = "linux"),
-        ignore = "-x ** 0.0 is returning different values based on OS"
-    )]
     test_float_array_op!(
+        #[cfg_attr(
+            any(target_os = "macos", target_os = "linux"),
+            ignore = "-x ** 0.0 is returning different values based on OS"
+        )]
         test_f32_power,
         Float32ArrayGPU,
         Float32ArrayGPU,
