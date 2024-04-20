@@ -85,7 +85,6 @@ impl BooleanArrayGPU {
 
     pub fn raw_values(&self) -> Option<Vec<bool>> {
         let result = self.gpu_device.retrive_data(&self.data);
-        let result: Vec<u8> = bytemuck::cast_slice(&result).to_vec();
         let mut bool_result = Vec::<bool>::with_capacity(self.len);
         for i in 0..self.len {
             bool_result.push(BooleanBufferBuilder::is_set_in_slice(&result, i))
@@ -211,11 +210,18 @@ mod tests {
     #[test]
     fn test_boolean_values() {
         let gpu_device = GpuDevice::new();
-        let values = vec![Some(true), Some(true), Some(false), None];
+        let mut values = vec![Some(true), Some(true), Some(false), None];
+        for i in 0..100 {
+            values.extend_from_within(0..4);
+        }
         let array = BooleanArrayGPU::from_optional_slice(&values, Arc::new(gpu_device));
 
-        let raw_values = array.raw_values().unwrap();
-        assert_eq!(raw_values, vec![true, true, false, false]);
+        let mut raw_value = vec![true, true, false, false];
+        for i in 0..100 {
+            raw_value.extend_from_within(0..4);
+        }
+
+        assert_eq!(array.raw_values().unwrap(), raw_value);
 
         let gpu_values = array.values();
         assert_eq!(gpu_values, values);
