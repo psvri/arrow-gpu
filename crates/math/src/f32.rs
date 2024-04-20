@@ -3,14 +3,38 @@ use arrow_gpu_array::gpu_utils::*;
 use std::sync::*;
 use wgpu::Buffer;
 
+use crate::MathBinaryType;
 use crate::{FloatMathUnaryType, MathUnaryType};
 
 const FLOATUNARY_SHADER: &str = include_str!("../compute_shaders/f32/floatunary.wgsl");
+const FLOATBINARY_SHADER: &str = include_str!("../compute_shaders/f32/floatbinary.wgsl");
 
 impl MathUnaryType for f32 {
     type OutputType = Float32ArrayGPU;
 
     const SHADER: &'static str = FLOATUNARY_SHADER;
+    const BUFFER_SIZE_MULTIPLIER: u64 = 1;
+
+    fn create_new(
+        data: Arc<Buffer>,
+        device: Arc<GpuDevice>,
+        len: usize,
+        null_buffer: Option<NullBitBufferGpu>,
+    ) -> Self::OutputType {
+        Float32ArrayGPU {
+            data,
+            gpu_device: device,
+            phantom: std::marker::PhantomData,
+            len,
+            null_buffer,
+        }
+    }
+}
+
+impl MathBinaryType for f32 {
+    type OutputType = Float32ArrayGPU;
+
+    const SHADER: &'static str = FLOATBINARY_SHADER;
     const BUFFER_SIZE_MULTIPLIER: u64 = 1;
 
     fn create_new(
@@ -208,6 +232,69 @@ mod tests {
             (-1.0f32).log2(),
             (-2.0f32).log2(),
             (-3.0f32).log2()
+        ]
+    );
+
+    test_float_array_op!(
+        #[cfg_attr(
+            any(target_os = "macos", target_os = "linux"),
+            ignore = "-x ** 0.0 is returning different values based on OS"
+        )]
+        test_f32_power,
+        Float32ArrayGPU,
+        Float32ArrayGPU,
+        Float32ArrayGPU,
+        power,
+        power_dyn,
+        vec![
+            Some(1.0f32),
+            Some(-1.0f32),
+            Some(10.0f32),
+            Some(-10.0f32),
+            Some(3.0),
+            Some(-1.0f32),
+            None,
+            None,
+            Some(f32::NAN),
+            Some(f32::INFINITY),
+            Some(f32::NEG_INFINITY),
+            Some(f32::NEG_INFINITY),
+            Some(f32::INFINITY),
+            Some(f32::NAN),
+        ],
+        vec![
+            Some(0.0f32),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(2.0),
+            None,
+            Some(3.0),
+            None,
+            Some(f32::NAN),
+            Some(f32::INFINITY),
+            Some(f32::NEG_INFINITY),
+            Some(f32::INFINITY),
+            Some(f32::NEG_INFINITY),
+            Some(3.0),
+        ],
+        vec![
+            Some(1.0f32.powf(0.0)),
+            // TODO fixeme gpu -1.0 ** 0.0 gives NAN instead of 1.0
+            Some(f32::NAN),
+            Some(10.0f32.powf(0.0)),
+            // TODO fixeme gpu -10.0 ** 0.0 gives NAN instead of 1.0
+            Some(f32::NAN),
+            Some(3.0f32.powf(2.0)),
+            None,
+            None,
+            None,
+            Some(f32::NAN),
+            Some(f32::INFINITY),
+            Some(f32::NAN),
+            Some(f32::NAN),
+            Some(0.0),
+            Some(f32::NAN),
         ]
     );
 }

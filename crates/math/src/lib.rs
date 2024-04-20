@@ -16,11 +16,18 @@ const EXP_ENTRY_POINT: &str = "exp_";
 const EXP2_ENTRY_POINT: &str = "exp2_";
 const LOG_ENTRY_POINT: &str = "log_";
 const LOG2_ENTRY_POINT: &str = "log2_";
+const POWER_ENTRY_POINT: &str = "power_";
 
 macro_rules! default_impl {
     ($self: ident, $fn: ident) => {
         let mut pipeline = ArrowComputePipeline::new($self.get_gpu_device(), None);
         let output = Self::$fn(&$self, &mut pipeline);
+        pipeline.finish();
+        return output;
+    };
+    ($self: ident, $other: ident, $fn: ident) => {
+        let mut pipeline = ArrowComputePipeline::new($self.get_gpu_device(), None);
+        let output = Self::$fn(&$self, $other, &mut pipeline);
         pipeline.finish();
         return output;
     };
@@ -37,6 +44,29 @@ pub trait MathUnaryPass: ArrayUtils {
 }
 
 pub trait MathUnaryType {
+    type OutputType;
+    const SHADER: &'static str;
+    const BUFFER_SIZE_MULTIPLIER: u64;
+
+    fn create_new(
+        data: Arc<Buffer>,
+        device: Arc<GpuDevice>,
+        len: usize,
+        null_buffer: Option<NullBitBufferGpu>,
+    ) -> Self::OutputType;
+}
+
+pub trait MathBinaryPass: ArrayUtils + Sized {
+    type OutputType;
+
+    fn power(&self, other: &Self) -> Self::OutputType {
+        default_impl!(self, other, power_op);
+    }
+
+    fn power_op(&self, other: &Self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+}
+
+pub trait MathBinaryType {
     type OutputType;
     const SHADER: &'static str;
     const BUFFER_SIZE_MULTIPLIER: u64;
@@ -91,7 +121,7 @@ pub trait FloatMathUnaryType {
     ) -> Self::OutputType;
 }
 
-macro_rules! apply_unary_function_op {
+macro_rules! apply_function_op {
     ($self: ident, $trait_name:ident, $entry_point: ident, $pipeline: ident) => {
         let dispatch_size = $self
             .data
@@ -118,13 +148,49 @@ macro_rules! apply_unary_function_op {
             new_null_buffer,
         );
     };
+    ($self: ident, $other: ident, $trait_name:ident, $entry_point: ident, $pipeline: ident) => {
+        let dispatch_size = $self
+            .data
+            .size()
+            .div_ceil(<T as ArrowPrimitiveType>::ITEM_SIZE)
+            .div_ceil(256) as u32;
+
+        let new_buffer = $pipeline.apply_binary_function(
+            &$self.data,
+            &$other.data,
+            $self.data.size() * <T as $trait_name>::BUFFER_SIZE_MULTIPLIER,
+            T::SHADER,
+            $entry_point,
+            dispatch_size,
+        );
+        let new_null_buffer = NullBitBufferGpu::merge_null_bit_buffer_op(
+            &$self.null_buffer,
+            &$other.null_buffer,
+            $pipeline,
+        );
+
+        return <T as $trait_name>::create_new(
+            Arc::new(new_buffer),
+            $self.gpu_device.clone(),
+            $self.len,
+            new_null_buffer,
+        );
+    };
 }
 
 impl<T: MathUnaryType + ArrowPrimitiveType> MathUnaryPass for PrimitiveArrayGpu<T> {
     type OutputType = T::OutputType;
 
     fn abs_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
-        apply_unary_function_op!(self, MathUnaryType, ABS_ENTRY_POINT, pipeline);
+        apply_function_op!(self, MathUnaryType, ABS_ENTRY_POINT, pipeline);
+    }
+}
+
+impl<T: MathBinaryType + ArrowPrimitiveType> MathBinaryPass for PrimitiveArrayGpu<T> {
+    type OutputType = T::OutputType;
+
+    fn power_op(&self, other: &Self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
+        apply_function_op!(self, other, MathBinaryType, POWER_ENTRY_POINT, pipeline);
     }
 }
 
@@ -132,31 +198,31 @@ impl<T: FloatMathUnaryType + ArrowPrimitiveType> FloatMathUnary for PrimitiveArr
     type OutputType = T::OutputType;
 
     fn sqrt_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
-        apply_unary_function_op!(self, FloatMathUnaryType, SQRT_ENTRY_POINT, pipeline);
+        apply_function_op!(self, FloatMathUnaryType, SQRT_ENTRY_POINT, pipeline);
     }
 
     fn cbrt_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
-        apply_unary_function_op!(self, FloatMathUnaryType, CBRT_ENTRY_POINT, pipeline);
+        apply_function_op!(self, FloatMathUnaryType, CBRT_ENTRY_POINT, pipeline);
     }
 
     fn exp_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
-        apply_unary_function_op!(self, FloatMathUnaryType, EXP_ENTRY_POINT, pipeline);
+        apply_function_op!(self, FloatMathUnaryType, EXP_ENTRY_POINT, pipeline);
     }
 
     fn exp2_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
-        apply_unary_function_op!(self, FloatMathUnaryType, EXP2_ENTRY_POINT, pipeline);
+        apply_function_op!(self, FloatMathUnaryType, EXP2_ENTRY_POINT, pipeline);
     }
 
     fn log_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
-        apply_unary_function_op!(self, FloatMathUnaryType, LOG_ENTRY_POINT, pipeline);
+        apply_function_op!(self, FloatMathUnaryType, LOG_ENTRY_POINT, pipeline);
     }
 
     fn log2_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
-        apply_unary_function_op!(self, FloatMathUnaryType, LOG2_ENTRY_POINT, pipeline);
+        apply_function_op!(self, FloatMathUnaryType, LOG2_ENTRY_POINT, pipeline);
     }
 }
 
-macro_rules! dyn_fn {
+macro_rules! dyn_unary_fn {
     ($([$dyn: ident, $dyn_op: ident, $array_op: ident, $($arr:ident),* ]),*) => {
         $(
             pub fn $dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
@@ -176,7 +242,7 @@ macro_rules! dyn_fn {
     }
 }
 
-dyn_fn!(
+dyn_unary_fn!(
     [abs_dyn, abs_op_dyn, abs_op, Float32ArrayGPU, Int32ArrayGPU],
     [sqrt_dyn, sqrt_op_dyn, sqrt_op, Float32ArrayGPU],
     [cbrt_dyn, cbrt_op_dyn, cbrt_op, Float32ArrayGPU],
@@ -185,3 +251,36 @@ dyn_fn!(
     [log_dyn, log_op_dyn, log_op, Float32ArrayGPU],
     [log2_dyn, log2_op_dyn, log2_op, Float32ArrayGPU]
 );
+
+macro_rules! dyn_binary_fn {
+    ($([$dyn: ident, $dyn_op: ident, $array_op: ident, $($arr:ident),* ]),*) => {
+        $(
+            pub fn $dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
+                let mut pipeline = ArrowComputePipeline::new(input1.get_gpu_device(), None);
+                let result = $dyn_op(input1, input2, &mut pipeline);
+                pipeline.finish();
+                result
+            }
+
+            pub fn $dyn_op(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
+                match (input1, input2) {
+                    $((ArrowArrayGPU::$arr(arr_1), ArrowArrayGPU::$arr(arr_2)) => arr_1.$array_op(arr_2, pipeline).into(),)+
+                    _ => panic!(
+                        "Operation {} not supported for type {:?} {:?}",
+                        stringify!($function),
+                        input1.get_dtype(),
+                        input2.get_dtype(),
+                    ),
+                }
+            }
+        )+
+    }
+}
+
+dyn_binary_fn!([
+    power_dyn,
+    power_op_dyn,
+    power_op,
+    Int32ArrayGPU,
+    Float32ArrayGPU
+]);

@@ -23,7 +23,7 @@ pub(crate) fn take_bool(
         data,
         &indexes.data,
         indexes.len as u64,
-        32,
+        (indexes.len.div_ceil(32) as u64) * 4,
         TAKE_SHADER,
         "take",
         pipeline,
