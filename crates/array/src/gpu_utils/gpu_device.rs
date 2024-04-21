@@ -148,6 +148,7 @@ impl GpuDevice {
                     layout: None,
                     module: &cs_module,
                     entry_point,
+                    compilation_options: Default::default(),
                 });
             self.pipeline_cache.insert(
                 PiepelineEntry {
