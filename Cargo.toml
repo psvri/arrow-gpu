@@ -19,8 +19,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace.dependencies]
-#wgpu = "0.19.3"
-wgpu = {git = "https://github.com/gfx-rs/wgpu.git", commit = "53dd49f839bfa87331f2f2ed91b8810d86a6a6d7"}
+wgpu = "0.20.0"
 pollster = "0.3.0"
 bytemuck = "1.15.0"
 futures-intrusive = "0.5.0"
