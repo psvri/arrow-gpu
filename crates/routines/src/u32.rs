@@ -17,7 +17,7 @@ mod test {
         UInt32ArrayGPU,
         merge,
         merge_dyn,
-        vec![
+        [
             Some(0),
             Some(1),
             None,
@@ -28,7 +28,7 @@ mod test {
             None,
             Some(50)
         ],
-        vec![
+        [
             Some(1),
             Some(2),
             None,
@@ -39,7 +39,7 @@ mod test {
             Some(30),
             None
         ],
-        vec![
+        [
             Some(true),
             Some(true),
             Some(false),
@@ -50,7 +50,7 @@ mod test {
             None,
             Some(false),
         ],
-        vec![
+        [
             Some(0),
             Some(1),
             None,
@@ -70,9 +70,9 @@ mod test {
         UInt32ArrayGPU,
         take,
         take_dyn,
-        vec![Some(0), Some(1), None, Some(3)],
-        vec![0, 1, 2, 3, 0, 1, 2, 3],
-        vec![
+        [Some(0), Some(1), None, Some(3)],
+        [0, 1, 2, 3, 0, 1, 2, 3],
+        [
             Some(0),
             Some(1),
             None,
@@ -90,10 +90,10 @@ mod test {
         UInt32ArrayGPU,
         put,
         put_dyn,
-        vec![0, 1, 2, 3],
-        vec![100, 0, 101, 0, 102, 0, 103, 0],
-        vec![0, 1, 2, 3],
-        vec![1, 3, 5, 7],
-        vec![100, 0, 101, 1, 102, 2, 103, 3]
+        [0, 1, 2, 3],
+        [100, 0, 101, 0, 102, 0, 103, 0],
+        [0, 1, 2, 3],
+        [1, 3, 5, 7],
+        [100, 0, 101, 1, 102, 2, 103, 3]
     );
 }

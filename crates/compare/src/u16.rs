@@ -28,7 +28,7 @@ mod test {
         UInt16ArrayGPU,
         BooleanArrayGPU,
         gt,
-        vec![
+        [
             Some(0u16),
             Some(3),
             Some(3),
@@ -40,7 +40,7 @@ mod test {
             Some(40),
             Some(70)
         ],
-        vec![
+        [
             Some(1u16),
             Some(2),
             Some(1u16),
@@ -52,7 +52,7 @@ mod test {
             Some(4),
             Some(7)
         ],
-        vec![
+        [
             Some(false),
             Some(true),
             Some(true),
@@ -72,9 +72,9 @@ mod test {
         UInt16ArrayGPU,
         BooleanArrayGPU,
         gt,
-        vec![Some(100u16); 100],
-        vec![Some(1u16); 100],
-        vec![Some(true); 100]
+        [Some(100u16); 100],
+        [Some(1u16); 100],
+        [Some(true); 100]
     );
 
     test_array_op!(
@@ -83,7 +83,7 @@ mod test {
         UInt16ArrayGPU,
         BooleanArrayGPU,
         gteq,
-        vec![
+        [
             Some(0u16),
             Some(3),
             Some(3),
@@ -95,7 +95,7 @@ mod test {
             Some(40),
             Some(7)
         ],
-        vec![
+        [
             Some(1u16),
             Some(2),
             Some(1),
@@ -107,7 +107,7 @@ mod test {
             Some(4),
             Some(7)
         ],
-        vec![
+        [
             Some(false),
             Some(true),
             Some(true),
@@ -128,7 +128,7 @@ mod test {
         BooleanArrayGPU,
         lt,
         lt_dyn,
-        vec![
+        [
             Some(0u16),
             Some(3),
             Some(3),
@@ -140,7 +140,7 @@ mod test {
             Some(40),
             Some(7)
         ],
-        vec![
+        [
             Some(1u16),
             Some(2),
             Some(1),
@@ -152,7 +152,7 @@ mod test {
             Some(4),
             Some(7)
         ],
-        vec![
+        [
             Some(true),
             Some(false),
             Some(false),
@@ -173,7 +173,7 @@ mod test {
         BooleanArrayGPU,
         lteq,
         lteq_dyn,
-        vec![
+        [
             Some(0u16),
             Some(3),
             Some(3),
@@ -185,7 +185,7 @@ mod test {
             Some(40),
             Some(7)
         ],
-        vec![
+        [
             Some(1u16),
             Some(2),
             Some(1),
@@ -197,7 +197,7 @@ mod test {
             Some(4),
             Some(7)
         ],
-        vec![
+        [
             Some(true),
             Some(false),
             Some(false),
@@ -218,7 +218,7 @@ mod test {
         BooleanArrayGPU,
         eq,
         eq_dyn,
-        vec![
+        [
             Some(0u16),
             Some(3),
             Some(3),
@@ -230,7 +230,7 @@ mod test {
             Some(40),
             Some(7)
         ],
-        vec![
+        [
             Some(1u16),
             Some(2),
             Some(1),
@@ -242,7 +242,7 @@ mod test {
             Some(4),
             Some(7)
         ],
-        vec![
+        [
             Some(false),
             Some(false),
             Some(false),
@@ -267,9 +267,9 @@ mod test {
         UInt16ArrayGPU,
         min,
         min_dyn,
-        vec![Some(0u16), Some(3), Some(3), Some(0), None, None],
-        vec![Some(1u16), Some(2), Some(3), None, Some(4), None],
-        vec![Some(0u16), Some(2), Some(3), None, None, None]
+        [Some(0u16), Some(3), Some(3), Some(0), None, None],
+        [Some(1u16), Some(2), Some(3), None, Some(4), None],
+        [Some(0u16), Some(2), Some(3), None, None, None]
     );
 
     test_array_op!(
@@ -283,8 +283,8 @@ mod test {
         UInt16ArrayGPU,
         max,
         max_dyn,
-        vec![Some(0u16), Some(3), Some(3), Some(0), None, None],
-        vec![Some(1u16), Some(2), Some(3), None, Some(4), None],
-        vec![Some(1u16), Some(3), Some(3), None, None, None]
+        [Some(0u16), Some(3), Some(3), Some(0), None, None],
+        [Some(1u16), Some(2), Some(3), None, Some(4), None],
+        [Some(1u16), Some(3), Some(3), None, None, None]
     );
 }

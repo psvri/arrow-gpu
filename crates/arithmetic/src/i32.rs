@@ -132,11 +132,11 @@ mod tests {
         Int32ArrayGPU,
         Int32ArrayGPU,
         Int32ArrayGPU,
-        vec![0, 1, 2, 3, 4],
+        [0, 1, 2, 3, 4],
         add_scalar,
         add_scalar_dyn,
         100i32,
-        vec![100, 101, 102, 103, 104]
+        [100, 101, 102, 103, 104]
     );
 
     test_scalar_op!(
@@ -144,11 +144,11 @@ mod tests {
         Int32ArrayGPU,
         Int32ArrayGPU,
         Int32ArrayGPU,
-        vec![0, 100, 200, 3, 104],
+        [0, 100, 200, 3, 104],
         sub_scalar,
         sub_scalar_dyn,
         100,
-        vec![-100, 0, 100, -97, 4]
+        [-100, 0, 100, -97, 4]
     );
 
     test_scalar_op!(
@@ -156,11 +156,11 @@ mod tests {
         Int32ArrayGPU,
         Int32ArrayGPU,
         Int32ArrayGPU,
-        vec![0, i32::MAX, 2, 3, 4],
+        [0, i32::MAX, 2, 3, 4],
         mul_scalar,
         mul_scalar_dyn,
         100,
-        vec![0, -100, 200, 300, 400]
+        [0, -100, 200, 300, 400]
     );
 
     test_scalar_op!(
@@ -168,11 +168,11 @@ mod tests {
         Int32ArrayGPU,
         Int32ArrayGPU,
         Int32ArrayGPU,
-        vec![0, 1, 100, 260, 450],
+        [0, 1, 100, 260, 450],
         div_scalar,
         div_scalar_dyn,
         100,
-        vec![0, 0, 1, 2, 4]
+        [0, 0, 1, 2, 4]
     );
 
     test_scalar_op!(
@@ -180,11 +180,11 @@ mod tests {
         Int32ArrayGPU,
         Int32ArrayGPU,
         Int32ArrayGPU,
-        vec![0, 1, 2, 3, 104],
+        [0, 1, 2, 3, 104],
         rem_scalar,
         rem_scalar_dyn,
         100i32,
-        vec![0, 1, 2, 3, 4]
+        [0, 1, 2, 3, 4]
     );
 
     test_scalar_op!(
@@ -192,11 +192,11 @@ mod tests {
         Int32ArrayGPU,
         Date32ArrayGPU,
         Int32ArrayGPU,
-        vec![0, 1, 2, 3, 104],
+        [0, 1, 2, 3, 104],
         rem_scalar,
         rem_scalar_dyn,
         100i32,
-        vec![0, 1, 2, 3, 4]
+        [0, 1, 2, 3, 4]
     );
 
     /*//ignore = "Not passing in linux CI but passes in windows 🤔"
@@ -204,10 +204,10 @@ mod tests {
     test_scalar_op!(
         test_div_by_zero_i32_scalar_i32,
         i32,
-        vec![0, 1, 100, 260, 450],
+        [0, 1, 100, 260, 450],
         div_scalar,
         0,
-        vec![-1; 5]
+        [-1; 5]
     );*/
 
     test_scalar_op!(
@@ -215,11 +215,11 @@ mod tests {
         Date32ArrayGPU,
         Int32ArrayGPU,
         Date32ArrayGPU,
-        vec![0, 1, 2, 3, 104],
+        [0, 1, 2, 3, 104],
         rem_scalar,
         rem_scalar_dyn,
         100i32,
-        vec![0, 1, 2, 3, 4]
+        [0, 1, 2, 3, 4]
     );
 
     test_scalar_op!(
@@ -227,11 +227,11 @@ mod tests {
         Date32ArrayGPU,
         Date32ArrayGPU,
         Date32ArrayGPU,
-        vec![0, 1, 2, 3, 104],
+        [0, 1, 2, 3, 104],
         rem_scalar,
         rem_scalar_dyn,
         100i32,
-        vec![0, 1, 2, 3, 4]
+        [0, 1, 2, 3, 4]
     );
 
     test_array_op!(
@@ -240,9 +240,9 @@ mod tests {
         Int32ArrayGPU,
         Int32ArrayGPU,
         add,
-        vec![Some(0i32), Some(1), None, None, Some(4)],
-        vec![Some(1i32), Some(2), None, Some(4), None],
-        vec![Some(1), Some(3), None, None, None]
+        [Some(0i32), Some(1), None, None, Some(4)],
+        [Some(1i32), Some(2), None, Some(4), None],
+        [Some(1), Some(3), None, None, None]
     );
 
     test_array_op!(
@@ -251,9 +251,9 @@ mod tests {
         Date32ArrayGPU,
         Date32ArrayGPU,
         add,
-        vec![Some(0i32), Some(1), None, None, Some(4)],
-        vec![Some(1i32), Some(2), None, Some(4), None],
-        vec![Some(1), Some(3), None, None, None]
+        [Some(0i32), Some(1), None, None, Some(4)],
+        [Some(1i32), Some(2), None, Some(4), None],
+        [Some(1), Some(3), None, None, None]
     );
 
     test_sum!(

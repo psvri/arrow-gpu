@@ -68,7 +68,7 @@ mod test {
         vec![0, -1, -2, 3, -4],
         abs,
         abs_dyn,
-        vec![0, 1, 2, 3, 4]
+        [0, 1, 2, 3, 4]
     );
 
     test_array_op!(
@@ -78,7 +78,7 @@ mod test {
         Int32ArrayGPU,
         power,
         power_dyn,
-        vec![
+        [
             Some(0i32),
             Some(-1),
             Some(-2),
@@ -89,7 +89,7 @@ mod test {
             Some(1),
             None
         ],
-        vec![
+        [
             Some(0i32),
             Some(-1),
             Some(2),
@@ -100,7 +100,7 @@ mod test {
             None,
             None
         ],
-        vec![
+        [
             Some(1i32),
             Some(-1),
             Some(4),

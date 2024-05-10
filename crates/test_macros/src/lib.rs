@@ -5,8 +5,7 @@ macro_rules! test_unary_op {
         fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
-            let data = $input;
-            let gpu_array = $input_ty::from_slice(&data, device.clone());
+            let gpu_array = $input_ty::from_slice(&$input, device.clone());
             let new_gpu_array = gpu_array.$unary_fn();
             assert_eq!(new_gpu_array.raw_values().unwrap(), $output);
             let new_gpu_array = $unary_fn_dyn(&gpu_array.into());
@@ -22,8 +21,7 @@ macro_rules! test_unary_op {
         fn $fn_name() {
             use arrow_gpu_array::GPU_DEVICE;
             let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
-            let data = $input;
-            let gpu_array = $input_ty::from_slice(&data, device);
+            let gpu_array = $input_ty::from_slice(&$input, device);
             let new_gpu_array = gpu_array.$unary_fn();
             assert_eq!(new_gpu_array.raw_values().unwrap(), $output);
         }
