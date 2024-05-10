@@ -262,15 +262,10 @@ dyn_fn!(
 macro_rules! dyn_minmax {
     ($function:ident, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
         pub fn $function(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
-            match (data_1, data_2) {
-                $((ArrowArrayGPU::$y(arr_1), ArrowArrayGPU::$y(arr_2)) => arr_1.$op_1(arr_2).into(),)+
-                _ => panic!(
-                    "Operation {} not supported for type {:?} {:?}",
-                    stringify!($function),
-                    data_1.get_dtype(),
-                    data_2.get_dtype(),
-                ),
-            }
+            let mut pipeline = ArrowComputePipeline::new(data_1.get_gpu_device(), None);
+            let result = $function_op(data_1, data_2, &mut pipeline);
+            pipeline.finish();
+            result
         }
 
         pub fn $function_op(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
