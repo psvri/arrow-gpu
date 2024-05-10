@@ -53,18 +53,18 @@ mod tests {
         test_cast_u16_to_i16,
         UInt16ArrayGPU,
         Int16ArrayGPU,
-        vec![0, 1, 2, 3, 4, u16::MAX, u16::MAX - 1, u16::MAX - 2],
+        [0, 1, 2, 3, 4, u16::MAX, u16::MAX - 1, u16::MAX - 2],
         Int16Type,
-        vec![0, 1, 2, 3, 4, -1, -2, -3]
+        [0, 1, 2, 3, 4, -1, -2, -3]
     );
 
     test_cast_op!(
         test_cast_u16_to_i32,
         UInt16ArrayGPU,
         Int32ArrayGPU,
-        vec![0, 1, 2, 3, 4, u16::MAX, u16::MAX - 1, u16::MAX - 2],
+        [0, 1, 2, 3, 4, u16::MAX, u16::MAX - 1, u16::MAX - 2],
         Int32Type,
-        vec![
+        [
             0,
             1,
             2,
@@ -80,17 +80,17 @@ mod tests {
         test_cast_u16_to_u32,
         UInt16ArrayGPU,
         UInt32ArrayGPU,
-        vec![0, 1, 2, 3, 4],
+        [0, 1, 2, 3, 4],
         UInt32Type,
-        vec![0, 1, 2, 3, 4]
+        [0, 1, 2, 3, 4]
     );
 
     test_cast_op!(
         test_cast_u16_to_f32,
         UInt16ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, 4, u16::MAX],
+        [0, 1, 2, 3, 4, u16::MAX],
         Float32Type,
-        vec![0.0, 1.0, 2.0, 3.0, 4.0, u16::MAX as f32]
+        [0.0, 1.0, 2.0, 3.0, 4.0, u16::MAX as f32]
     );
 }

@@ -97,9 +97,9 @@ mod tests {
             1.0f32.abs(),
             2.0f32.abs(),
             3.0f32.abs(),
-            -1.0f32.abs(),
-            -2.0f32.abs(),
-            -3.0f32.abs()
+            (-1.0f32).abs(),
+            (-2.0f32).abs(),
+            (-3.0f32).abs()
         ]
     );
 
@@ -246,7 +246,7 @@ mod tests {
         Float32ArrayGPU,
         power,
         power_dyn,
-        vec![
+        [
             Some(1.0f32),
             Some(-1.0f32),
             Some(10.0f32),
@@ -262,7 +262,7 @@ mod tests {
             Some(f32::INFINITY),
             Some(f32::NAN),
         ],
-        vec![
+        [
             Some(0.0f32),
             Some(0.0),
             Some(0.0),
@@ -278,7 +278,7 @@ mod tests {
             Some(f32::NEG_INFINITY),
             Some(3.0),
         ],
-        vec![
+        [
             Some(1.0f32.powf(0.0)),
             // TODO fixeme gpu -1.0 ** 0.0 gives NAN instead of 1.0
             Some(f32::NAN),

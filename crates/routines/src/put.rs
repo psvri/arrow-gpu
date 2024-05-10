@@ -62,9 +62,8 @@ pub fn put_dyn(
     dst_indexes: &UInt32ArrayGPU,
 ) {
     let mut pipeline = ArrowComputePipeline::new(src.get_gpu_device(), Some("put"));
-    let result = put_op_dyn(src, src_indexes, dst, dst_indexes, &mut pipeline);
+    put_op_dyn(src, src_indexes, dst, dst_indexes, &mut pipeline);
     pipeline.finish();
-    result
 }
 
 macro_rules! put_op_dyn_arms {

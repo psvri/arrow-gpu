@@ -78,9 +78,9 @@ mod tests {
             1.0f32.sinh(),
             2.0f32.sinh(),
             3.0f32.sinh(),
-            -1.0f32.sinh(),
-            -2.0f32.sinh(),
-            -3.0f32.sinh()
+            (-1.0f32).sinh(),
+            (-2.0f32).sinh(),
+            (-3.0f32).sinh()
         ]
     );
 
@@ -95,9 +95,9 @@ mod tests {
         vec![
             0.0f32.cos(),
             1.0f32.cos(),
-            -1.0f32.cos(),
+            (-1.0f32).cos(),
             56.0f32.cos(),
-            -56.0f32.cos(),
+            (-56.0f32).cos(),
             (i8::MIN as f32).cos(),
             (i8::MAX as f32).cos(),
         ]
@@ -113,9 +113,9 @@ mod tests {
         vec![
             0.0f32.sin(),
             1.0f32.sin(),
-            -1.0f32.sin(),
+            (-1.0f32).sin(),
             56.0f32.sin(),
-            -56.0f32.sin(),
+            (-56.0f32).sin(),
             (i8::MIN as f32).sin(),
             (i8::MAX as f32).sin(),
         ]

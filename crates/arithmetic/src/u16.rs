@@ -28,10 +28,10 @@ mod test {
         UInt16ArrayGPU,
         UInt16ArrayGPU,
         UInt16ArrayGPU,
-        vec![0, 1, 2, 3, 4],
+        [0, 1, 2, 3, 4],
         add_scalar,
         add_scalar_dyn,
         100u16,
-        vec![100, 101, 102, 103, 104]
+        [100, 101, 102, 103, 104]
     );
 }

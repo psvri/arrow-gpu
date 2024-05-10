@@ -30,7 +30,7 @@ mod test {
         BooleanArrayGPU,
         gt,
         gt_dyn,
-        vec![
+        [
             Some(0i16),
             Some(3),
             Some(3),
@@ -42,7 +42,7 @@ mod test {
             Some(40),
             Some(70)
         ],
-        vec![
+        [
             Some(1i16),
             Some(2),
             Some(1i16),
@@ -54,7 +54,7 @@ mod test {
             Some(4),
             Some(7)
         ],
-        vec![
+        [
             Some(false),
             Some(true),
             Some(true),
@@ -75,9 +75,9 @@ mod test {
         BooleanArrayGPU,
         gt,
         gt_dyn,
-        vec![Some(100i16); 100],
-        vec![Some(1i16); 100],
-        vec![Some(true); 100]
+        [Some(100i16); 100],
+        [Some(1i16); 100],
+        [Some(true); 100]
     );
 
     test_array_op!(
@@ -87,7 +87,7 @@ mod test {
         BooleanArrayGPU,
         gteq,
         gteq_dyn,
-        vec![
+        [
             Some(0i16),
             Some(3),
             Some(3),
@@ -99,7 +99,7 @@ mod test {
             Some(40),
             Some(7)
         ],
-        vec![
+        [
             Some(1i16),
             Some(2),
             Some(1),
@@ -111,7 +111,7 @@ mod test {
             Some(4),
             Some(7)
         ],
-        vec![
+        [
             Some(false),
             Some(true),
             Some(true),
@@ -132,7 +132,7 @@ mod test {
         BooleanArrayGPU,
         lt,
         lt_dyn,
-        vec![
+        [
             Some(0i16),
             Some(3),
             Some(3),
@@ -144,7 +144,7 @@ mod test {
             Some(40),
             Some(7)
         ],
-        vec![
+        [
             Some(1i16),
             Some(2),
             Some(1),
@@ -156,7 +156,7 @@ mod test {
             Some(4),
             Some(7)
         ],
-        vec![
+        [
             Some(true),
             Some(false),
             Some(false),
@@ -177,7 +177,7 @@ mod test {
         BooleanArrayGPU,
         lteq,
         lteq_dyn,
-        vec![
+        [
             Some(0i16),
             Some(3),
             Some(3),
@@ -189,7 +189,7 @@ mod test {
             Some(40),
             Some(7)
         ],
-        vec![
+        [
             Some(1i16),
             Some(2),
             Some(1),
@@ -201,7 +201,7 @@ mod test {
             Some(4),
             Some(7)
         ],
-        vec![
+        [
             Some(true),
             Some(false),
             Some(false),
@@ -222,7 +222,7 @@ mod test {
         BooleanArrayGPU,
         eq,
         eq_dyn,
-        vec![
+        [
             Some(0i16),
             Some(3),
             Some(3),
@@ -234,7 +234,7 @@ mod test {
             Some(40),
             Some(7)
         ],
-        vec![
+        [
             Some(1i16),
             Some(2),
             Some(1),
@@ -246,7 +246,7 @@ mod test {
             Some(4),
             Some(7)
         ],
-        vec![
+        [
             Some(false),
             Some(false),
             Some(false),

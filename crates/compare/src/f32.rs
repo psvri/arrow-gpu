@@ -22,7 +22,7 @@ mod test {
         BooleanArrayGPU,
         gt,
         gt_dyn,
-        vec![
+        [
             Some(-1.0f32),
             Some(3.0),
             Some(-1.0f32),
@@ -35,7 +35,7 @@ mod test {
             Some(f32::INFINITY),
             Some(f32::NAN),
         ],
-        vec![
+        [
             Some(0.0f32),
             Some(2.0),
             None,
@@ -48,7 +48,7 @@ mod test {
             Some(f32::NEG_INFINITY),
             Some(3.0),
         ],
-        vec![
+        [
             Some(false),
             Some(true),
             None,
@@ -70,7 +70,7 @@ mod test {
         BooleanArrayGPU,
         gteq,
         gteq_dyn,
-        vec![
+        [
             Some(-1.0f32),
             Some(3.0),
             Some(-1.0f32),
@@ -83,7 +83,7 @@ mod test {
             Some(f32::INFINITY),
             Some(f32::NAN),
         ],
-        vec![
+        [
             Some(0.0f32),
             Some(2.0),
             None,
@@ -96,7 +96,7 @@ mod test {
             Some(f32::NEG_INFINITY),
             Some(3.0),
         ],
-        vec![
+        [
             Some(false),
             Some(true),
             None,
@@ -118,7 +118,7 @@ mod test {
         BooleanArrayGPU,
         lt,
         lt_dyn,
-        vec![
+        [
             Some(-1.0f32),
             Some(3.0),
             Some(-1.0f32),
@@ -131,7 +131,7 @@ mod test {
             Some(f32::INFINITY),
             Some(f32::NAN),
         ],
-        vec![
+        [
             Some(0.0f32),
             Some(2.0),
             None,
@@ -144,7 +144,7 @@ mod test {
             Some(f32::NEG_INFINITY),
             Some(3.0),
         ],
-        vec![
+        [
             Some(true),
             Some(false),
             None,
@@ -166,7 +166,7 @@ mod test {
         BooleanArrayGPU,
         lteq,
         lteq_dyn,
-        vec![
+        [
             Some(-1.0f32),
             Some(3.0),
             Some(-1.0f32),
@@ -179,7 +179,7 @@ mod test {
             Some(f32::INFINITY),
             Some(f32::NAN),
         ],
-        vec![
+        [
             Some(0.0f32),
             Some(2.0),
             None,
@@ -192,7 +192,7 @@ mod test {
             Some(f32::NEG_INFINITY),
             Some(3.0),
         ],
-        vec![
+        [
             Some(true),
             Some(false),
             None,
@@ -214,7 +214,7 @@ mod test {
         BooleanArrayGPU,
         eq,
         eq_dyn,
-        vec![
+        [
             Some(0.0f32),
             Some(3.0),
             Some(-1.0f32),
@@ -227,7 +227,7 @@ mod test {
             Some(f32::INFINITY),
             Some(f32::NAN),
         ],
-        vec![
+        [
             Some(0.0f32),
             Some(2.0),
             None,
@@ -240,7 +240,7 @@ mod test {
             Some(f32::NEG_INFINITY),
             Some(3.0),
         ],
-        vec![
+        [
             Some(true),
             Some(false),
             None,
@@ -262,7 +262,7 @@ mod test {
         Float32ArrayGPU,
         max,
         max_dyn,
-        vec![
+        [
             Some(-1.0f32),
             Some(3.0),
             Some(-1.0f32),
@@ -275,7 +275,7 @@ mod test {
             Some(f32::INFINITY),
             Some(f32::NAN),
         ],
-        vec![
+        [
             Some(0.0f32),
             Some(2.0),
             None,
@@ -288,7 +288,7 @@ mod test {
             Some(f32::NEG_INFINITY),
             Some(3.0),
         ],
-        vec![
+        [
             Some(0.0),
             Some(3.0),
             None,
@@ -310,7 +310,7 @@ mod test {
         Float32ArrayGPU,
         min,
         min_dyn,
-        vec![
+        [
             Some(-1.0f32),
             Some(3.0),
             Some(-1.0f32),
@@ -323,7 +323,7 @@ mod test {
             Some(f32::INFINITY),
             Some(f32::NAN),
         ],
-        vec![
+        [
             Some(0.0f32),
             Some(2.0),
             None,
@@ -336,7 +336,7 @@ mod test {
             Some(f32::NEG_INFINITY),
             Some(3.0),
         ],
-        vec![
+        [
             Some(-1.0),
             Some(2.0),
             None,

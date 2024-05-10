@@ -136,7 +136,7 @@ mod tests {
         BooleanArrayGPU,
         merge,
         merge_dyn,
-        vec![
+        [
             Some(true),
             Some(true),
             None,
@@ -147,7 +147,7 @@ mod tests {
             None,
             Some(true)
         ],
-        vec![
+        [
             Some(false),
             Some(false),
             None,
@@ -158,7 +158,7 @@ mod tests {
             Some(false),
             None
         ],
-        vec![
+        [
             Some(true),
             Some(true),
             Some(false),
@@ -169,7 +169,7 @@ mod tests {
             None,
             Some(false),
         ],
-        vec![
+        [
             Some(true),
             Some(true),
             None,
@@ -188,11 +188,11 @@ mod tests {
         BooleanArrayGPU,
         put,
         put_dyn,
-        vec![true, true, false, false],
-        vec![true; 8],
-        vec![0, 1, 2, 3],
-        vec![1, 3, 5, 7],
-        vec![true, true, true, true, true, false, true, false]
+        [true, true, false, false],
+        [true; 8],
+        [0, 1, 2, 3],
+        [1, 3, 5, 7],
+        [true, true, true, true, true, false, true, false]
     );
 
     // TODO test for cases with null
@@ -202,9 +202,9 @@ mod tests {
         UInt32ArrayGPU,
         BooleanArrayGPU,
         take,
-        vec![true, true, false, false],
-        vec![0, 1, 2, 3, 0, 1, 2, 3],
-        vec![true, true, false, false, true, true, false, false]
+        [true, true, false, false],
+        [0, 1, 2, 3, 0, 1, 2, 3],
+        [true, true, false, false, true, true, false, false]
     );
 
     // TODO test for cases with null
@@ -214,8 +214,8 @@ mod tests {
         UInt32ArrayGPU,
         BooleanArrayGPU,
         take,
-        vec![true],
-        vec![0; 100],
-        vec![true; 100]
+        [true],
+        [0; 100],
+        [true; 100]
     );
 }

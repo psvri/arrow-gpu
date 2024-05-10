@@ -16,7 +16,7 @@ mod test {
         UInt16ArrayGPU,
         merge,
         merge_dyn,
-        vec![
+        [
             Some(0),
             Some(1),
             None,
@@ -27,7 +27,7 @@ mod test {
             None,
             Some(50)
         ],
-        vec![
+        [
             Some(1),
             Some(2),
             None,
@@ -38,7 +38,7 @@ mod test {
             Some(30),
             None
         ],
-        vec![
+        [
             Some(true),
             Some(true),
             Some(false),
@@ -49,7 +49,7 @@ mod test {
             None,
             Some(false),
         ],
-        vec![
+        [
             Some(0),
             Some(1),
             None,

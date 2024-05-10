@@ -158,7 +158,7 @@ mod test {
         BooleanArrayGPU,
         bitwise_and,
         bitwise_and_dyn,
-        vec![
+        [
             Some(true),
             Some(true),
             Some(false),
@@ -166,7 +166,7 @@ mod test {
             Some(true),
             None
         ],
-        vec![
+        [
             Some(true),
             Some(false),
             Some(true),
@@ -174,7 +174,7 @@ mod test {
             None,
             Some(true)
         ],
-        vec![
+        [
             Some(true),
             Some(false),
             Some(false),
@@ -191,7 +191,7 @@ mod test {
         BooleanArrayGPU,
         bitwise_or,
         bitwise_or_dyn,
-        vec![
+        [
             Some(true),
             Some(true),
             Some(false),
@@ -199,7 +199,7 @@ mod test {
             Some(true),
             None
         ],
-        vec![
+        [
             Some(true),
             Some(false),
             Some(true),
@@ -207,7 +207,7 @@ mod test {
             None,
             Some(true)
         ],
-        vec![Some(true), Some(true), Some(true), Some(false), None, None]
+        [Some(true), Some(true), Some(true), Some(false), None, None]
     );
 
     test_array_op!(
@@ -217,7 +217,7 @@ mod test {
         BooleanArrayGPU,
         bitwise_xor,
         bitwise_xor_dyn,
-        vec![
+        [
             Some(true),
             Some(true),
             Some(false),
@@ -225,7 +225,7 @@ mod test {
             Some(true),
             None
         ],
-        vec![
+        [
             Some(true),
             Some(false),
             Some(true),
@@ -233,17 +233,17 @@ mod test {
             None,
             Some(true)
         ],
-        vec![Some(false), Some(true), Some(true), Some(false), None, None]
+        [Some(false), Some(true), Some(true), Some(false), None, None]
     );
 
     test_unary_op!(
         test_bitwise_not_bool,
         BooleanArrayGPU,
         BooleanArrayGPU,
-        vec![true, true, false, true, false],
+        [true, true, false, true, false],
         bitwise_not,
         bitwise_not_dyn,
-        vec![false, false, true, false, true]
+        [false, false, true, false, true]
     );
 
     fn test_bool_reduction(

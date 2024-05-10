@@ -19,9 +19,9 @@ mod test {
         test_bitcast_u32_to_f32,
         UInt32ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 10, 5713, 57130, u32::MIN, u32::MAX],
+        [0, 1, 10, 5713, 57130, u32::MIN, u32::MAX],
         Float32Type,
-        vec![
+        [
             0.0,
             f32::from_bits(1),
             f32::from_bits(10),

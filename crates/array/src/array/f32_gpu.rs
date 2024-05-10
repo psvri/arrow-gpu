@@ -90,7 +90,7 @@ mod tests {
     fn test_f32_array_from_optinal_vec() {
         let device = Arc::new(GpuDevice::new());
         let gpu_array_1 = Float32ArrayGPU::from_optional_slice(
-            &vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
+            &[Some(0.0), Some(1.0), None, None, Some(4.0)],
             device.clone(),
         );
         assert_eq!(
@@ -102,7 +102,7 @@ mod tests {
             vec![0b00010011]
         );
         let gpu_array_2 = Float32ArrayGPU::from_optional_slice(
-            &vec![Some(1.0), Some(2.0), None, Some(4.0), None],
+            &[Some(1.0), Some(2.0), None, Some(4.0), None],
             device,
         );
         assert_eq!(
