@@ -65,7 +65,7 @@ mod test {
         test_i32_abs,
         Int32ArrayGPU,
         Int32ArrayGPU,
-        vec![0, -1, -2, 3, -4],
+        [0, -1, -2, 3, -4],
         abs,
         abs_dyn,
         [0, 1, 2, 3, 4]

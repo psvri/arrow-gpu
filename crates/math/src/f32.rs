@@ -89,10 +89,10 @@ mod tests {
         test_f32_abs,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         abs,
         abs_dyn,
-        vec![
+        [
             0.0f32.abs(),
             1.0f32.abs(),
             2.0f32.abs(),
@@ -111,10 +111,10 @@ mod tests {
         test_f32_sqrt,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         sqrt,
         sqrt_dyn,
-        vec![
+        [
             0.0f32.sqrt(),
             1.0f32.sqrt(),
             2.0f32.sqrt(),
@@ -133,10 +133,10 @@ mod tests {
         test_f32_cbrt,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         cbrt,
         cbrt_dyn,
-        vec![
+        [
             0.0f32.cbrt(),
             1.0f32.cbrt(),
             2.0f32.cbrt(),
@@ -155,10 +155,10 @@ mod tests {
         test_f32_exp,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         exp,
         exp_dyn,
-        vec![
+        [
             0.0f32.exp(),
             1.0f32.exp(),
             2.0f32.exp(),
@@ -177,10 +177,10 @@ mod tests {
         test_f32_exp2,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         exp2,
         exp2_dyn,
-        vec![
+        [
             0.0f32.exp2(),
             1.0f32.exp2(),
             2.0f32.exp2(),
@@ -199,10 +199,10 @@ mod tests {
         test_f32_log,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         log,
         log_dyn,
-        vec![
+        [
             0.0f32.ln(),
             1.0f32.ln(),
             2.0f32.ln(),
@@ -221,10 +221,10 @@ mod tests {
         test_f32_log2,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         log2,
         log2_dyn,
-        vec![
+        [
             0.0f32.log2(),
             1.0f32.log2(),
             2.0f32.log2(),
