@@ -140,10 +140,6 @@ mod tests {
     );
 
     test_unary_op_float!(
-        #[cfg_attr(
-            target_os = "windows",
-            ignore = "Not passing in CI but passes in local 🤔"
-        )]
         test_f32_exp,
         Float32ArrayGPU,
         Float32ArrayGPU,
