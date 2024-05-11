@@ -75,7 +75,7 @@ mod tests {
         test_cast_u8_to_i8,
         UInt8ArrayGPU,
         Int8ArrayGPU,
-        vec![
+        [
             0,
             1,
             2,
@@ -87,51 +87,51 @@ mod tests {
             7
         ],
         Int8Type,
-        vec![0, 1, 2, 3, -1, -2, -3, -7, 7]
+        [0, 1, 2, 3, -1, -2, -3, -7, 7]
     );
 
     test_cast_op!(
         test_cast_u8_to_i16,
         UInt8ArrayGPU,
         Int16ArrayGPU,
-        vec![0, 1, 2, 3, 255, 254, 253, 249, 7],
+        [0, 1, 2, 3, 255, 254, 253, 249, 7],
         Int16Type,
-        vec![0, 1, 2, 3, 255, 254, 253, 249, 7]
+        [0, 1, 2, 3, 255, 254, 253, 249, 7]
     );
 
     test_cast_op!(
         test_cast_u8_to_i32,
         UInt8ArrayGPU,
         Int32ArrayGPU,
-        vec![0, 1, 2, 3, 255, 254, 253, 249, 7],
+        [0, 1, 2, 3, 255, 254, 253, 249, 7],
         Int32Type,
-        vec![0, 1, 2, 3, 255, 254, 253, 249, 7]
+        [0, 1, 2, 3, 255, 254, 253, 249, 7]
     );
 
     test_cast_op!(
         test_cast_u8_to_u16,
         UInt8ArrayGPU,
         UInt16ArrayGPU,
-        vec![0, 1, 2, 3, 255, 250, 7],
+        [0, 1, 2, 3, 255, 250, 7],
         UInt16Type,
-        vec![0, 1, 2, 3, 255, 250, 7]
+        [0, 1, 2, 3, 255, 250, 7]
     );
 
     test_cast_op!(
         test_cast_u8_to_u32,
         UInt8ArrayGPU,
         UInt32ArrayGPU,
-        vec![0, 1, 2, 3, 255, 250, 7],
+        [0, 1, 2, 3, 255, 250, 7],
         UInt32Type,
-        vec![0, 1, 2, 3, 255, 250, 7]
+        [0, 1, 2, 3, 255, 250, 7]
     );
 
     test_cast_op!(
         test_cast_u8_to_f32,
         UInt8ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, 255, 250, 7],
+        [0, 1, 2, 3, 255, 250, 7],
         Float32Type,
-        vec![0.0, 1.0, 2.0, 3.0, 255.0, 250.0, 7.0]
+        [0.0, 1.0, 2.0, 3.0, 255.0, 250.0, 7.0]
     );
 }

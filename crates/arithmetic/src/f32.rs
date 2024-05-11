@@ -130,11 +130,11 @@ mod tests {
         Float32ArrayGPU,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, 104.0],
+        [0.0, 1.0, 2.0, 3.0, 104.0],
         rem_scalar,
         rem_scalar_dyn,
         100.0,
-        vec![0.0, 1.0, 2.0, 3.0, 4.0]
+        [0.0, 1.0, 2.0, 3.0, 4.0]
     );
 
     test_scalar_op!(
@@ -142,11 +142,11 @@ mod tests {
         Float32ArrayGPU,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
+        [0.0f32, 1.0, 2.0, 3.0, 4.0],
         add_scalar,
         add_dyn,
         100.0,
-        vec![100.0, 101.0, 102.0, 103.0, 104.0]
+        [100.0, 101.0, 102.0, 103.0, 104.0]
     );
 
     test_scalar_op!(
@@ -154,11 +154,11 @@ mod tests {
         Float32ArrayGPU,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
+        [0.0f32, 1.0, 2.0, 3.0, 4.0],
         div_scalar,
         div_scalar_dyn,
         100.0,
-        vec![0.0, 0.01, 0.02, 0.03, 0.04]
+        [0.0, 0.01, 0.02, 0.03, 0.04]
     );
 
     test_scalar_op!(
@@ -166,11 +166,11 @@ mod tests {
         Float32ArrayGPU,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
+        [0.0f32, 1.0, 2.0, 3.0, 4.0],
         mul_scalar,
         mul_dyn,
         100.0,
-        vec![0.0, 100.0, 200.0, 300.0, 400.0]
+        [0.0, 100.0, 200.0, 300.0, 400.0]
     );
 
     test_scalar_op!(
@@ -178,11 +178,11 @@ mod tests {
         Float32ArrayGPU,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0f32, 1.0, 2.0, 3.0, 4.0],
+        [0.0f32, 1.0, 2.0, 3.0, 4.0],
         sub_scalar,
         sub_scalar_dyn,
         100.0,
-        vec![-100.0, -99.0, -98.0, -97.0, -96.0]
+        [-100.0, -99.0, -98.0, -97.0, -96.0]
     );
 
     #[test]
@@ -199,7 +199,7 @@ mod tests {
                 .collect::<Vec<f32>>(),
             device.clone(),
         );
-        let values_array = Float32ArrayGPU::from_slice(&vec![100.0], device);
+        let values_array = Float32ArrayGPU::from_slice(&[100.0], device);
         let new_gpu_array = gpu_array.add_scalar(&values_array);
         for (index, value) in new_gpu_array.raw_values().unwrap().into_iter().enumerate() {
             assert_eq!((index as f32) + 100.0, value);
@@ -213,9 +213,9 @@ mod tests {
         Float32ArrayGPU,
         add,
         add_dyn,
-        vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
-        vec![Some(1.0), Some(2.0), None, Some(4.0), None],
-        vec![Some(1.0), Some(3.0), None, None, None]
+        [Some(0.0), Some(1.0), None, None, Some(4.0)],
+        [Some(1.0), Some(2.0), None, Some(4.0), None],
+        [Some(1.0), Some(3.0), None, None, None]
     );
 
     test_array_op!(
@@ -225,9 +225,9 @@ mod tests {
         Float32ArrayGPU,
         sub,
         sub_dyn,
-        vec![Some(0.0), Some(1.0), None, None, Some(4.0), Some(10.0)],
-        vec![Some(1.0), Some(2.0), None, Some(4.0), None, Some(0.0)],
-        vec![Some(-1.0), Some(-1.0), None, None, None, Some(10.0)]
+        [Some(0.0), Some(1.0), None, None, Some(4.0), Some(10.0)],
+        [Some(1.0), Some(2.0), None, Some(4.0), None, Some(0.0)],
+        [Some(-1.0), Some(-1.0), None, None, None, Some(10.0)]
     );
 
     test_array_op!(
@@ -237,9 +237,9 @@ mod tests {
         Float32ArrayGPU,
         mul,
         mul_dyn,
-        vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
-        vec![Some(1.0), Some(2.0), None, Some(4.0), None],
-        vec![Some(0.0), Some(2.0), None, None, None]
+        [Some(0.0), Some(1.0), None, None, Some(4.0)],
+        [Some(1.0), Some(2.0), None, Some(4.0), None],
+        [Some(0.0), Some(2.0), None, None, None]
     );
 
     test_array_op!(
@@ -249,19 +249,19 @@ mod tests {
         Float32ArrayGPU,
         div,
         div_dyn,
-        vec![Some(0.0), Some(1.0), None, None, Some(4.0)],
-        vec![Some(1.0), Some(2.0), None, Some(4.0), None],
-        vec![Some(0.0), Some(0.5), None, None, None]
+        [Some(0.0), Some(1.0), None, None, Some(4.0)],
+        [Some(1.0), Some(2.0), None, Some(4.0), None],
+        [Some(0.0), Some(0.5), None, None, None]
     );
 
     test_unary_op_float!(
         test_f32_exp2,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         neg,
         neg_dyn,
-        vec![0.0, -1.0, -2.0, -3.0, 1.0, 2.0, 3.0]
+        [0.0, -1.0, -2.0, -3.0, 1.0, 2.0, 3.0]
     );
 
     test_sum!(

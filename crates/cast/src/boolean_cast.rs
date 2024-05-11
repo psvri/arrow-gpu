@@ -86,8 +86,8 @@ mod test {
         test_cast_boolean_to_f32,
         BooleanArrayGPU,
         Float32ArrayGPU,
-        vec![true, false, true, true, false, false, true, true, false],
+        [true, false, true, true, false, false, true, true, false],
         Float32Type,
-        vec![1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0]
+        [1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0]
     );
 }

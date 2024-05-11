@@ -27,9 +27,9 @@ mod test {
         Int8ArrayGPU,
         bitwise_and,
         bitwise_and_dyn,
-        vec![Some(0), Some(1), Some(100), Some(100), Some(-50), None],
-        vec![Some(0), Some(1), Some(-100), Some(!100), None, Some(!50)],
-        vec![Some(0), Some(1), Some(100 & -100), Some(0), None, None]
+        [Some(0), Some(1), Some(100), Some(100), Some(-50), None],
+        [Some(0), Some(1), Some(-100), Some(!100), None, Some(!50)],
+        [Some(0), Some(1), Some(100 & -100), Some(0), None, None]
     );
 
     test_array_op!(
@@ -39,9 +39,9 @@ mod test {
         Int8ArrayGPU,
         bitwise_or,
         bitwise_or_dyn,
-        vec![Some(0), Some(1), Some(100), Some(100), Some(-50), None],
-        vec![Some(0), Some(1), Some(-100), Some(!100), None, Some(!50)],
-        vec![
+        [Some(0), Some(1), Some(100), Some(100), Some(-50), None],
+        [Some(0), Some(1), Some(-100), Some(!100), None, Some(!50)],
+        [
             Some(0),
             Some(1),
             Some(100 | -100),
@@ -58,9 +58,9 @@ mod test {
         Int8ArrayGPU,
         bitwise_xor,
         bitwise_xor_dyn,
-        vec![Some(0), Some(1), Some(100), Some(100), Some(-50), None],
-        vec![Some(0), Some(0), Some(-100), Some(!100), None, Some(!50)],
-        vec![
+        [Some(0), Some(1), Some(100), Some(100), Some(-50), None],
+        [Some(0), Some(0), Some(-100), Some(!100), None, Some(!50)],
+        [
             Some(0),
             Some(1),
             Some(100 ^ -100),
@@ -77,7 +77,7 @@ mod test {
         Int8ArrayGPU,
         bitwise_shl,
         bitwise_shl_dyn,
-        vec![
+        [
             Some(0),
             Some(1),
             Some(100),
@@ -87,7 +87,7 @@ mod test {
             Some(-50),
             None
         ],
-        vec![
+        [
             Some(0),
             Some(1),
             Some(3),
@@ -97,7 +97,7 @@ mod test {
             None,
             Some(!50)
         ],
-        vec![
+        [
             Some(0),
             Some(1 << 1),
             Some(100 << 3),
@@ -116,7 +116,7 @@ mod test {
         Int8ArrayGPU,
         bitwise_shr,
         bitwise_shr_dyn,
-        vec![
+        [
             Some(0),
             Some(1),
             Some(100),
@@ -126,7 +126,7 @@ mod test {
             Some(-50),
             None
         ],
-        vec![
+        [
             Some(0),
             Some(1),
             Some(3),
@@ -136,7 +136,7 @@ mod test {
             None,
             Some(!50)
         ],
-        vec![
+        [
             Some(0),
             Some(1 >> 1),
             Some(100 >> 3),
@@ -152,9 +152,9 @@ mod test {
         test_bitwise_not_i8,
         Int8ArrayGPU,
         Int8ArrayGPU,
-        vec![0, 1, 2, 3, 4, -1, -50],
+        [0, 1, 2, 3, 4, -1, -50],
         bitwise_not,
         bitwise_not_dyn,
-        vec![!0, !1, !2, !3, !4, !-1, !-50]
+        [!0, !1, !2, !3, !4, !-1, !-50]
     );
 }

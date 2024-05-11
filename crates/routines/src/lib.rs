@@ -124,7 +124,7 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
             &self.data,
             &indexes.data,
             indexes.len as u64,
-            (indexes.len as u64 * T::ITEM_SIZE) as u64,
+            indexes.len as u64 * T::ITEM_SIZE,
             T::TAKE_SHADER,
             "take",
             pipeline,

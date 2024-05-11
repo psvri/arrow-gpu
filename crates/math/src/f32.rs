@@ -82,39 +82,31 @@ mod tests {
     use crate::*;
 
     test_unary_op_float!(
-        #[cfg_attr(
-            target_os = "windows",
-            ignore = "Not passing in CI but passes in local 🤔"
-        )]
         test_f32_abs,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         abs,
         abs_dyn,
-        vec![
+        [
             0.0f32.abs(),
             1.0f32.abs(),
             2.0f32.abs(),
             3.0f32.abs(),
-            -1.0f32.abs(),
-            -2.0f32.abs(),
-            -3.0f32.abs()
+            (-1.0f32).abs(),
+            (-2.0f32).abs(),
+            (-3.0f32).abs()
         ]
     );
 
     test_unary_op_float!(
-        #[cfg_attr(
-            target_os = "windows",
-            ignore = "Not passing in CI but passes in local 🤔"
-        )]
         test_f32_sqrt,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         sqrt,
         sqrt_dyn,
-        vec![
+        [
             0.0f32.sqrt(),
             1.0f32.sqrt(),
             2.0f32.sqrt(),
@@ -126,17 +118,13 @@ mod tests {
     );
 
     test_unary_op_float!(
-        #[cfg_attr(
-            target_os = "windows",
-            ignore = "Not passing in CI but passes in local 🤔"
-        )]
         test_f32_cbrt,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         cbrt,
         cbrt_dyn,
-        vec![
+        [
             0.0f32.cbrt(),
             1.0f32.cbrt(),
             2.0f32.cbrt(),
@@ -148,17 +136,13 @@ mod tests {
     );
 
     test_unary_op_float!(
-        #[cfg_attr(
-            target_os = "windows",
-            ignore = "Not passing in CI but passes in local 🤔"
-        )]
         test_f32_exp,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         exp,
         exp_dyn,
-        vec![
+        [
             0.0f32.exp(),
             1.0f32.exp(),
             2.0f32.exp(),
@@ -170,17 +154,13 @@ mod tests {
     );
 
     test_unary_op_float!(
-        #[cfg_attr(
-            target_os = "windows",
-            ignore = "Not passing in CI but passes in local 🤔"
-        )]
         test_f32_exp2,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         exp2,
         exp2_dyn,
-        vec![
+        [
             0.0f32.exp2(),
             1.0f32.exp2(),
             2.0f32.exp2(),
@@ -192,17 +172,13 @@ mod tests {
     );
 
     test_unary_op_float!(
-        #[cfg_attr(
-            target_os = "windows",
-            ignore = "Not passing in CI but passes in local 🤔"
-        )]
         test_f32_log,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         log,
         log_dyn,
-        vec![
+        [
             0.0f32.ln(),
             1.0f32.ln(),
             2.0f32.ln(),
@@ -214,17 +190,13 @@ mod tests {
     );
 
     test_unary_op_float!(
-        #[cfg_attr(
-            target_os = "windows",
-            ignore = "Not passing in CI but passes in local 🤔"
-        )]
         test_f32_log2,
         Float32ArrayGPU,
         Float32ArrayGPU,
-        vec![0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
+        [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0],
         log2,
         log2_dyn,
-        vec![
+        [
             0.0f32.log2(),
             1.0f32.log2(),
             2.0f32.log2(),
@@ -246,7 +218,7 @@ mod tests {
         Float32ArrayGPU,
         power,
         power_dyn,
-        vec![
+        [
             Some(1.0f32),
             Some(-1.0f32),
             Some(10.0f32),
@@ -262,7 +234,7 @@ mod tests {
             Some(f32::INFINITY),
             Some(f32::NAN),
         ],
-        vec![
+        [
             Some(0.0f32),
             Some(0.0),
             Some(0.0),
@@ -278,7 +250,7 @@ mod tests {
             Some(f32::NEG_INFINITY),
             Some(3.0),
         ],
-        vec![
+        [
             Some(1.0f32.powf(0.0)),
             // TODO fixeme gpu -1.0 ** 0.0 gives NAN instead of 1.0
             Some(f32::NAN),

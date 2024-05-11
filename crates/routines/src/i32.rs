@@ -26,7 +26,7 @@ mod test {
         Int32ArrayGPU,
         merge,
         merge_dyn,
-        vec![
+        [
             Some(0),
             Some(1),
             None,
@@ -37,7 +37,7 @@ mod test {
             None,
             Some(50)
         ],
-        vec![
+        [
             Some(1),
             Some(2),
             None,
@@ -48,7 +48,7 @@ mod test {
             Some(30),
             None
         ],
-        vec![
+        [
             Some(true),
             Some(true),
             Some(false),
@@ -59,7 +59,7 @@ mod test {
             None,
             Some(false),
         ],
-        vec![
+        [
             Some(0),
             Some(1),
             None,
@@ -78,7 +78,7 @@ mod test {
         Date32ArrayGPU,
         Date32ArrayGPU,
         merge,
-        vec![
+        [
             Some(0),
             Some(1),
             None,
@@ -89,7 +89,7 @@ mod test {
             None,
             Some(50)
         ],
-        vec![
+        [
             Some(1),
             Some(2),
             None,
@@ -100,7 +100,7 @@ mod test {
             Some(30),
             None
         ],
-        vec![
+        [
             Some(true),
             Some(true),
             Some(false),
@@ -111,7 +111,7 @@ mod test {
             None,
             Some(false),
         ],
-        vec![
+        [
             Some(0),
             Some(1),
             None,
@@ -131,9 +131,9 @@ mod test {
         Int32ArrayGPU,
         take,
         take_dyn,
-        vec![Some(0), Some(1), None, Some(3)],
-        vec![0, 1, 2, 3, 0, 1, 2, 3],
-        vec![
+        [Some(0), Some(1), None, Some(3)],
+        [0, 1, 2, 3, 0, 1, 2, 3],
+        [
             Some(0),
             Some(1),
             None,
@@ -151,11 +151,11 @@ mod test {
         Float32ArrayGPU,
         put,
         put_dyn,
-        vec![0.0, 1.0, 2.0, 3.0],
-        vec![0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0],
-        vec![0, 1, 2, 3],
-        vec![1, 3, 5, 7],
-        vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0]
+        [0.0, 1.0, 2.0, 3.0],
+        [0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0],
+        [0, 1, 2, 3],
+        [1, 3, 5, 7],
+        [0.0, 0.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0]
     );
 
     // TODO test for cases with null
@@ -164,11 +164,11 @@ mod test {
         Int32ArrayGPU,
         put,
         put_dyn,
-        vec![0, 1, 2, 3],
-        vec![0, 0, 1, 0, 2, 0, 3, 0],
-        vec![0, 1, 2, 3],
-        vec![1, 3, 5, 7],
-        vec![0, 0, 1, 1, 2, 2, 3, 3]
+        [0, 1, 2, 3],
+        [0, 0, 1, 0, 2, 0, 3, 0],
+        [0, 1, 2, 3],
+        [1, 3, 5, 7],
+        [0, 0, 1, 1, 2, 2, 3, 3]
     );
 
     // TODO test for cases with null
@@ -177,10 +177,10 @@ mod test {
         Date32ArrayGPU,
         put,
         put_dyn,
-        vec![0, 1, 2, 3],
-        vec![0, 0, 1, 0, 2, 0, 3, 0],
-        vec![0, 1, 2, 3],
-        vec![1, 3, 5, 7],
-        vec![0, 0, 1, 1, 2, 2, 3, 3]
+        [0, 1, 2, 3],
+        [0, 0, 1, 0, 2, 0, 3, 0],
+        [0, 1, 2, 3],
+        [1, 3, 5, 7],
+        [0, 0, 1, 1, 2, 2, 3, 3]
     );
 }
