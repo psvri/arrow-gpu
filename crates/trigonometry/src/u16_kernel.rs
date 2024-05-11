@@ -70,10 +70,10 @@ mod tests {
         test_u16_sinh,
         UInt16ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, 4],
+        [0, 1, 2, 3, 4],
         sinh,
         sinh_dyn,
-        vec![
+        [
             0.0f32.sinh(),
             1.0f32.sinh(),
             2.0f32.sinh(),
@@ -86,10 +86,10 @@ mod tests {
         test_u16_cos,
         UInt16ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, 4],
+        [0, 1, 2, 3, 4],
         cos,
         cos_dyn,
-        vec![
+        [
             0.0f32.cos(),
             1.0f32.cos(),
             2.0f32.cos(),
@@ -102,10 +102,10 @@ mod tests {
         test_u16_sin,
         UInt16ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, 4],
+        [0, 1, 2, 3, 4],
         sin,
         sin_dyn,
-        vec![
+        [
             0.0f32.sin(),
             1.0f32.sin(),
             2.0f32.sin(),

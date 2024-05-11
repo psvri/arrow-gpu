@@ -70,10 +70,10 @@ mod tests {
         test_i8_sinh,
         Int8ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, 2, 3, -1, -2, -3],
+        [0, 1, 2, 3, -1, -2, -3],
         sinh,
         sinh_dyn,
-        vec![
+        [
             0.0f32.sinh(),
             1.0f32.sinh(),
             2.0f32.sinh(),
@@ -89,10 +89,10 @@ mod tests {
         test_i8_cos,
         Int8ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, -1, 56, -56, i8::MIN, i8::MAX],
+        [0, 1, -1, 56, -56, i8::MIN, i8::MAX],
         cos,
         cos_dyn,
-        vec![
+        [
             0.0f32.cos(),
             1.0f32.cos(),
             (-1.0f32).cos(),
@@ -107,10 +107,10 @@ mod tests {
         test_i8_sin,
         Int8ArrayGPU,
         Float32ArrayGPU,
-        vec![0, 1, -1, 56, -56, i8::MIN, i8::MAX],
+        [0, 1, -1, 56, -56, i8::MIN, i8::MAX],
         sin,
         sin_dyn,
-        vec![
+        [
             0.0f32.sin(),
             1.0f32.sin(),
             (-1.0f32).sin(),
