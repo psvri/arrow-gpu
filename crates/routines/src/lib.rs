@@ -88,13 +88,17 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
         mask: &BooleanArrayGPU,
         pipeline: &mut ArrowComputePipeline,
     ) -> Self {
+        let dispatch_size = (self.data.size() / T::ITEM_SIZE) as u32;
+        let new_buffer_size = self.data.size();
+
         let new_buffer = pipeline.apply_ternary_function(
             &self.data,
             &other.data,
             &mask.data,
-            T::ITEM_SIZE,
+            new_buffer_size,
             T::MERGE_SHADER,
             "merge_array",
+            dispatch_size,
         );
 
         let op1 = self.null_buffer.as_ref().map(|x| x.bit_buffer.as_ref());
