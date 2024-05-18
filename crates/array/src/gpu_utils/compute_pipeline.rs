@@ -116,13 +116,14 @@ impl ArrowComputePipeline {
         operand_1: &Buffer,
         operand_2: &Buffer,
         operand_3: &Buffer,
-        item_size: u64,
+        new_buffer_size: u64,
         shader: &str,
         entry_point: &str,
+        dispatch_size: u32,
     ) -> Buffer {
         let compute_pipeline = self.device.create_compute_pipeline(shader, entry_point);
 
-        let new_values_buffer = self.device.create_empty_buffer(operand_1.size());
+        let new_values_buffer = self.device.create_empty_buffer(new_buffer_size);
 
         let bind_group_layout = compute_pipeline.get_bind_group_layout(0);
         let bind_group_array = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -148,15 +149,13 @@ impl ArrowComputePipeline {
             ],
         });
 
-        let dispatch_size = operand_1.size() / item_size;
-
         let query = self.device.compute_pass(
             &mut self.encoder,
             Some(entry_point),
             &compute_pipeline,
             &bind_group_array,
             entry_point,
-            dispatch_size.div_ceil(256) as u32,
+            dispatch_size.div_ceil(256),
         );
 
         self.queries.push(query);
