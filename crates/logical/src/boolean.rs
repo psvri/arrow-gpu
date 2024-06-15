@@ -118,7 +118,7 @@ impl LogicalContains for BooleanArrayGPU {
     }
 
     fn all(&self) -> bool {
-        const COUNT_ONE_BITS_SHADER: &'static str =
+        const COUNT_ONE_BITS_SHADER: &str =
             include_str!("../compute_shaders/u32/countbitones.wgsl");
 
         let mut pipeline = ArrowComputePipeline::new(self.get_gpu_device(), Some("all"));

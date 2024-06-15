@@ -194,7 +194,6 @@ mod tests {
         let device = Arc::new(GpuDevice::new());
         let gpu_array = Float32ArrayGPU::from_slice(
             &(0..1024 * 1024 * 10)
-                .into_iter()
                 .map(|x| x as f32)
                 .collect::<Vec<f32>>(),
             device.clone(),
