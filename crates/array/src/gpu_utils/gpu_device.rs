@@ -6,7 +6,7 @@ use log::info;
 use pollster::FutureExt;
 use wgpu::{
     util::DeviceExt, Adapter, BindGroup, BindGroupDescriptor, Buffer, ComputePipeline, Device,
-    Queue, ShaderModule,
+    MemoryHints, Queue, ShaderModule,
 };
 
 use crate::array::RustNativeType;
@@ -65,6 +65,7 @@ impl GpuDevice {
                     label: None,
                     required_features,
                     required_limits: wgpu::Limits::downlevel_defaults(),
+                    memory_hints: MemoryHints::Performance,
                 },
                 None,
             )
@@ -87,6 +88,7 @@ impl GpuDevice {
                     label: None,
                     required_features: wgpu::Features::empty(),
                     required_limits: wgpu::Limits::downlevel_defaults(),
+                    memory_hints: MemoryHints::Performance,
                 },
                 None,
             )
@@ -149,6 +151,7 @@ impl GpuDevice {
                     module: &cs_module,
                     entry_point,
                     compilation_options: Default::default(),
+                    cache: None,
                 });
             self.pipeline_cache.insert(
                 PiepelineEntry {
