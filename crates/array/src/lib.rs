@@ -4,7 +4,7 @@ pub mod kernels;
 pub mod utils;
 
 use gpu_utils::GpuDevice;
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, LazyLock};
 
 #[derive(Debug)]
 pub enum ArrowErrorGPU {
@@ -13,4 +13,4 @@ pub enum ArrowErrorGPU {
 }
 
 #[doc(hidden)]
-pub static GPU_DEVICE: OnceLock<Arc<GpuDevice>> = OnceLock::new();
+pub static GPU_DEVICE: LazyLock<Arc<GpuDevice>> = LazyLock::new(|| Arc::new(GpuDevice::new()));

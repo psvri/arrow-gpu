@@ -176,9 +176,8 @@ mod test {
         ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $input_1: expr, $input_2: expr, $mask: expr, $output: expr) => {
             #[test]
             fn $fn_name() {
-                use arrow_gpu_array::gpu_utils::GpuDevice;
                 use arrow_gpu_array::GPU_DEVICE;
-                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
+                let device = GPU_DEVICE.clone();
                 let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());
                 let mask = BooleanArrayGPU::from_optional_slice(&$mask, device.clone());
@@ -189,9 +188,8 @@ mod test {
         ($fn_name: ident, $operand1_type: ident, $operand2_type: ident, $output_type: ident, $operation: ident, $operation_dyn: ident, $input_1: expr, $input_2: expr,  $mask: expr, $output: expr) => {
             #[test]
             fn $fn_name() {
-                use arrow_gpu_array::gpu_utils::GpuDevice;
                 use arrow_gpu_array::GPU_DEVICE;
-                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
+                let device = GPU_DEVICE.clone();
                 let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_optional_slice(&$input_2, device.clone());
                 let mask = BooleanArrayGPU::from_optional_slice(&$mask, device.clone());

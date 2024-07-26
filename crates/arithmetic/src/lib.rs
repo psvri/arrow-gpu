@@ -103,11 +103,9 @@ mod test {
             #[test]
             fn $test_name() {
                 use arrow_gpu_array::{
-                    gpu_utils::GpuDevice, kernels::broadcast::Broadcast, GPU_DEVICE,
+                    kernels::broadcast::Broadcast, GPU_DEVICE,
                 };
-                let device = GPU_DEVICE
-                    .get_or_init(|| Arc::new(GpuDevice::new()))
-                    .clone();
+                let device = GPU_DEVICE.clone();
                 let array = $ty::broadcast($base, $size, device);
                 assert_eq!(array.sum().raw_values().unwrap(), vec![$output]);
             }
