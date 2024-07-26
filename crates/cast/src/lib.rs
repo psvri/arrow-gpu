@@ -189,8 +189,7 @@ mod tests {
             #[test]
             fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
-                use arrow_gpu_array::gpu_utils::*;
-                let device = GPU_DEVICE.get_or_init(|| std::sync::Arc::new(GpuDevice::new()).clone());
+                let device = GPU_DEVICE.clone();
                 let gpu_array = $input_ty::from_slice(&$input, device.clone());
                 let new_gpu_array: $output_ty =
                     <$input_ty as Cast<$output_ty>>::cast(&gpu_array);
@@ -214,8 +213,7 @@ mod tests {
             #[test]
             fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
-                use arrow_gpu_array::gpu_utils::*;
-                let device = GPU_DEVICE.get_or_init(|| std::sync::Arc::new(GpuDevice::new()).clone());
+                let device = GPU_DEVICE.clone();
                 let gpu_array = $input_ty::from_slice(&$input, device.clone());
                 let new_gpu_array: $output_ty =
                     <$input_ty as BitCast<$output_ty>>::bitcast(&gpu_array);

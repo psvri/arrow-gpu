@@ -113,7 +113,7 @@ mod tests {
                 use arrow_gpu_array::GPU_DEVICE;
                 use arrow_gpu_array::gpu_utils::GpuDevice;
                 use pollster::FutureExt;
-                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
+                let device = GPU_DEVICE.clone();
                 let gpu_array_1 = $operand_type::from_slice(&$src, device.clone());
                 let mut gpu_array_2 = $operand_type::from_slice(&$dst, device.clone());
                 let src_index = UInt32ArrayGPU::from_slice(&$src_index, device.clone());
@@ -127,8 +127,7 @@ mod tests {
             #[test]
             fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
-                use arrow_gpu_array::gpu_utils::GpuDevice;
-                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
+                let device = GPU_DEVICE.clone();
                 let gpu_array_1 = $operand_type::from_slice(&$src, device.clone());
                 let mut gpu_array_2 = $operand_type::from_slice(&$dst, device.clone());
                 let src_index = UInt32ArrayGPU::from_slice(&$src_index, device.clone());

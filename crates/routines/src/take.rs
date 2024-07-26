@@ -101,8 +101,7 @@ mod tests {
             #[test]
             fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
-                use arrow_gpu_array::gpu_utils::GpuDevice;
-                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
+                let device = GPU_DEVICE.clone();
                 let gpu_array_1 = $operand1_type::from_slice(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_slice(&$input_2, device.clone());
                 let new_gpu_array = gpu_array_1.$operation(&gpu_array_2);
@@ -114,8 +113,7 @@ mod tests {
             #[test]
             fn $fn_name() {
                 use arrow_gpu_array::GPU_DEVICE;
-                use arrow_gpu_array::gpu_utils::GpuDevice;
-                let device = GPU_DEVICE.get_or_init(|| Arc::new(GpuDevice::new()).clone());
+                let device = GPU_DEVICE.clone();
                 let gpu_array_1 = $operand1_type::from_optional_slice(&$input_1, device.clone());
                 let gpu_array_2 = $operand2_type::from_slice(&$input_2, device.clone());
                 let new_gpu_array = gpu_array_1.$operation(&gpu_array_2);
