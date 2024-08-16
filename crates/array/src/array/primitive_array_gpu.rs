@@ -143,10 +143,8 @@ pub mod test {
         ($fn_name: ident, $ty: ident, $input: expr) => {
             #[test]
             fn $fn_name() {
-                use crate::GpuDevice;
                 use crate::GPU_DEVICE;
-                let device =
-                    GPU_DEVICE.get_or_init(|| std::sync::Arc::new(GpuDevice::new()).clone());
+                let device = GPU_DEVICE.clone();
                 let length = 100;
                 let new_gpu_array = $ty::broadcast($input, length, device.clone());
                 let new_values = new_gpu_array.raw_values().unwrap();

@@ -118,7 +118,7 @@ impl LogicalContains for BooleanArrayGPU {
     }
 
     fn all(&self) -> bool {
-        const COUNT_ONE_BITS_SHADER: &'static str =
+        const COUNT_ONE_BITS_SHADER: &str =
             include_str!("../compute_shaders/u32/countbitones.wgsl");
 
         let mut pipeline = ArrowComputePipeline::new(self.get_gpu_device(), Some("all"));
@@ -259,9 +259,7 @@ mod test {
     #[test]
     fn test_any() {
         use arrow_gpu_array::GPU_DEVICE;
-        let device = GPU_DEVICE
-            .get_or_init(|| Arc::new(GpuDevice::new()))
-            .clone();
+        let device = GPU_DEVICE.clone();
 
         test_bool_reduction(
             &[true, true, false, true, false],
@@ -291,9 +289,7 @@ mod test {
     #[test]
     fn test_all() {
         use arrow_gpu_array::GPU_DEVICE;
-        let device = GPU_DEVICE
-            .get_or_init(|| Arc::new(GpuDevice::new()))
-            .clone();
+        let device = GPU_DEVICE.clone();
 
         test_bool_reduction(
             &[true, true, false, true, false],

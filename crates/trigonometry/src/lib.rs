@@ -179,10 +179,5 @@ dyn_fn!(
         Int16ArrayGPU,
         Int8ArrayGPU
     ],
-    [
-        acos_dyn,
-        acos_op_dyn,
-        acos_op,
-        Float32ArrayGPU
-    ]
+    [acos_dyn, acos_op_dyn, acos_op, Float32ArrayGPU]
 );
