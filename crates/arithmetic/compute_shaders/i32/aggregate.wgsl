@@ -18,16 +18,21 @@ fn sum(
     @builtin(workgroup_id) wg_id: vec3<u32>
 ) {
     if global_id.x >= arrayLength(&input_data) {
-        return;
+        shared_data[local_id.x] = 0;
+    } else {
+        shared_data[local_id.x] = input_data[global_id.x];
     }
-
-    shared_data[local_id.x] = input_data[global_id.x];
+    
     workgroupBarrier();
 
     for (var s = 1u; s < wg_size; s *= 2u) {
-        if (local_id.x % (2u*s) == 0) && (global_id.x + s < arrayLength(&input_data)) {
-            shared_data[local_id.x] += shared_data[local_id.x + s];
+
+        var index = 2 * s * local_id.x;
+
+        if (index < wg_size && (index + s) < wg_size) {
+            shared_data[index] += shared_data[index + s];
         }
+
         workgroupBarrier();
     }
 
