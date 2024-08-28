@@ -24,12 +24,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("u32_array_sum");
 
     for i in [1, 10] {
-        let input = vec![base_value; size * i];
+        let input_size = size * i;
 
-        let mut gpu_data = UInt32ArrayGPU::broadcast(base_value, size, device.clone());
-        let mut cpu_data = UInt32Array::from(input);
+        let mut gpu_data = UInt32ArrayGPU::broadcast(base_value, input_size, device.clone());
+        let mut cpu_data = UInt32Array::from(vec![base_value; input_size]);
 
-        group.throughput(Throughput::Bytes(size as u64));
+        group.throughput(Throughput::Bytes(input_size as u64));
 
         group.bench_function(format!("sum gpu u32 {} million", i), |b| {
             b.iter(|| bench_gpu_u32_add(black_box(&mut gpu_data)))
