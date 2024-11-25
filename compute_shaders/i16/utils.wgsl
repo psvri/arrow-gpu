@@ -4,7 +4,8 @@
 // Hence in little endian i32 it becomes cdab
 
 const MAX_I16: i32 = 0x0000ffff;
-const SHIFTED_MAX_I16: i32 = MAX_I16 << 16u;
+// TODO use bitcast<i32>(0xffff0000u) when its available in const
+const SHIFTED_MAX_I16: i32 = -65536;
 const LEFT_SIGN_EXTRACTOR: i32 = 0x00008000;
 const RIGHT_SIGN_EXTRACTOR: i32 = -0x80000000;
 
