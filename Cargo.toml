@@ -19,7 +19,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace.dependencies]
-wgpu = "24.0.0"
+wgpu = "24.0.1"
 pollster = "0.4.0"
 bytemuck = "1.19.0"
 futures-intrusive = "0.5.0"
