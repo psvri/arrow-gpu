@@ -39,7 +39,6 @@ mod test {
     use arrow_gpu_array::array::*;
 
     test_cast_op!(
-        #[cfg_attr(target_os = "linux", ignore = "Not passing in CI 🤔")]
         test_cast_f32_to_u8,
         Float32ArrayGPU,
         UInt8ArrayGPU,
