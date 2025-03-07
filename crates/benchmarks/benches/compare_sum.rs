@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use arrow::array::UInt32Array;
 use arrow::compute::kernels::aggregate::sum;
-use arrow_gpu::kernels::broadcast::Broadcast;
 use arrow_gpu::kernels::Sum;
+use arrow_gpu::kernels::broadcast::Broadcast;
 use arrow_gpu::{array::*, gpu_utils::*};
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, black_box, criterion_group, criterion_main};
 
 fn bench_cpu_u32_add(data: &mut UInt32Array) -> u32 {
     sum(data).unwrap()

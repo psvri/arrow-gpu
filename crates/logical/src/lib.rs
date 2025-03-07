@@ -64,9 +64,9 @@ pub trait Logical: ArrayUtils + Sized {
     fn bitwise_xor_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
     fn bitwise_not_op(&self, pipeline: &mut ArrowComputePipeline) -> Self;
     fn bitwise_shl_op(&self, operand: &UInt32ArrayGPU, pipeline: &mut ArrowComputePipeline)
-        -> Self;
+    -> Self;
     fn bitwise_shr_op(&self, operand: &UInt32ArrayGPU, pipeline: &mut ArrowComputePipeline)
-        -> Self;
+    -> Self;
 }
 
 pub trait LogicalContains {

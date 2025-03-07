@@ -1,6 +1,6 @@
 use crate::ArrowErrorGPU;
 
-use super::{primitive_array_gpu::*, ArrowArrayGPU};
+use super::{ArrowArrayGPU, primitive_array_gpu::*};
 
 #[derive(Default, Debug)]
 pub struct Date32Type {}

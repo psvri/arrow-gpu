@@ -1,6 +1,6 @@
 use crate::gpu_utils::*;
-use crate::kernels::broadcast::Broadcast;
 use crate::kernels::ScalarValue;
+use crate::kernels::broadcast::Broadcast;
 use crate::utils::ScalarArray;
 use bytemuck::Pod;
 use std::sync::Arc;
@@ -24,14 +24,14 @@ pub use boolean_gpu::BooleanArrayGPU;
 pub use date32_gpu::Date32ArrayGPU;
 pub use date32_gpu::Date32Type;
 pub use f32_gpu::Float32ArrayGPU;
+pub use i8_gpu::Int8ArrayGPU;
 pub use i16_gpu::Int16ArrayGPU;
 pub use i32_gpu::Int32ArrayGPU;
-pub use i8_gpu::Int8ArrayGPU;
 pub use null_bit_buffer::*;
 pub use primitive_array_gpu::PrimitiveArrayGpu;
+pub use u8_gpu::UInt8ArrayGPU;
 pub use u16_gpu::UInt16ArrayGPU;
 pub use u32_gpu::UInt32ArrayGPU;
-pub use u8_gpu::UInt8ArrayGPU;
 
 #[derive(Debug)]
 #[non_exhaustive]

@@ -103,7 +103,7 @@ impl CmpQuery {
     pub fn create_compute_pass_descriptor<'a>(
         &'a self,
         label: Option<&'a str>,
-    ) -> ComputePassDescriptor {
+    ) -> ComputePassDescriptor<'a> {
         ComputePassDescriptor {
             label,
             timestamp_writes: None,

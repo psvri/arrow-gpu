@@ -14,41 +14,6 @@ pub(crate) const U8_MERGE_SHADER: &str = concat!(
 
 use crate::Swizzle;
 
-pub fn merge_null_buffers(
-    device: &GpuDevice,
-    operand_1_null_buffer: Option<&Buffer>,
-    operand_2_null_buffer: Option<&Buffer>,
-    mask: &Buffer,
-    mask_null_buffer: Option<&Buffer>,
-) -> Option<Buffer> {
-    const SHADER: &str = include_str!("../compute_shaders/u32/merge_null_buffer.wgsl");
-
-    let merged_buffer_1 = operand_1_null_buffer.map(|op1_null_buffer| {
-        device.apply_binary_function(op1_null_buffer, mask, 4, SHADER, "merge_selected")
-    });
-
-    let merged_buffer_2 = operand_2_null_buffer.map(|op2_null_buffer| {
-        device.apply_binary_function(op2_null_buffer, mask, 4, SHADER, "merge_not_selected")
-    });
-
-    let merged_buffer = match (merged_buffer_1, merged_buffer_2) {
-        (Some(mb1), Some(mb2)) => {
-            Some(device.apply_binary_function(&mb1, &mb2, 4, SHADER, "merge_or"))
-        }
-        (None, Some(mb)) | (Some(mb), None) => Some(mb),
-        (None, None) => None,
-    };
-
-    match (merged_buffer, mask_null_buffer) {
-        (Some(mb1), Some(mb2)) => {
-            Some(device.apply_binary_function(&mb1, mb2, 4, SHADER, "merge_nulls"))
-        }
-        (None, Some(mb)) => Some(device.clone_buffer(mb)),
-        (Some(mb), None) => Some(mb),
-        (None, None) => None,
-    }
-}
-
 pub fn merge_null_buffers_op(
     operand_1_null_buffer: Option<&Buffer>,
     operand_2_null_buffer: Option<&Buffer>,

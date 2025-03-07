@@ -3,8 +3,8 @@ use std::sync::Arc;
 
 use wgpu::Buffer;
 
-use crate::kernels::broadcast::Broadcast;
 use crate::ArrowErrorGPU;
+use crate::kernels::broadcast::Broadcast;
 
 use super::{
     ArrayUtils, ArrowArrayGPU, ArrowComputePipeline, BooleanBufferBuilder, GpuDevice,
@@ -53,11 +53,8 @@ impl BooleanArrayGPU {
         let mut buffer = BooleanBufferBuilder::new_with_capacity(value.len());
 
         for (index, val) in value.iter().enumerate() {
-            match val {
-                true => {
-                    buffer.set_bit(index);
-                }
-                false => {}
+            if *val {
+                buffer.set_bit(index);
             }
         }
 
@@ -101,7 +98,7 @@ impl BooleanArrayGPU {
             Some(null_bit_buffer) => {
                 let null_values = null_bit_buffer.raw_values();
                 for (pos, val) in primitive_values.iter().enumerate() {
-                    if (null_values[pos / 8] & 1 << (pos % 8)) != 0 {
+                    if (null_values[pos / 8] & (1 << (pos % 8))) != 0 {
                         result_vec.push(Some(*val))
                     } else {
                         result_vec.push(None)

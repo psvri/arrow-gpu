@@ -1,4 +1,4 @@
-use crate::{merge::U8_MERGE_SHADER, SwizzleType};
+use crate::{SwizzleType, merge::U8_MERGE_SHADER};
 
 impl SwizzleType for i8 {
     const MERGE_SHADER: &'static str = U8_MERGE_SHADER;
