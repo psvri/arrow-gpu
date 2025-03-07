@@ -5,7 +5,7 @@ use arrow::{
     compute::kernels::numeric::add,
 };
 use arrow_gpu::{array::*, gpu_utils::*, kernels::add_dyn};
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 fn bench_cpu_f32_add(data: &mut Float32Array, value: &dyn Datum) -> ArrayRef {
     add(data, value).unwrap()

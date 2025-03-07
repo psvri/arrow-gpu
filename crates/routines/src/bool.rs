@@ -6,7 +6,7 @@ use arrow_gpu_array::{
 };
 use wgpu::Buffer;
 
-use crate::{merge_null_buffers_op, put::apply_put_op, take::apply_take_op, Swizzle};
+use crate::{Swizzle, merge_null_buffers_op, put::apply_put_op, take::apply_take_op};
 
 const MERGE_SHADER: &str = include_str!("../compute_shaders/bool/merge.wgsl");
 const PUT_SHADER: &str = include_str!("../compute_shaders/bool/put.wgsl");

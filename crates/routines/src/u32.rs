@@ -1,4 +1,4 @@
-use crate::{merge::U32_MERGE_SHADER, put::U32_PUT_SHADER, take::U32_TAKE_SHADER, SwizzleType};
+use crate::{SwizzleType, merge::U32_MERGE_SHADER, put::U32_PUT_SHADER, take::U32_TAKE_SHADER};
 
 impl SwizzleType for u32 {
     const MERGE_SHADER: &'static str = U32_MERGE_SHADER;

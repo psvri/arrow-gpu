@@ -1,6 +1,6 @@
 use crate::{
-    i32::{I32_LOGICAL_SHADER, I32_NOT_SHADER},
     LogicalType,
+    i32::{I32_LOGICAL_SHADER, I32_NOT_SHADER},
 };
 
 const I16_SHIFT_SHADER: &str = concat!(

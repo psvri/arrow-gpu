@@ -33,9 +33,9 @@ impl Cast<UInt8ArrayGPU> for Float32ArrayGPU {
 
 #[cfg(test)]
 mod test {
+    use crate::Cast;
     use crate::cast_dyn;
     use crate::tests::test_cast_op;
-    use crate::Cast;
     use arrow_gpu_array::array::*;
 
     test_cast_op!(

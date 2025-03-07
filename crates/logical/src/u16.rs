@@ -1,6 +1,6 @@
 use crate::{
-    u32::{U32_LOGICAL_SHADER, U32_NOT_SHADER},
     LogicalType,
+    u32::{U32_LOGICAL_SHADER, U32_NOT_SHADER},
 };
 
 const U16_SHIFT_SHADER: &str = concat!(

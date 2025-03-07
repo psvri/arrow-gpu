@@ -2,8 +2,8 @@ use arrow_gpu_array::array::*;
 use arrow_gpu_array::gpu_utils::*;
 use std::sync::Arc;
 
-use crate::impl_cast;
 use crate::Cast;
+use crate::impl_cast;
 
 const I16_CAST_I32_SHADER: &str = concat!(
     include_str!("../../../compute_shaders/i16/utils.wgsl"),

@@ -5,13 +5,13 @@ use hashbrown::Equivalent;
 use log::info;
 use pollster::FutureExt;
 use wgpu::{
-    util::DeviceExt, Adapter, BindGroup, BindGroupDescriptor, Buffer, ComputePipeline, Device,
-    MemoryHints, Queue, ShaderModule,
+    Adapter, BindGroup, BindGroupDescriptor, Buffer, ComputePipeline, Device, MemoryHints, Queue,
+    ShaderModule, util::DeviceExt,
 };
 
 use crate::array::RustNativeType;
 
-use super::{append_hashmap::AppendHashMap, CmpQuery};
+use super::{CmpQuery, append_hashmap::AppendHashMap};
 
 #[derive(PartialEq, Eq, Hash)]
 struct PiepelineEntry {
@@ -250,7 +250,7 @@ impl GpuDevice {
             // dropped before we unmap the buffer.
             drop(data);
             staging_buffer.unmap(); // Unmaps buffer from memory
-                                    // /println!("{:?}", result);
+            // /println!("{:?}", result);
 
             result
         } else {

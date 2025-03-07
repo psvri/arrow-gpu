@@ -1,7 +1,7 @@
-use super::{primitive_array_gpu::*, ArrowArray, ArrowArrayGPU, ArrowType, NullBitBufferGpu};
+use super::{ArrowArray, ArrowArrayGPU, ArrowType, NullBitBufferGpu, primitive_array_gpu::*};
+use crate::ArrowErrorGPU;
 use crate::gpu_utils::*;
 use crate::kernels::broadcast::Broadcast;
-use crate::ArrowErrorGPU;
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
 

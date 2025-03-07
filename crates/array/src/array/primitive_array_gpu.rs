@@ -5,8 +5,8 @@ use crate::gpu_utils::*;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use std::sync::Arc;
-use wgpu::util::align_to;
 use wgpu::Buffer;
+use wgpu::util::align_to;
 
 pub struct PrimitiveArrayGpu<T: ArrowPrimitiveType> {
     pub data: Arc<Buffer>,
@@ -82,7 +82,7 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
                     Some(null_bit_buffer) => {
                         let null_values = null_bit_buffer.raw_values();
                         for (pos, val) in primitive_values.iter().enumerate() {
-                            if (null_values[pos / 8] & 1 << (pos % 8)) == 1 << (pos % 8) {
+                            if (null_values[pos / 8] & (1 << (pos % 8))) == 1 << (pos % 8) {
                                 result_vec.push(Some(*val))
                             } else {
                                 result_vec.push(None)

@@ -72,11 +72,14 @@ macro_rules! put_op_dyn_arms {
             $((ArrowArrayGPU::$arr(op1), ArrowArrayGPU::$arr(op2)) => {
                 op1.put_op($src_indexes, op2, $dst_indexes, $pipeline).into()
             })*
+            // temporary workaround as 2024 edition gives error
+            // the trait bound `!: From<()>` is not satisfied
+            #[allow(unreachable_code)]
             (x, y) => panic!(
                 "Put Operation not supported for {:?} and {:?}",
                 x.get_dtype(),
                 y.get_dtype(),
-            ),
+            ) as (),
         }
     };
 }

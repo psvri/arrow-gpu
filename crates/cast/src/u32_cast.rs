@@ -3,16 +3,16 @@ use std::sync::Arc;
 use arrow_gpu_array::array::{ArrayUtils, Float32ArrayGPU, NullBitBufferGpu, UInt32ArrayGPU};
 use arrow_gpu_array::gpu_utils::*;
 
-use crate::{impl_bitcast, BitCast};
+use crate::{BitCast, impl_bitcast};
 
 impl_bitcast!(Float32ArrayGPU, UInt32ArrayGPU);
 
 #[cfg(test)]
 mod test {
-    use crate::bitcast_dyn;
-    use crate::tests::test_bitcast_op;
     use crate::ArrowType;
     use crate::BitCast;
+    use crate::bitcast_dyn;
+    use crate::tests::test_bitcast_op;
     use arrow_gpu_array::array::{Float32ArrayGPU, UInt32ArrayGPU};
 
     test_bitcast_op!(

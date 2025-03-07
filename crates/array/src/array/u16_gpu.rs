@@ -1,7 +1,7 @@
-use super::{primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU, ArrowArrayGPU};
+use super::{ArrowArrayGPU, primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU};
+use crate::ArrowErrorGPU;
 use crate::gpu_utils::*;
 use crate::kernels::broadcast::Broadcast;
-use crate::ArrowErrorGPU;
 use std::sync::Arc;
 
 pub type UInt16ArrayGPU = PrimitiveArrayGpu<u16>;

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use wgpu::{util::align_to, Buffer, CommandEncoder};
+use wgpu::{Buffer, CommandEncoder, util::align_to};
 
 const LOGICAL_AND_SHADER: &str = include_str!("../../../logical/compute_shaders/u32/logical.wgsl");
 
@@ -52,11 +52,11 @@ impl BooleanBufferBuilder {
     }
 
     pub fn is_set(&self, pos: usize) -> bool {
-        self.data[pos / 8] & 1 << (pos % 8) == 1 << (pos % 8)
+        self.data[pos / 8] & (1 << (pos % 8)) == 1 << (pos % 8)
     }
 
     pub fn is_set_in_slice(data: &[u8], pos: usize) -> bool {
-        data[pos / 8] & 1 << (pos % 8) == 1 << (pos % 8)
+        data[pos / 8] & (1 << (pos % 8)) == 1 << (pos % 8)
     }
 }
 

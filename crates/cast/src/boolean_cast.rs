@@ -78,9 +78,9 @@ impl Cast<Float32ArrayGPU> for BooleanArrayGPU {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::ArrowType;
     use crate::cast_dyn;
     use crate::tests::test_cast_op;
-    use crate::ArrowType;
 
     test_cast_op!(
         test_cast_boolean_to_f32,
