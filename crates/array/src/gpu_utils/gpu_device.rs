@@ -149,7 +149,7 @@ impl GpuDevice {
                     label: None,
                     layout: None,
                     module: &cs_module,
-                    entry_point,
+                    entry_point: Some(entry_point),
                     compilation_options: Default::default(),
                     cache: None,
                 });
