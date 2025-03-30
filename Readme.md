@@ -5,3 +5,6 @@
 WIP experimental GPU implmentation of apache arrow written in rust.
 
 The project is using WGPU for interacting with GPU.
+
+## Users
+[webgpupy](https://github.com/psvri/webgpupy) : Cross platform GPU accelarated NumPy 
