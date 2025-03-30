@@ -26,3 +26,7 @@ profile = [
     "arrow_gpu_routines/profile",
     "arrow_gpu_trigonometry/profile",
 ]
+
+[[example]]
+name = "simple"
+path = "./examples/simple.rs"
