@@ -6,6 +6,7 @@ const LOGICAL_AND_SHADER: &str = include_str!("../../../logical/compute_shaders/
 
 use crate::gpu_utils::*;
 
+/// Used for building bool buffers that will later be transfered to gpu
 pub struct BooleanBufferBuilder {
     pub(crate) data: Vec<u8>,
     len: usize,
@@ -86,6 +87,7 @@ mod tests {
     }
 }
 
+/// Null bit buffer of arrow array stored in GPU
 #[derive(Debug, Clone)]
 pub struct NullBitBufferGpu {
     pub bit_buffer: Arc<Buffer>,

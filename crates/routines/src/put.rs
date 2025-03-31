@@ -55,6 +55,7 @@ pub(crate) fn apply_put_op(
     query.resolve(&mut pipeline.encoder);
 }
 
+/// Put elements from src using src_indexes into dst using dst_indexes
 pub fn put_dyn(
     src: &ArrowArrayGPU,
     src_indexes: &UInt32ArrayGPU,
@@ -84,6 +85,7 @@ macro_rules! put_op_dyn_arms {
     };
 }
 
+/// Submits a command to put elements from src using src_indexes into dst using dst_indexes
 pub fn put_op_dyn(
     src: &ArrowArrayGPU,
     src_indexes: &UInt32ArrayGPU,

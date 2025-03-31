@@ -24,9 +24,8 @@ pub use merge::*;
 pub use put::{put_dyn, put_op_dyn};
 pub use take::{take_dyn, take_op_dyn};
 
+/// Trait for swizzle operations on the array
 pub trait Swizzle: ArrayUtils + Sized {
-    // Selects self incase of true else selects from other.
-    // None values in mask results in None
     fn merge(&self, other: &Self, mask: &BooleanArrayGPU) -> Self {
         let mut pipeline = ArrowComputePipeline::new(self.get_gpu_device(), None);
         let result = self.merge_op(other, mask, &mut pipeline);
@@ -34,8 +33,6 @@ pub trait Swizzle: ArrayUtils + Sized {
         result
     }
 
-    /// Take values from array by index.
-    /// None values in mask results in None
     fn take(&self, indexes: &UInt32ArrayGPU) -> Self {
         let mut pipeline = ArrowComputePipeline::new(self.get_gpu_device(), None);
         let result = self.take_op(indexes, &mut pipeline);
@@ -43,16 +40,16 @@ pub trait Swizzle: ArrayUtils + Sized {
         result
     }
 
-    /// Put values from src array to dst array.
-    /// None values in mask results in None
     fn put(&self, src_indexes: &UInt32ArrayGPU, dst: &mut Self, dst_indexes: &UInt32ArrayGPU) {
         let mut pipeline = ArrowComputePipeline::new(self.get_gpu_device(), None);
         self.put_op(src_indexes, dst, dst_indexes, &mut pipeline);
         pipeline.finish();
     }
 
-    // Selects self incase of true else selects from other.
-    // None values in mask results in None
+    /// Creates a new array using the given mask.
+    /// Elements from self are selected when the corresponding bit in the mask is set
+    /// else elements are taken from other.
+    /// None values in mask results in None
     fn merge_op(
         &self,
         other: &Self,
@@ -60,12 +57,11 @@ pub trait Swizzle: ArrayUtils + Sized {
         pipeline: &mut ArrowComputePipeline,
     ) -> Self;
 
-    /// Take values from array by index.
-    /// None values in mask results in None
+    /// Creates a new array by taking elements from self using the indexes
     fn take_op(&self, indexes: &UInt32ArrayGPU, pipeline: &mut ArrowComputePipeline) -> Self;
 
-    /// Put values from src array to dst array.
-    /// None values in mask results in None
+    /// Put elements from self using src_indexes
+    /// into dst using dst_indexes
     fn put_op(
         &self,
         src_indexes: &UInt32ArrayGPU,
@@ -75,10 +71,11 @@ pub trait Swizzle: ArrayUtils + Sized {
     );
 }
 
+/// Helper trait for Arrow arrays that support swizzle operation
 pub trait SwizzleType {
     const MERGE_SHADER: &'static str;
-    const TAKE_SHADER: &'static str = todo!();
-    const PUT_SHADER: &'static str = todo!();
+    const TAKE_SHADER: &'static str;
+    const PUT_SHADER: &'static str;
 }
 
 impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {

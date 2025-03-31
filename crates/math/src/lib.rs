@@ -33,16 +33,19 @@ macro_rules! default_impl {
     };
 }
 
-pub trait MathUnaryPass: ArrayUtils {
+/// Trait for unary operations on each element of the array
+pub trait MathUnary: ArrayUtils {
     type OutputType;
 
     fn abs(&self) -> Self::OutputType {
         default_impl!(self, abs_op);
     }
 
+    /// Compute abs(x) for each x in array
     fn abs_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
 }
 
+/// Helper trait for Arrow arrays that support unary math operation
 pub trait MathUnaryType {
     type OutputType;
     const SHADER: &'static str;
@@ -56,16 +59,19 @@ pub trait MathUnaryType {
     ) -> Self::OutputType;
 }
 
-pub trait MathBinaryPass: ArrayUtils + Sized {
+/// Trait for binary operations on each pair of elements on the array
+pub trait MathBinary: ArrayUtils + Sized {
     type OutputType;
 
     fn power(&self, other: &Self) -> Self::OutputType {
         default_impl!(self, other, power_op);
     }
 
+    /// Compute x ^ y for each pair (x, y) in zip(self, other)
     fn power_op(&self, other: &Self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
 }
 
+/// Helper trait for Arrow arrays that support binary math operation
 pub trait MathBinaryType {
     type OutputType;
     const SHADER: &'static str;
@@ -79,6 +85,7 @@ pub trait MathBinaryType {
     ) -> Self::OutputType;
 }
 
+/// Trait for unary float operations on each element of the array
 pub trait FloatMathUnary: ArrayUtils {
     type OutputType;
     fn sqrt(&self) -> Self::OutputType {
@@ -100,14 +107,21 @@ pub trait FloatMathUnary: ArrayUtils {
         default_impl!(self, log2_op);
     }
 
+    /// Compute square_root(x) for each x in array
     fn sqrt_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+    /// Compute cube_root(x) for each x in array
     fn cbrt_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+    /// Compute e^x for each x in array
     fn exp_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+    /// Compute 2^x for each x in array
     fn exp2_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+    /// Compute log(x) for each x in array
     fn log_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+    /// Compute log_to_base_2(x) for each x in array
     fn log2_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
 }
 
+/// Helper trait for Arrow arrays that support unary float math operation
 pub trait FloatMathUnaryType {
     type OutputType;
     const SHADER: &'static str;
@@ -178,7 +192,7 @@ macro_rules! apply_function_op {
     };
 }
 
-impl<T: MathUnaryType + ArrowPrimitiveType> MathUnaryPass for PrimitiveArrayGpu<T> {
+impl<T: MathUnaryType + ArrowPrimitiveType> MathUnary for PrimitiveArrayGpu<T> {
     type OutputType = T::OutputType;
 
     fn abs_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
@@ -186,7 +200,7 @@ impl<T: MathUnaryType + ArrowPrimitiveType> MathUnaryPass for PrimitiveArrayGpu<
     }
 }
 
-impl<T: MathBinaryType + ArrowPrimitiveType> MathBinaryPass for PrimitiveArrayGpu<T> {
+impl<T: MathBinaryType + ArrowPrimitiveType> MathBinary for PrimitiveArrayGpu<T> {
     type OutputType = T::OutputType;
 
     fn power_op(&self, other: &Self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
@@ -223,8 +237,9 @@ impl<T: FloatMathUnaryType + ArrowPrimitiveType> FloatMathUnary for PrimitiveArr
 }
 
 macro_rules! dyn_unary_fn {
-    ($([$dyn: ident, $dyn_op: ident, $array_op: ident, $($arr:ident),* ]),*) => {
+    ($([$dyn: ident, $doc: expr, $dyn_op: ident, $array_op: ident, $($arr:ident),* ]),*) => {
         $(
+            #[doc=$doc]
             pub fn $dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
                 let mut pipeline = ArrowComputePipeline::new(data.get_gpu_device(), None);
                 let result = $dyn_op(data, &mut pipeline);
@@ -232,6 +247,7 @@ macro_rules! dyn_unary_fn {
                 result
             }
 
+            #[doc=concat!("Submits a command to the pipeline to ", $doc)]
             pub fn $dyn_op(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
                 match data {
                     $(ArrowArrayGPU::$arr(arr_1) => arr_1.$array_op(pipeline).into(),)*
@@ -243,18 +259,62 @@ macro_rules! dyn_unary_fn {
 }
 
 dyn_unary_fn!(
-    [abs_dyn, abs_op_dyn, abs_op, Float32ArrayGPU, Int32ArrayGPU],
-    [sqrt_dyn, sqrt_op_dyn, sqrt_op, Float32ArrayGPU],
-    [cbrt_dyn, cbrt_op_dyn, cbrt_op, Float32ArrayGPU],
-    [exp_dyn, exp_op_dyn, exp_op, Float32ArrayGPU],
-    [exp2_dyn, exp2_op_dyn, exp2_op, Float32ArrayGPU],
-    [log_dyn, log_op_dyn, log_op, Float32ArrayGPU],
-    [log2_dyn, log2_op_dyn, log2_op, Float32ArrayGPU]
+    [
+        abs_dyn,
+        "Compute abs(x) for each x in array",
+        abs_op_dyn,
+        abs_op,
+        Float32ArrayGPU,
+        Int32ArrayGPU
+    ],
+    [
+        sqrt_dyn,
+        "Compute square_root(x) for each x in array",
+        sqrt_op_dyn,
+        sqrt_op,
+        Float32ArrayGPU
+    ],
+    [
+        cbrt_dyn,
+        "Compute cube_root(x) for each x in array",
+        cbrt_op_dyn,
+        cbrt_op,
+        Float32ArrayGPU
+    ],
+    [
+        exp_dyn,
+        "Compute e^x for each x in array",
+        exp_op_dyn,
+        exp_op,
+        Float32ArrayGPU
+    ],
+    [
+        exp2_dyn,
+        "Compute 2^x for each x in array",
+        exp2_op_dyn,
+        exp2_op,
+        Float32ArrayGPU
+    ],
+    [
+        log_dyn,
+        "Compute log(x) for each x in array",
+        log_op_dyn,
+        log_op,
+        Float32ArrayGPU
+    ],
+    [
+        log2_dyn,
+        "Compute log_to_base_2(x) for each x in array",
+        log2_op_dyn,
+        log2_op,
+        Float32ArrayGPU
+    ]
 );
 
 macro_rules! dyn_binary_fn {
-    ($([$dyn: ident, $dyn_op: ident, $array_op: ident, $($arr:ident),* ]),*) => {
+    ($([$dyn: ident, $doc: expr, $dyn_op: ident, $array_op: ident, $($arr:ident),* ]),*) => {
         $(
+            #[doc=$doc]
             pub fn $dyn(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU) -> ArrowArrayGPU {
                 let mut pipeline = ArrowComputePipeline::new(input1.get_gpu_device(), None);
                 let result = $dyn_op(input1, input2, &mut pipeline);
@@ -262,6 +322,7 @@ macro_rules! dyn_binary_fn {
                 result
             }
 
+            #[doc=concat!("Submits a command to the pipeline to ", $doc)]
             pub fn $dyn_op(input1: &ArrowArrayGPU, input2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
                 match (input1, input2) {
                     $((ArrowArrayGPU::$arr(arr_1), ArrowArrayGPU::$arr(arr_2)) => arr_1.$array_op(arr_2, pipeline).into(),)+
@@ -279,6 +340,7 @@ macro_rules! dyn_binary_fn {
 
 dyn_binary_fn!([
     power_dyn,
+    "Compute x ^ y for each pair (x, y) in zip(input1, input2)",
     power_op_dyn,
     power_op,
     Int32ArrayGPU,

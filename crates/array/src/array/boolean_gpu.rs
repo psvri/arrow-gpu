@@ -11,6 +11,7 @@ use super::{
     NullBitBufferGpu,
 };
 
+/// bool arrow array in gpu
 pub struct BooleanArrayGPU {
     pub data: Arc<Buffer>,
     pub gpu_device: Arc<GpuDevice>,

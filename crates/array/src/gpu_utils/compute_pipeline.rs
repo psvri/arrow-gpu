@@ -4,6 +4,7 @@ use wgpu::{Buffer, CommandEncoder};
 
 use super::{CmpQuery, GpuDevice};
 
+/// Creates a compute pipeline for Arrow array buffers to be sent to the GPU.  
 pub struct ArrowComputePipeline {
     pub device: Arc<GpuDevice>,
     pub queries: Vec<CmpQuery>,
@@ -254,6 +255,7 @@ impl ArrowComputePipeline {
         new_values_buffer
     }
 
+    /// Submit the pipeline to the GPU
     pub fn finish(self) {
         let _submision_index = self.device.queue.submit(Some(self.encoder.finish()));
 

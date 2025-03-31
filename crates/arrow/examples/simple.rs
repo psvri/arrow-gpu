@@ -41,7 +41,7 @@ pub fn run_basic_add() {
 }
 
 /// Each compute kernel can take a compute pipeline,  
-/// allowing multiple operations to be executed on the GPU in a single compute pass.
+/// allowing multiple operations to be executed on the GPU in a single command.
 pub fn run_compute_pipeline_ops() {
     let device = Arc::new(GpuDevice::new());
 

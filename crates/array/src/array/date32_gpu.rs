@@ -2,9 +2,11 @@ use crate::ArrowErrorGPU;
 
 use super::{ArrowArrayGPU, primitive_array_gpu::*};
 
+/// Struct to indicate date32
 #[derive(Default, Debug)]
 pub struct Date32Type {}
 
+/// Date32 arrow array in gpu
 pub type Date32ArrayGPU = PrimitiveArrayGpu<Date32Type>;
 
 impl From<Date32ArrayGPU> for ArrowArrayGPU {

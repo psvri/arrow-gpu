@@ -4,6 +4,7 @@ use crate::gpu_utils::*;
 use crate::kernels::broadcast::Broadcast;
 use std::sync::Arc;
 
+/// Int16 arrow array in gpu
 pub type Int16ArrayGPU = PrimitiveArrayGpu<i16>;
 
 impl Broadcast<i16> for Int16ArrayGPU {

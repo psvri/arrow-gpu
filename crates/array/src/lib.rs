@@ -6,6 +6,7 @@ pub mod utils;
 use gpu_utils::GpuDevice;
 use std::sync::{Arc, LazyLock};
 
+/// Enum of errors
 #[derive(Debug)]
 pub enum ArrowErrorGPU {
     OperationNotSupported(String),

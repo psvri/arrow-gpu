@@ -6,6 +6,7 @@ use crate::kernels::broadcast::Broadcast;
 use std::{any::Any, sync::Arc};
 use wgpu::Buffer;
 
+/// UInt32 arrow array in gpu
 pub type UInt32ArrayGPU = PrimitiveArrayGpu<u32>;
 
 pub const U32_BROADCAST_SHADER: &str = include_str!("../../compute_shaders/u32/broadcast.wgsl");

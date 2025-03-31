@@ -33,6 +33,7 @@ pub use u8_gpu::UInt8ArrayGPU;
 pub use u16_gpu::UInt16ArrayGPU;
 pub use u32_gpu::UInt32ArrayGPU;
 
+/// Enum of apache arrow datatypes
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum ArrowType {
@@ -47,6 +48,7 @@ pub enum ArrowType {
     Date32Type,
 }
 
+/// Trait expressing a Rust type that has the same in-memory representation as Arrow.
 pub trait RustNativeType: Pod + Debug + Default {}
 
 impl RustNativeType for i32 {}
@@ -57,6 +59,7 @@ impl RustNativeType for u32 {}
 impl RustNativeType for u16 {}
 impl RustNativeType for u8 {}
 
+/// Helper trait for types backed by primitive values
 pub trait ArrowPrimitiveType: Send + Sync {
     type NativeType: RustNativeType;
     const ITEM_SIZE: u64;
@@ -89,10 +92,12 @@ pub(crate) trait ArrowArray: Any + Sync + Send + Debug {
     fn get_null_bit_buffer(&self) -> Option<&NullBitBufferGpu>;
 }
 
+/// Trait for utility functions implemented by all gpu arrow array
 pub trait ArrayUtils {
     fn get_gpu_device(&self) -> Arc<GpuDevice>;
 }
 
+/// Enum of apache arrow array
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum ArrowArrayGPU {
@@ -179,6 +184,7 @@ impl ArrowArrayGPU {
     }
 }
 
+/// Broadcast a single scalar value across the entire array of length `len`
 pub fn broadcast_dyn(value: ScalarValue, len: usize, device: Arc<GpuDevice>) -> ArrowArrayGPU {
     match value {
         ScalarValue::F32(x) => Float32ArrayGPU::broadcast(x, len, device).into(),
@@ -192,6 +198,8 @@ pub fn broadcast_dyn(value: ScalarValue, len: usize, device: Arc<GpuDevice>) -> 
     }
 }
 
+/// Adds a command to the pipeline to
+/// broadcast a single scalar value across the entire array of length `len`
 pub fn broadcast_op_dyn(
     value: ScalarValue,
     len: usize,
