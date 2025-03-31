@@ -3,10 +3,7 @@ use crate::{
     u32::{U32_LOGICAL_SHADER, U32_NOT_SHADER},
 };
 
-const U8_SHIFT_SHADER: &str = concat!(
-    include_str!("../../../compute_shaders/u8/utils.wgsl"),
-    include_str!("../compute_shaders/u8/shift.wgsl")
-);
+const U8_SHIFT_SHADER: &str = include_str!("../compute_shaders/u8/shift.wgsl");
 
 impl LogicalType for u8 {
     const SHADER: &'static str = U32_LOGICAL_SHADER;

@@ -13,21 +13,33 @@ var<storage, read_write> new_values: array<u32>;
 @compute
 @workgroup_size(256)
 fn bitwise_shl(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let index_pos = (global_id.x * 4u);
-    let left_byte = get_left_byte(left_values[global_id.x]) << right_values[index_pos];
-    let mid_left_byte = get_mid_left_byte(left_values[global_id.x]) << right_values[index_pos + 1u];
-    let mid_right_byte = get_mid_right_byte(left_values[global_id.x]) << right_values[index_pos + 2u];
-    let right_byte = get_right_byte(left_values[global_id.x]) << right_values[index_pos + 3u];
-    new_values[global_id.x] = (left_byte & LEFT_EXTRACTOR) | ((mid_left_byte & LEFT_EXTRACTOR) << 8u) | ((mid_right_byte & LEFT_EXTRACTOR) << 16u) | ((right_byte & LEFT_EXTRACTOR) << 24u);
+    if global_id.x < arrayLength(&new_values) {
+        let lhs = unpack4xU8(left_values[global_id.x]);
+        let index_pos = (global_id.x * 4u);
+        let rhs = vec4(
+            right_values[index_pos], 
+            right_values[index_pos + 1], 
+            right_values[index_pos + 2], 
+            right_values[index_pos + 3]
+        );
+
+        new_values[global_id.x] = pack4xU8(lhs << rhs);
+    }
 }
 
 @compute
 @workgroup_size(256)
 fn bitwise_shr(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let index_pos = (global_id.x * 4u);
-    let left_byte = get_left_byte(left_values[global_id.x]) >> right_values[index_pos];
-    let mid_left_byte = get_mid_left_byte(left_values[global_id.x]) >> right_values[index_pos + 1u];
-    let mid_right_byte = get_mid_right_byte(left_values[global_id.x]) >> right_values[index_pos + 2u];
-    let right_byte = get_right_byte(left_values[global_id.x]) >> right_values[index_pos + 3u];
-    new_values[global_id.x] = (left_byte & LEFT_EXTRACTOR) | ((mid_left_byte & LEFT_EXTRACTOR) << 8u) | ((mid_right_byte & LEFT_EXTRACTOR) << 16u) | ((right_byte & LEFT_EXTRACTOR) << 24u);
+    if global_id.x < arrayLength(&new_values) {
+        let lhs = unpack4xU8(left_values[global_id.x]);
+        let index_pos = (global_id.x * 4u);
+        let rhs = vec4(
+            right_values[index_pos], 
+            right_values[index_pos + 1], 
+            right_values[index_pos + 2], 
+            right_values[index_pos + 3]
+        );
+
+        new_values[global_id.x] = pack4xU8(lhs >> rhs);
+    }
 }
