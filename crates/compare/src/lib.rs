@@ -172,7 +172,8 @@ impl<T: CompareType + ArrowPrimitiveType> MinMax for PrimitiveArrayGpu<T> {
 }
 
 macro_rules! dyn_fn {
-    ($function:ident, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+    ($function:ident, $doc: expr, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+        #[doc=$doc]
         pub fn $function(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> BooleanArrayGPU {
             let mut pipeline = ArrowComputePipeline::new(data_1.get_gpu_device(), None);
             let result = $function_op(data_1, data_2, &mut pipeline);
@@ -180,6 +181,7 @@ macro_rules! dyn_fn {
             result
         }
 
+        #[doc=concat!("Submits a command to the pipeline to ", $doc)]
         pub fn $function_op(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> BooleanArrayGPU {
             match (data_1, data_2) {
                 $((ArrowArrayGPU::$y(arr_1), ArrowArrayGPU::$y(arr_2)) => arr_1.$op_2(arr_2, pipeline).into(),)+
@@ -196,6 +198,7 @@ macro_rules! dyn_fn {
 
 dyn_fn!(
     gt_dyn,
+    "Construct bool array from computing x > y for each pair (x, y) in zip(data_1, data_2)",
     gt,
     gt_op_dyn,
     gt_op,
@@ -211,6 +214,7 @@ dyn_fn!(
 
 dyn_fn!(
     gteq_dyn,
+    "Construct bool array from computing x >= y for each pair (x, y) in zip(data_1, data_2)",
     gteq,
     gteq_op_dyn,
     gteq_op,
@@ -226,6 +230,7 @@ dyn_fn!(
 
 dyn_fn!(
     lt_dyn,
+    "Construct bool array from computing x < y for each pair (x, y) in zip(data_1, data_2)",
     lt,
     lt_op_dyn,
     lt_op,
@@ -241,6 +246,7 @@ dyn_fn!(
 
 dyn_fn!(
     lteq_dyn,
+    "Construct bool array from computing x <= y for each pair (x, y) in zip(data_1, data_2)",
     lteq,
     lteq_op_dyn,
     lteq_op,
@@ -256,6 +262,7 @@ dyn_fn!(
 
 dyn_fn!(
     eq_dyn,
+    "Construct bool array from computing x == y for each pair (x, y) in zip(data_1, data_2)",
     eq,
     eq_op_dyn,
     eq_op,
@@ -270,7 +277,8 @@ dyn_fn!(
 );
 
 macro_rules! dyn_minmax {
-    ($function:ident, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+    ($function:ident, $doc: expr, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+        #[doc=$doc]
         pub fn $function(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
             let mut pipeline = ArrowComputePipeline::new(data_1.get_gpu_device(), None);
             let result = $function_op(data_1, data_2, &mut pipeline);
@@ -278,6 +286,7 @@ macro_rules! dyn_minmax {
             result
         }
 
+        #[doc=concat!("Submits a command to the pipeline to ", $doc)]
         pub fn $function_op(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
             match (data_1, data_2) {
                 $((ArrowArrayGPU::$y(arr_1), ArrowArrayGPU::$y(arr_2)) => arr_1.$op_2(arr_2, pipeline).into(),)+
@@ -294,6 +303,7 @@ macro_rules! dyn_minmax {
 
 dyn_minmax!(
     max_dyn,
+    "Compute max(x, y) for each pair (x, y) in zip(lhs, rhs)",
     max,
     max_op_dyn,
     max_op,
@@ -309,6 +319,7 @@ dyn_minmax!(
 
 dyn_minmax!(
     min_dyn,
+    "Compute min(x, y) for each pair (x, y) in zip(lhs, rhs)",
     min,
     min_op_dyn,
     min_op,

@@ -109,7 +109,8 @@ macro_rules! impl_bitcast {
 pub(crate) use impl_bitcast;
 
 macro_rules! dyn_cast {
-    ($function:ident, $function_op:ident, $( [$from:ident, $into_ty:ident, $into: ident] ),*) => (
+    ($function:ident, $doc: expr, $function_op:ident, $( [$from:ident, $into_ty:ident, $into: ident] ),*) => (
+        #[doc=$doc]
         pub fn $function(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
             let mut pipeline = ArrowComputePipeline::new(from.get_gpu_device(), None);
             let result = $function_op(from, into, &mut pipeline);
@@ -117,6 +118,7 @@ macro_rules! dyn_cast {
             result
         }
 
+        #[doc=concat!("Submits a command to the pipeline to ", $doc)]
         pub fn $function_op(from: &ArrowArrayGPU, into: &ArrowType, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
             match (from, into) {
                 $((ArrowArrayGPU::$from(x), ArrowType::$into_ty) => Cast::<$into>::cast_op(x, pipeline).into(),)+
@@ -132,6 +134,7 @@ macro_rules! dyn_cast {
 
 dyn_cast!(
     cast_dyn,
+    "Cast x as `T` for each x in array",
     cast_op_dyn,
     [Int8ArrayGPU, UInt8Type, UInt8ArrayGPU],
     [Int8ArrayGPU, UInt16Type, UInt16ArrayGPU],
@@ -158,7 +161,8 @@ dyn_cast!(
 );
 
 macro_rules! dyn_bitcast {
-    ($function:ident, $function_op:ident, $( [$from:ident, $into_ty:ident, $into: ident] ),*) => (
+    ($function:ident, $doc: expr, $function_op:ident, $( [$from:ident, $into_ty:ident, $into: ident] ),*) => (
+        #[doc=$doc]
         pub fn $function(from: &ArrowArrayGPU, into: &ArrowType) -> ArrowArrayGPU {
             let mut pipeline = ArrowComputePipeline::new(from.get_gpu_device(), None);
             let result = $function_op(from, into, &mut pipeline);
@@ -166,6 +170,7 @@ macro_rules! dyn_bitcast {
             result
         }
 
+        #[doc=concat!("Submits a command to the pipeline to ", $doc)]
         pub fn $function_op(from: &ArrowArrayGPU, into: &ArrowType, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
             match (from, into) {
                 $((ArrowArrayGPU::$from(x), ArrowType::$into_ty) => BitCast::<$into>::bitcast_op(x, pipeline).into(),)+
@@ -181,6 +186,7 @@ macro_rules! dyn_bitcast {
 
 dyn_bitcast!(
     bitcast_dyn,
+    "Reinterpret x as `T` for each x in array",
     bitcast_op_dyn,
     [UInt32ArrayGPU, Float32Type, Float32ArrayGPU]
 );

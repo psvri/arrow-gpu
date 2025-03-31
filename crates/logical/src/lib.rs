@@ -61,18 +61,18 @@ pub trait Logical: ArrayUtils + Sized {
         default_impl!(self, operand, bitwise_shr_op);
     }
 
-    /// For each pair (x, y) in zip(self, operand) compute x & y
+    /// Compute x & y for each pair (x, y) in zip(self, operand)
     fn bitwise_and_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
-    /// For each pair (x, y) in zip(self, operand) compute x | y
+    /// Compute x | y for each pair (x, y) in zip(self, operand)
     fn bitwise_or_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
-    /// For each pair (x, y) in zip(self, operand) compute x ^ y
+    /// Compute x ^ y for each pair (x, y) in zip(self, operand)
     fn bitwise_xor_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
-    /// For each element x in the array computes !x
+    /// Compute !x for each x in array
     fn bitwise_not_op(&self, pipeline: &mut ArrowComputePipeline) -> Self;
-    /// For each pair (x, y) in zip(self, operand) compute x << y
+    /// Compute x << y for each pair (x, y) in zip(self, operand)
     fn bitwise_shl_op(&self, operand: &UInt32ArrayGPU, pipeline: &mut ArrowComputePipeline)
     -> Self;
-    /// For each pair (x, y) in zip(self, operand) compute x >> y
+    /// Compute x >> y for each pair (x, y) in zip(self, operand)
     fn bitwise_shr_op(&self, operand: &UInt32ArrayGPU, pipeline: &mut ArrowComputePipeline)
     -> Self;
 }
@@ -187,7 +187,8 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
 }
 
 macro_rules! dyn_fn {
-    ($function:ident, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+    ($function:ident, $doc: expr, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+        #[doc=$doc]
         pub fn $function(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
             let mut pipeline = ArrowComputePipeline::new(data_1.get_gpu_device(), None);
             let result = $function_op(data_1, data_2, &mut pipeline);
@@ -195,6 +196,7 @@ macro_rules! dyn_fn {
             result
         }
 
+        #[doc=concat!("Submits a command to the pipeline to ", $doc)]
         pub fn $function_op(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
             match (data_1, data_2) {
                 $((ArrowArrayGPU::$y(arr_1), ArrowArrayGPU::$y(arr_2)) => arr_1.$op_2(arr_2, pipeline).into(),)+
@@ -211,6 +213,7 @@ macro_rules! dyn_fn {
 
 dyn_fn!(
     bitwise_and_dyn,
+    "Compute x & y for each pair (x, y) in zip(data_1, data_2)",
     bitwise_and,
     bitwise_and_op_dyn,
     bitwise_and_op,
@@ -225,6 +228,7 @@ dyn_fn!(
 
 dyn_fn!(
     bitwise_or_dyn,
+    "Compute x | y for each pair (x, y) in zip(data_1, data_2)",
     bitwise_or,
     bitwise_or_op_dyn,
     bitwise_or_op,
@@ -239,6 +243,7 @@ dyn_fn!(
 
 dyn_fn!(
     bitwise_xor_dyn,
+    "Compute x ^ y for each pair (x, y) in zip(data_1, data_2)",
     bitwise_xor,
     bitwise_xor_op_dyn,
     bitwise_xor_op,
@@ -252,7 +257,8 @@ dyn_fn!(
 );
 
 macro_rules! dyn_fn_sh {
-    ($function:ident, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+    ($function:ident, $doc: expr, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+        #[doc=$doc]
         pub fn $function(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
             let mut pipeline = ArrowComputePipeline::new(data_1.get_gpu_device(), None);
             let result = $function_op(data_1, data_2, &mut pipeline);
@@ -260,6 +266,7 @@ macro_rules! dyn_fn_sh {
             result
         }
 
+        #[doc=concat!("Submits a command to the pipeline to ", $doc)]
         pub fn $function_op(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
             match (data_1, data_2) {
                 $((ArrowArrayGPU::$y(arr_1), ArrowArrayGPU::UInt32ArrayGPU(arr_2)) => arr_1.$op_2(arr_2, pipeline).into(),)+
@@ -276,6 +283,7 @@ macro_rules! dyn_fn_sh {
 
 dyn_fn_sh!(
     bitwise_shl_dyn,
+    "Compute x << y for each pair (x, y) in zip(data_1, data_2)",
     bitwise_shl,
     bitwise_shl_op_dyn,
     bitwise_shl_op,
@@ -289,6 +297,7 @@ dyn_fn_sh!(
 
 dyn_fn_sh!(
     bitwise_shr_dyn,
+    "Compute x >> y for each pair (x, y) in zip(data_1, data_2)",
     bitwise_shr,
     bitwise_shr_op_dyn,
     bitwise_shr_op,
@@ -301,7 +310,8 @@ dyn_fn_sh!(
 );
 
 macro_rules! dyn_not {
-    ($function:ident, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+    ($function:ident, $doc: expr, $op_1:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*) => (
+        #[doc=$doc]
         pub fn $function(data_1: &ArrowArrayGPU) -> ArrowArrayGPU {
             let mut pipeline = ArrowComputePipeline::new(data_1.get_gpu_device(), None);
             let result = $function_op(data_1, &mut pipeline);
@@ -309,6 +319,7 @@ macro_rules! dyn_not {
             result
         }
 
+        #[doc=concat!("Submits a command to the pipeline to ", $doc)]
         pub fn $function_op(data_1: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
             match (data_1) {
                 $(ArrowArrayGPU::$y(arr_1) => arr_1.$op_2(pipeline).into(),)+
@@ -324,6 +335,7 @@ macro_rules! dyn_not {
 
 dyn_not!(
     bitwise_not_dyn,
+    "Compute !x for each x in array",
     bitwise_not,
     bitwise_not_op_dyn,
     bitwise_not_op,

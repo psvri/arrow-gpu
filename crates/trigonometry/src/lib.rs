@@ -26,7 +26,7 @@ pub trait Hyperbolic: ArrayUtils {
         default_impl!(self, sinh_op);
     }
 
-    /// For each element x in the array computes sinh(x)
+    /// Compute sinh(x) for each x in array
     fn sinh_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
@@ -59,11 +59,11 @@ pub trait Trigonometric: ArrayUtils {
         default_impl!(self, acos_op);
     }
 
-    /// For each element x in the array computes cos(x)
+    /// Compute cos(x) for each x in array
     fn cos_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output;
-    /// For each element x in the array computes sin(x)
+    /// Compute sin(x) for each x in array
     fn sin_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output;
-    /// For each element x in the array computes acos(x)
+    /// Compute acos(x) for each x in array
     fn acos_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
@@ -137,8 +137,9 @@ impl<T: TrigonometricType + ArrowPrimitiveType> Trigonometric for PrimitiveArray
 }
 
 macro_rules! dyn_fn {
-    ($([$dyn: ident, $dyn_op: ident, $array_op: ident, $($arr:ident),* ]),*) => {
+    ($([$dyn: ident, $doc: expr, $dyn_op: ident, $array_op: ident, $($arr:ident),* ]),*) => {
         $(
+            #[doc=$doc]
             pub fn $dyn(data: &ArrowArrayGPU) -> ArrowArrayGPU {
                 let mut pipeline = ArrowComputePipeline::new(data.get_gpu_device(), None);
                 let result = $dyn_op(data, &mut pipeline);
@@ -146,6 +147,7 @@ macro_rules! dyn_fn {
                 result
             }
 
+            #[doc=concat!("Submits a command to the pipeline to ", $doc)]
             pub fn $dyn_op(data: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
                 match data {
                     $(ArrowArrayGPU::$arr(arr_1) => arr_1.$array_op(pipeline).into(),)*
@@ -159,6 +161,7 @@ macro_rules! dyn_fn {
 dyn_fn!(
     [
         sinh_dyn,
+        "Compute sinh(x) for each x in array",
         sinh_op_dyn,
         sinh_op,
         Float32ArrayGPU,
@@ -169,6 +172,7 @@ dyn_fn!(
     ],
     [
         cos_dyn,
+        "Compute cos(x) for each x in array",
         cos_op_dyn,
         cos_op,
         Float32ArrayGPU,
@@ -179,6 +183,7 @@ dyn_fn!(
     ],
     [
         sin_dyn,
+        "Compute sin(x) for each x in array",
         sin_op_dyn,
         sin_op,
         Float32ArrayGPU,
@@ -187,5 +192,11 @@ dyn_fn!(
         Int16ArrayGPU,
         Int8ArrayGPU
     ],
-    [acos_dyn, acos_op_dyn, acos_op, Float32ArrayGPU]
+    [
+        acos_dyn,
+        "Compute acos(x) for each x in array",
+        acos_op_dyn,
+        acos_op,
+        Float32ArrayGPU
+    ]
 );

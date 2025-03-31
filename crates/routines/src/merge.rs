@@ -85,6 +85,10 @@ pub fn merge_null_buffers_op(
     }
 }
 
+/// Creates a new array using the given mask.
+/// Elements from operand_1 are selected when the corresponding bit in the mask is set
+/// else elements are taken from operand_2.
+/// None values in mask results in None
 pub fn merge_dyn(
     operand_1: &ArrowArrayGPU,
     operand_2: &ArrowArrayGPU,
@@ -111,6 +115,10 @@ macro_rules! merge_op_dyn_arms {
     };
 }
 
+/// Submits a command to creates a new array using the given mask.
+/// Elements from operand_1 are selected when the corresponding bit in the mask is set
+/// else elements are taken from operand_2.
+/// None values in mask results in None
 pub fn merge_op_dyn(
     operand_1: &ArrowArrayGPU,
     operand_2: &ArrowArrayGPU,

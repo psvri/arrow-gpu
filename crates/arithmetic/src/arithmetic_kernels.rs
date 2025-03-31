@@ -75,7 +75,8 @@ pub trait ArrowScalarRem<Rhs>: ArrayUtils {
 }
 
 macro_rules! dyn_fn {
-    ($function:ident, $function_op:ident, $op_2:ident, $( $y:ident ),*,$([$x: ident, $z: ident]),*) => {
+    ($function:ident, $doc: expr, $function_op:ident, $op_2:ident, $( $y:ident ),*,$([$x: ident, $z: ident]),*) => {
+        #[doc=$doc]
         pub fn $function(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU) -> ArrowArrayGPU {
             let mut pipeline = ArrowComputePipeline::new(data_1.get_gpu_device(), None);
             let result = $function_op(data_1, data_2, &mut pipeline);
@@ -83,6 +84,7 @@ macro_rules! dyn_fn {
             result
         }
 
+        #[doc=concat!("Submits a command to the pipeline to ", $doc)]
         pub fn $function_op(data_1: &ArrowArrayGPU, data_2: &ArrowArrayGPU, pipeline: &mut ArrowComputePipeline) -> ArrowArrayGPU {
             match (data_1, data_2) {
                 $((ArrowArrayGPU::$y(arr_1), ArrowArrayGPU::$y(arr_2)) => arr_1.$op_2(arr_2, pipeline).into(),)+
@@ -119,6 +121,7 @@ macro_rules! dyn_fn {
 
 dyn_fn!(
     add_scalar_dyn,
+    "Add a scalar to each element in the array",
     add_scalar_op_dyn,
     add_scalar_op,
     Float32ArrayGPU,
@@ -130,6 +133,7 @@ dyn_fn!(
 
 dyn_fn!(
     sub_scalar_dyn,
+    "Subtract a scalar from each element in the array",
     sub_scalar_op_dyn,
     sub_scalar_op,
     Float32ArrayGPU,
@@ -139,6 +143,7 @@ dyn_fn!(
 
 dyn_fn!(
     mul_scalar_dyn,
+    "Multiply a scalar to each element in the array",
     mul_scalar_op_dyn,
     mul_scalar_op,
     Float32ArrayGPU,
@@ -148,6 +153,7 @@ dyn_fn!(
 
 dyn_fn!(
     div_scalar_dyn,
+    "Divide each element in the array by scalar",
     div_scalar_op_dyn,
     div_scalar_op,
     Float32ArrayGPU,
@@ -157,6 +163,7 @@ dyn_fn!(
 
 dyn_fn!(
     rem_scalar_dyn,
+    "Find remainder of each element in the array by scalar",
     rem_scalar_op_dyn,
     rem_scalar_op,
     Float32ArrayGPU,
@@ -217,6 +224,7 @@ pub trait ArrowDiv<Rhs>: ArrayUtils {
 
 dyn_fn!(
     add_array_dyn,
+    "Compute x + y for each pair (x, y) in zip(lhs, rhs)",
     add_array_op_dyn,
     add_op,
     Float32ArrayGPU,
@@ -227,11 +235,29 @@ dyn_fn!(
     [Date32ArrayGPU, Int32ArrayGPU]
 );
 
-dyn_fn!(sub_array_dyn, sub_array_op_dyn, sub_op, Float32ArrayGPU,);
+dyn_fn!(
+    sub_array_dyn,
+    "Compute x - y for each pair (x, y) in zip(lhs, rhs)",
+    sub_array_op_dyn,
+    sub_op,
+    Float32ArrayGPU,
+);
 
-dyn_fn!(mul_array_dyn, mul_array_op_dyn, mul_op, Float32ArrayGPU,);
+dyn_fn!(
+    mul_array_dyn,
+    "Compute x * y for each pair (x, y) in zip(lhs, rhs)",
+    mul_array_op_dyn,
+    mul_op,
+    Float32ArrayGPU,
+);
 
-dyn_fn!(div_array_dyn, div_array_op_dyn, div_op, Float32ArrayGPU,);
+dyn_fn!(
+    div_array_dyn,
+    "Compute x / y for each pair (x, y) in zip(lhs, rhs)",
+    div_array_op_dyn,
+    div_op,
+    Float32ArrayGPU,
+);
 
 dyn_fn!(
     [add_dyn, add_op_dyn, add_array_op_dyn, add_scalar_op_dyn],

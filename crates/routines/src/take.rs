@@ -54,6 +54,7 @@ pub(crate) fn apply_take_op(
     new_values_buffer
 }
 
+/// Create a new array by taking elements from operand_1 using the indexes
 pub fn take_dyn(operand_1: &ArrowArrayGPU, indexes: &UInt32ArrayGPU) -> ArrowArrayGPU {
     let mut pipeline = ArrowComputePipeline::new(operand_1.get_gpu_device(), Some("take"));
     let result = take_op_dyn(operand_1, indexes, &mut pipeline);
@@ -75,6 +76,7 @@ macro_rules! take_op_dyn_arms {
     };
 }
 
+/// Submits a command to creates a new array by taking elements from operand_1 using the indexes
 pub fn take_op_dyn(
     operand_1: &ArrowArrayGPU,
     indexes: &UInt32ArrayGPU,
