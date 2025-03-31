@@ -33,16 +33,19 @@ macro_rules! default_impl {
     };
 }
 
-pub trait MathUnaryPass: ArrayUtils {
+/// Trait for unary operations on each element of the array
+pub trait MathUnary: ArrayUtils {
     type OutputType;
 
     fn abs(&self) -> Self::OutputType {
         default_impl!(self, abs_op);
     }
 
+    /// For each element x in the array computes abs(x)
     fn abs_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
 }
 
+/// Helper trait for Arrow arrays that support unary math operation
 pub trait MathUnaryType {
     type OutputType;
     const SHADER: &'static str;
@@ -56,16 +59,19 @@ pub trait MathUnaryType {
     ) -> Self::OutputType;
 }
 
-pub trait MathBinaryPass: ArrayUtils + Sized {
+/// Trait for binary operations on each pair of elements on the array
+pub trait MathBinary: ArrayUtils + Sized {
     type OutputType;
 
     fn power(&self, other: &Self) -> Self::OutputType {
         default_impl!(self, other, power_op);
     }
 
+    /// For each pair (x, y) in zip(self, other) compute x ^ y
     fn power_op(&self, other: &Self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
 }
 
+/// Helper trait for Arrow arrays that support binary math operation
 pub trait MathBinaryType {
     type OutputType;
     const SHADER: &'static str;
@@ -79,6 +85,7 @@ pub trait MathBinaryType {
     ) -> Self::OutputType;
 }
 
+/// Trait for unary float operations on each element of the array
 pub trait FloatMathUnary: ArrayUtils {
     type OutputType;
     fn sqrt(&self) -> Self::OutputType {
@@ -100,14 +107,21 @@ pub trait FloatMathUnary: ArrayUtils {
         default_impl!(self, log2_op);
     }
 
+    /// For each element x in the array computes square_root(x)
     fn sqrt_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+    /// For each element x in the array computes cube_root(x)
     fn cbrt_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+    /// For each element x in the array computes e^x
     fn exp_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+    /// For each element x in the array computes 2^x
     fn exp2_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+    /// For each element x in the array computes log(x)
     fn log_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
+    /// For each element x in the array computes log_to_base_2(x)
     fn log2_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
 }
 
+/// Helper trait for Arrow arrays that support unary float math operation
 pub trait FloatMathUnaryType {
     type OutputType;
     const SHADER: &'static str;
@@ -178,7 +192,7 @@ macro_rules! apply_function_op {
     };
 }
 
-impl<T: MathUnaryType + ArrowPrimitiveType> MathUnaryPass for PrimitiveArrayGpu<T> {
+impl<T: MathUnaryType + ArrowPrimitiveType> MathUnary for PrimitiveArrayGpu<T> {
     type OutputType = T::OutputType;
 
     fn abs_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {
@@ -186,7 +200,7 @@ impl<T: MathUnaryType + ArrowPrimitiveType> MathUnaryPass for PrimitiveArrayGpu<
     }
 }
 
-impl<T: MathBinaryType + ArrowPrimitiveType> MathBinaryPass for PrimitiveArrayGpu<T> {
+impl<T: MathBinaryType + ArrowPrimitiveType> MathBinary for PrimitiveArrayGpu<T> {
     type OutputType = T::OutputType;
 
     fn power_op(&self, other: &Self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType {

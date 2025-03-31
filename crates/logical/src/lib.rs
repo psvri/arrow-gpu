@@ -18,6 +18,7 @@ pub(crate) const NOT_ENTRY_POINT: &str = "bitwise_not";
 pub(crate) const SHIFT_LEFT_ENTRY_POINT: &str = "bitwise_shl";
 pub(crate) const SHIFT_RIGHT_ENTRY_POINT: &str = "bitwise_shr";
 
+/// Helper trait for Arrow arrays that support logical operation
 pub trait LogicalType {
     const SHADER: &'static str;
     const SHIFT_SHADER: &'static str;
@@ -39,6 +40,7 @@ macro_rules! default_impl {
     };
 }
 
+/// Trait for logical operation on each element of the array
 pub trait Logical: ArrayUtils + Sized {
     fn bitwise_and(&self, operand: &Self) -> Self {
         default_impl!(self, operand, bitwise_and_op);
@@ -59,18 +61,27 @@ pub trait Logical: ArrayUtils + Sized {
         default_impl!(self, operand, bitwise_shr_op);
     }
 
+    /// For each pair (x, y) in zip(self, operand) compute x & y
     fn bitwise_and_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
+    /// For each pair (x, y) in zip(self, operand) compute x | y
     fn bitwise_or_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
+    /// For each pair (x, y) in zip(self, operand) compute x ^ y
     fn bitwise_xor_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
+    /// For each element x in the array computes !x
     fn bitwise_not_op(&self, pipeline: &mut ArrowComputePipeline) -> Self;
+    /// For each pair (x, y) in zip(self, operand) compute x << y
     fn bitwise_shl_op(&self, operand: &UInt32ArrayGPU, pipeline: &mut ArrowComputePipeline)
     -> Self;
+    /// For each pair (x, y) in zip(self, operand) compute x >> y
     fn bitwise_shr_op(&self, operand: &UInt32ArrayGPU, pipeline: &mut ArrowComputePipeline)
     -> Self;
 }
 
+/// Trait for is bit set operations
 pub trait LogicalContains {
+    /// Check if all bits are set in the array
     fn any(&self) -> bool;
+    /// Check if any bit is set in the array
     fn all(&self) -> bool;
 }
 

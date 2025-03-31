@@ -18,6 +18,7 @@ macro_rules! default_impl {
     };
 }
 
+/// Trait for hyperbolic operation on each element of the array
 pub trait Hyperbolic: ArrayUtils {
     type Output;
 
@@ -25,9 +26,11 @@ pub trait Hyperbolic: ArrayUtils {
         default_impl!(self, sinh_op);
     }
 
+    /// For each element x in the array computes sinh(x)
     fn sinh_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
+/// Helper trait for Arrow arrays that support hyperbolic functions
 pub trait HyperbolicType {
     type OutputType;
     const SHADER: &'static str;
@@ -42,6 +45,7 @@ pub trait HyperbolicType {
     ) -> Self::OutputType;
 }
 
+/// Trait for trigonometry operation on each element of the array
 pub trait Trigonometric: ArrayUtils {
     type Output;
 
@@ -55,11 +59,15 @@ pub trait Trigonometric: ArrayUtils {
         default_impl!(self, acos_op);
     }
 
+    /// For each element x in the array computes cos(x)
     fn cos_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output;
+    /// For each element x in the array computes sin(x)
     fn sin_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output;
+    /// For each element x in the array computes acos(x)
     fn acos_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
+/// Helper trait for Arrow arrays that support trigonometry functions
 pub trait TrigonometricType {
     type OutputType;
     const SHADER: &'static str;

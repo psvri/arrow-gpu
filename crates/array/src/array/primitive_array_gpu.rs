@@ -8,6 +8,7 @@ use std::sync::Arc;
 use wgpu::Buffer;
 use wgpu::util::align_to;
 
+/// Arrow array backed by primitive types stored in GPU
 pub struct PrimitiveArrayGpu<T: ArrowPrimitiveType> {
     pub data: Arc<Buffer>,
     pub gpu_device: Arc<GpuDevice>,

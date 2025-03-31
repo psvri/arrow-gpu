@@ -2,6 +2,7 @@ use crate::array::ArrowArrayGPU;
 
 pub mod broadcast;
 
+/// Enum of scalar values used in kernels
 #[derive(Debug)]
 pub enum ScalarValue {
     F32(f32),
@@ -14,6 +15,7 @@ pub enum ScalarValue {
     BOOL(bool),
 }
 
+/// Enum of operands
 #[derive(Debug)]
 pub enum Operand {
     Scalar(ScalarValue),

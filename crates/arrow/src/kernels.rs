@@ -1,5 +1,5 @@
 pub use arrow_gpu_arithmetic::*;
-pub use arrow_gpu_array::kernels::*;
+pub use arrow_gpu_array::kernels::broadcast::*;
 pub use arrow_gpu_cast::*;
 pub use arrow_gpu_compare::*;
 pub use arrow_gpu_logical::*;

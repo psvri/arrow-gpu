@@ -11,6 +11,7 @@ pub(crate) mod u8_cast;
 
 pub use boolean_cast::*;
 
+/// The cast ArrowArray into another ArrowArray
 pub trait Cast<T>: ArrayUtils {
     fn cast(&self) -> T {
         let mut pipeline = ArrowComputePipeline::new(self.get_gpu_device(), None);
@@ -19,9 +20,11 @@ pub trait Cast<T>: ArrayUtils {
         output
     }
 
+    /// cast self as `T`
     fn cast_op(&self, pipeline: &mut ArrowComputePipeline) -> T;
 }
 
+/// The reinterprets ArrowArray's bits as another ArrowArray
 pub trait BitCast<T>: ArrayUtils {
     fn bitcast(&self) -> T {
         let mut pipeline = ArrowComputePipeline::new(self.get_gpu_device(), None);
@@ -30,6 +33,7 @@ pub trait BitCast<T>: ArrayUtils {
         results
     }
 
+    /// The reinterprets self as `T`
     fn bitcast_op(&self, pipeline: &mut ArrowComputePipeline) -> T;
 }
 

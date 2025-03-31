@@ -31,11 +31,13 @@ macro_rules! default_impl {
     };
 }
 
+/// Helper trait for Arrow arrays that support comparison operation
 pub trait CompareType {
     const COMPARE_SHADER: &'static str;
     const MIN_MAX_SHADER: &'static str;
 }
 
+/// Trait for comparing ArrowArrays
 pub trait Compare: ArrayUtils {
     fn gt(&self, operand: &Self) -> BooleanArrayGPU {
         default_impl!(self, operand, gt_op);
@@ -53,13 +55,19 @@ pub trait Compare: ArrayUtils {
         default_impl!(self, operand, eq_op);
     }
 
+    /// Returns a boolean array indicating where `self` > `operand`.
     fn gt_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> BooleanArrayGPU;
+    /// Returns a boolean array indicating where `self` >= `operand`.
     fn gteq_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> BooleanArrayGPU;
+    /// Returns a boolean array indicating where `self` < `operand`.
     fn lt_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> BooleanArrayGPU;
+    /// Returns a boolean array indicating where `self` <= `operand`.
     fn lteq_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> BooleanArrayGPU;
+    /// Returns a boolean array indicating where `self` == `operand`.
     fn eq_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> BooleanArrayGPU;
 }
 
+/// Trait for finding min and max across each element in ArrowArrays
 pub trait MinMax: ArrayUtils + Sized {
     fn max(&self, operand: &Self) -> Self {
         default_impl!(self, operand, max_op);
@@ -68,7 +76,9 @@ pub trait MinMax: ArrayUtils + Sized {
         default_impl!(self, operand, min_op);
     }
 
+    /// Returns an array where each element is max(self, operand)
     fn max_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
+    /// Returns an array where each element is min(self, operand)
     fn min_op(&self, operand: &Self, pipeline: &mut ArrowComputePipeline) -> Self;
 }
 

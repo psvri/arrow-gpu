@@ -14,6 +14,7 @@ macro_rules! default_impl {
     };
 }
 
+/// The addition operator ArrowArray + Scalar
 pub trait ArrowScalarAdd<Rhs>: ArrayUtils {
     type Output;
 
@@ -21,9 +22,11 @@ pub trait ArrowScalarAdd<Rhs>: ArrayUtils {
         default_impl!(self, value, add_scalar_op);
     }
 
+    /// Adds scalar to self
     fn add_scalar_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
+/// The subtract operator ArrowArray - Scalar
 pub trait ArrowScalarSub<Rhs>: ArrayUtils {
     type Output;
 
@@ -31,9 +34,11 @@ pub trait ArrowScalarSub<Rhs>: ArrayUtils {
         default_impl!(self, value, sub_scalar_op);
     }
 
+    /// Subtracts scalar from self
     fn sub_scalar_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
+/// The multiplication operator ArrowArray * Scalar
 pub trait ArrowScalarMul<Rhs>: ArrayUtils {
     type Output;
 
@@ -41,9 +46,11 @@ pub trait ArrowScalarMul<Rhs>: ArrayUtils {
         default_impl!(self, value, mul_scalar_op);
     }
 
+    /// Multiplies scalar with self
     fn mul_scalar_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
+/// The division operator ArrowArray / Scalar
 pub trait ArrowScalarDiv<Rhs>: ArrayUtils {
     type Output;
 
@@ -51,9 +58,11 @@ pub trait ArrowScalarDiv<Rhs>: ArrayUtils {
         default_impl!(self, value, div_scalar_op);
     }
 
+    /// Divides self with scalar
     fn div_scalar_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
+/// The remainder operator ArrowArray % Scalar
 pub trait ArrowScalarRem<Rhs>: ArrayUtils {
     type Output;
 
@@ -61,6 +70,7 @@ pub trait ArrowScalarRem<Rhs>: ArrayUtils {
         default_impl!(self, value, rem_scalar_op);
     }
 
+    /// Gives remainder of self with scalar
     fn rem_scalar_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
@@ -157,6 +167,7 @@ dyn_fn!(
     [Date32ArrayGPU, Int32ArrayGPU]
 );
 
+/// The addition operator ArrowArray + ArrowArray
 pub trait ArrowAdd<Rhs>: ArrayUtils {
     type Output;
 
@@ -164,9 +175,11 @@ pub trait ArrowAdd<Rhs>: ArrayUtils {
         default_impl!(self, value, add_op);
     }
 
+    /// Adds array to self
     fn add_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
+/// The subtract operator ArrowArray - ArrowArray
 pub trait ArrowSub<Rhs>: ArrayUtils {
     type Output;
 
@@ -174,9 +187,11 @@ pub trait ArrowSub<Rhs>: ArrayUtils {
         default_impl!(self, value, sub_op);
     }
 
+    /// Subtracts array from self
     fn sub_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
+/// The multiplication operator ArrowArray * ArrowArray
 pub trait ArrowMul<Rhs>: ArrayUtils {
     type Output;
 
@@ -184,9 +199,11 @@ pub trait ArrowMul<Rhs>: ArrayUtils {
         default_impl!(self, value, mul_op);
     }
 
+    /// Multiplies array with self
     fn mul_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
+/// The division operator ArrowArray / ArrowArray
 pub trait ArrowDiv<Rhs>: ArrayUtils {
     type Output;
 
@@ -194,6 +211,7 @@ pub trait ArrowDiv<Rhs>: ArrayUtils {
         default_impl!(self, value, div_op);
     }
 
+    /// Divides self with array
     fn div_op(&self, value: &Rhs, pipeline: &mut ArrowComputePipeline) -> Self::Output;
 }
 
@@ -222,6 +240,7 @@ dyn_fn!(
     [div_dyn, div_op_dyn, div_array_op_dyn, div_scalar_op_dyn]
 );
 
+/// The negation operator -ArrowArray
 pub trait Neg: ArrayUtils {
     type OutputType;
     fn neg(&self) -> Self::OutputType {
@@ -234,7 +253,7 @@ pub trait Neg: ArrayUtils {
     fn neg_op(&self, pipeline: &mut ArrowComputePipeline) -> Self::OutputType;
 }
 
-// TODO rework this into macro probably
+/// Helper trait for Arrow arrays that support negation operation
 pub trait NegUnaryType {
     type OutputType;
     const SHADER: &'static str;

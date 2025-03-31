@@ -1,10 +1,11 @@
-// Writing our own implementation with logic from else crate
+// Writing our own implementation with logic from elsa crate
 // https://github.com/Manishearth/elsa/blob/master/src/sync.rs
 
 use hashbrown::{Equivalent, HashMap};
 use std::hash::Hash;
 use std::sync::{Arc, RwLock};
 
+/// Append only hashmap used for storing compiled shaders
 pub(crate) struct AppendHashMap<K, V> {
     map: RwLock<HashMap<K, Arc<V>>>,
 }

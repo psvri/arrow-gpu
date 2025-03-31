@@ -25,6 +25,7 @@ impl Equivalent<PiepelineEntry> for (&str, &str) {
     }
 }
 
+/// Represents a GPU device
 pub struct GpuDevice {
     pub device: Device,
     pub queue: Queue,
@@ -41,6 +42,7 @@ impl Debug for GpuDevice {
 }
 
 impl GpuDevice {
+    /// Creates a new GpuDevice
     pub fn new() -> GpuDevice {
         let instance = wgpu::Instance::default();
 
@@ -81,6 +83,7 @@ impl GpuDevice {
         }
     }
 
+    /// Creates a new GpuDevice from Adapter
     pub fn from_adapter(adapter: Adapter) -> GpuDevice {
         let (device, queue) = adapter
             .request_device(
@@ -102,6 +105,7 @@ impl GpuDevice {
         }
     }
 
+    /// Creates a new CommandEncoder for the device
     pub fn create_command_encoder(&self, label: Option<&str>) -> wgpu::CommandEncoder {
         self.device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label })
@@ -163,6 +167,7 @@ impl GpuDevice {
         }
     }
 
+    /// Creates a GPU buffer with `data`
     pub fn create_gpu_buffer_with_data(&self, data: &[impl RustNativeType]) -> Buffer {
         self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -174,6 +179,7 @@ impl GpuDevice {
             })
     }
 
+    /// Creates an empty GPU buffer
     pub fn create_empty_buffer(&self, size: u64) -> Buffer {
         self.device.create_buffer(&wgpu::BufferDescriptor {
             label: None,

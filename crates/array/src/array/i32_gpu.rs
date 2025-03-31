@@ -9,6 +9,7 @@ use wgpu::Buffer;
 
 const I32_BROADCAST_SHADER: &str = include_str!("../../compute_shaders/i32/broadcast.wgsl");
 
+/// Int32 arrow array in gpu
 pub type Int32ArrayGPU = PrimitiveArrayGpu<i32>;
 
 impl From<Int32ArrayGPU> for ArrowArrayGPU {

@@ -2,6 +2,8 @@ use crate::{SwizzleType, merge::U8_MERGE_SHADER};
 
 impl SwizzleType for i8 {
     const MERGE_SHADER: &'static str = U8_MERGE_SHADER;
+    const TAKE_SHADER: &'static str = "todo!()";
+    const PUT_SHADER: &'static str = "todo!()";
 }
 
 #[cfg(test)]

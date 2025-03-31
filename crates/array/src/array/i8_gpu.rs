@@ -4,6 +4,7 @@ use crate::gpu_utils::*;
 use crate::kernels::broadcast::Broadcast;
 use std::sync::Arc;
 
+/// Int8 arrow array in gpu
 pub type Int8ArrayGPU = PrimitiveArrayGpu<i8>;
 
 impl Broadcast<i8> for Int8ArrayGPU {

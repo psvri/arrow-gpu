@@ -4,6 +4,7 @@ use arrow_gpu_array::{
 };
 use std::sync::Arc;
 
+/// Trait for sum of all elements in the array
 pub trait Sum: ArrayUtils + Sized {
     fn sum(&self) -> Self {
         let mut pipeline = ArrowComputePipeline::new(self.get_gpu_device(), Some("Sum"));
@@ -12,9 +13,11 @@ pub trait Sum: ArrayUtils + Sized {
         result
     }
 
+    /// Computes sum of all elements in the array
     fn sum_op(&self, pipeline: &mut ArrowComputePipeline) -> Self;
 }
 
+/// Helper trait for Arrow arrays backed by 32 bits that support sum
 pub trait Sum32Bit: ArrowPrimitiveType {
     const SHADER: &'static str;
 }
