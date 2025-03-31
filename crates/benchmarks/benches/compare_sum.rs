@@ -2,8 +2,7 @@ use std::sync::Arc;
 
 use arrow::array::UInt32Array;
 use arrow::compute::kernels::aggregate::sum;
-use arrow_gpu::kernels::Sum;
-use arrow_gpu::kernels::broadcast::Broadcast;
+use arrow_gpu::kernels::{Broadcast, Sum};
 use arrow_gpu::{array::*, gpu_utils::*};
 use criterion::{Criterion, Throughput, black_box, criterion_group, criterion_main};
 

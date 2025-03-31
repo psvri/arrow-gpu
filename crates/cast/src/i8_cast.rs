@@ -5,18 +5,9 @@ use std::sync::Arc;
 use crate::Cast;
 use crate::impl_cast;
 
-const I8_CAST_I32_SHADER: &str = concat!(
-    include_str!("../../../compute_shaders/i8/utils.wgsl"),
-    include_str!("../compute_shaders/i8/cast_i32.wgsl")
-);
-const I8_CAST_I16_SHADER: &str = concat!(
-    include_str!("../../../compute_shaders/i8/utils.wgsl"),
-    include_str!("../compute_shaders/i8/cast_i16.wgsl")
-);
-const I8_CAST_F32_SHADER: &str = concat!(
-    include_str!("../../../compute_shaders/i8/utils.wgsl"),
-    include_str!("../compute_shaders/i8/cast_f32.wgsl")
-);
+const I8_CAST_I32_SHADER: &str = include_str!("../compute_shaders/i8/cast_i32.wgsl");
+const I8_CAST_I16_SHADER: &str = include_str!("../compute_shaders/i8/cast_i16.wgsl");
+const I8_CAST_F32_SHADER: &str = include_str!("../compute_shaders/i8/cast_f32.wgsl");
 
 impl_cast!(
     Int32ArrayGPU,

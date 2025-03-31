@@ -5,15 +5,9 @@ use wgpu::Buffer;
 
 use crate::{HyperbolicType, TrigonometricType};
 
-const HYPERBOLIC_SHADER: &str = concat!(
-    include_str!("../../../compute_shaders/u8/utils.wgsl"),
-    include_str!("../compute_shaders/u8/hyperbolic.wgsl")
-);
+const HYPERBOLIC_SHADER: &str = include_str!("../compute_shaders/u8/hyperbolic.wgsl");
 
-const TRIGONOMETRY_SHADER: &str = concat!(
-    include_str!("../../../compute_shaders/u8/utils.wgsl"),
-    include_str!("../compute_shaders/u8/trigonometry.wgsl")
-);
+const TRIGONOMETRY_SHADER: &str = include_str!("../compute_shaders/u8/trigonometry.wgsl");
 
 impl HyperbolicType for u8 {
     type OutputType = Float32ArrayGPU;
