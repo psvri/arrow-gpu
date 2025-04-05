@@ -1,12 +1,9 @@
-use std::sync::Arc;
-
+use crate::{MathBinaryType, MathUnaryType};
 use arrow_gpu_array::{
-    array::{Int32ArrayGPU, NullBitBufferGpu},
+    array::{Int32ArrayGPU, NullBitBufferGpu, buffer::ArrowGpuBuffer},
     gpu_utils::GpuDevice,
 };
-use wgpu::Buffer;
-
-use crate::{MathBinaryType, MathUnaryType};
+use std::sync::Arc;
 
 const I32UNARY_SHADER: &str = include_str!("../compute_shaders/i32/unary.wgsl");
 const I32BINARY_SHADER: &str = include_str!("../compute_shaders/i32/binary.wgsl");
@@ -18,7 +15,7 @@ impl MathUnaryType for i32 {
     const BUFFER_SIZE_MULTIPLIER: u64 = 1;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,
@@ -40,7 +37,7 @@ impl MathBinaryType for i32 {
     const BUFFER_SIZE_MULTIPLIER: u64 = 1;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,

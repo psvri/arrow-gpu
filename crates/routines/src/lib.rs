@@ -111,7 +111,7 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
         });
 
         Self {
-            data: Arc::new(new_buffer),
+            data: new_buffer.into(),
             gpu_device: self.gpu_device.clone(),
             phantom: std::marker::PhantomData,
             len: self.len,
@@ -134,7 +134,7 @@ impl<T: SwizzleType + ArrowPrimitiveType> Swizzle for PrimitiveArrayGpu<T> {
         let null_buffer = take_null_buffer(self.null_buffer.as_ref(), indexes, pipeline);
 
         Self {
-            data: Arc::new(new_buffer),
+            data: new_buffer.into(),
             gpu_device: self.gpu_device.clone(),
             phantom: std::marker::PhantomData,
             len: indexes.len,

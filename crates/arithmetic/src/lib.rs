@@ -38,7 +38,7 @@ macro_rules! impl_arithmetic_op {
                 );
 
                 Self {
-                    data: Arc::new(new_buffer),
+                    data: new_buffer.into(),
                     gpu_device: self.gpu_device.clone(),
                     phantom: Default::default(),
                     len: self.len,
@@ -82,7 +82,7 @@ macro_rules! impl_arithmetic_array_op {
                 );
 
                 Self {
-                    data: Arc::new(new_data_buffer),
+                    data: new_data_buffer.into(),
                     gpu_device: self.gpu_device.clone(),
                     phantom: Default::default(),
                     len: self.len,

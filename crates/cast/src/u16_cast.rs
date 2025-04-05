@@ -1,6 +1,5 @@
 use arrow_gpu_array::array::*;
 use arrow_gpu_array::gpu_utils::*;
-use std::sync::Arc;
 
 use crate::Cast;
 use crate::impl_cast;

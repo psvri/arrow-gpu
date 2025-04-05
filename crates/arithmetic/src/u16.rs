@@ -1,8 +1,6 @@
+use crate::*;
 use arrow_gpu_array::array::{types::*, *};
 use arrow_gpu_array::gpu_utils::*;
-use std::sync::Arc;
-
-use crate::*;
 
 const U16_SCALAR_SHADER: &str = concat!(
     include_str!("../../../compute_shaders/u16/utils.wgsl"),

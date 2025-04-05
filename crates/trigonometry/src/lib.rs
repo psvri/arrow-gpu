@@ -1,7 +1,7 @@
+use arrow_gpu_array::array::buffer::ArrowGpuBuffer;
 use arrow_gpu_array::array::*;
 use arrow_gpu_array::gpu_utils::*;
 use std::sync::Arc;
-use wgpu::Buffer;
 
 pub(crate) mod f32_kernel;
 pub(crate) mod i16_kernel;
@@ -38,7 +38,7 @@ pub trait HyperbolicType {
     const BUFFER_SIZE_MULTIPLIER: u64;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,
@@ -75,7 +75,7 @@ pub trait TrigonometricType {
     const BUFFER_SIZE_MULTIPLIER: u64;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,
@@ -104,7 +104,7 @@ macro_rules! apply_unary_function_op {
         );
 
         return <T as $trait_name>::create_new(
-            Arc::new(new_buffer),
+            new_buffer.into(),
             $self.gpu_device.clone(),
             $self.len,
             null_buffer,

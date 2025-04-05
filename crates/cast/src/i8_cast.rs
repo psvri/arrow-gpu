@@ -1,9 +1,7 @@
-use arrow_gpu_array::array::*;
-use arrow_gpu_array::gpu_utils::*;
-use std::sync::Arc;
-
 use crate::Cast;
 use crate::impl_cast;
+use arrow_gpu_array::array::*;
+use arrow_gpu_array::gpu_utils::*;
 
 const I8_CAST_I32_SHADER: &str = include_str!("../compute_shaders/i8/cast_i32.wgsl");
 const I8_CAST_I16_SHADER: &str = include_str!("../compute_shaders/i8/cast_i16.wgsl");

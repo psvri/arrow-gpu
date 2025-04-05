@@ -1,9 +1,6 @@
-use std::sync::Arc;
-
+use crate::{BitCast, impl_bitcast};
 use arrow_gpu_array::array::{ArrayUtils, Float32ArrayGPU, NullBitBufferGpu, UInt32ArrayGPU};
 use arrow_gpu_array::gpu_utils::*;
-
-use crate::{BitCast, impl_bitcast};
 
 impl_bitcast!(Float32ArrayGPU, UInt32ArrayGPU);
 

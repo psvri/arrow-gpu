@@ -1,6 +1,5 @@
 use arrow_gpu_array::array::{Float32ArrayGPU, NullBitBufferGpu, UInt8ArrayGPU};
 use arrow_gpu_array::gpu_utils::*;
-use std::sync::Arc;
 
 use crate::Cast;
 
@@ -22,7 +21,7 @@ impl Cast<UInt8ArrayGPU> for Float32ArrayGPU {
             NullBitBufferGpu::clone_null_bit_buffer_pass(&self.null_buffer, &mut pipeline.encoder);
 
         UInt8ArrayGPU {
-            data: Arc::new(new_buffer),
+            data: new_buffer.into(),
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,

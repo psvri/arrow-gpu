@@ -108,7 +108,7 @@ macro_rules! apply_binary_function_op {
         );
 
         return Self {
-            data: Arc::new(new_buffer),
+            data: new_buffer.into(),
             gpu_device: $self.gpu_device.clone(),
             phantom: std::marker::PhantomData,
             len: $self.len,
@@ -149,7 +149,7 @@ impl<T: LogicalType + ArrowPrimitiveType> Logical for PrimitiveArrayGpu<T> {
             NullBitBufferGpu::clone_null_bit_buffer_pass(&self.null_buffer, &mut pipeline.encoder);
 
         Self {
-            data: Arc::new(new_buffer),
+            data: new_buffer.into(),
             gpu_device: self.gpu_device.clone(),
             phantom: std::marker::PhantomData,
             len: self.len,

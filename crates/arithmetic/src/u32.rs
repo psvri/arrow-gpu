@@ -1,7 +1,5 @@
 use arrow_gpu_array::array::{types::UInt32Type, *};
 use arrow_gpu_array::gpu_utils::*;
-use std::sync::Arc;
-
 use crate::impl_arithmetic_op;
 use crate::*;
 
