@@ -1,11 +1,11 @@
+use super::buffer::ArrowGpuBuffer;
 use super::{
     ArrowArray, ArrowArrayGPU, ArrowComputePipeline, ArrowPrimitiveType, ArrowType,
     NullBitBufferGpu, primitive_array_gpu::*,
 };
 use crate::gpu_utils::*;
 use crate::{ArrowErrorGPU, kernels::broadcast::Broadcast};
-use std::{any::Any, sync::Arc};
-use wgpu::Buffer;
+use std::any::Any;
 
 const I32_BROADCAST_SHADER: &str = include_str!("../../compute_shaders/i32/broadcast.wgsl");
 
@@ -46,7 +46,7 @@ impl<T: ArrowPrimitiveType<NativeType = i32>> Broadcast<i32> for PrimitiveArrayG
             "broadcast",
             len.div_ceil(256) as u32,
         );
-        let data = Arc::new(gpu_buffer);
+        let data = gpu_buffer.into();
         let null_buffer = None;
 
         Self {
@@ -76,7 +76,7 @@ impl ArrowArray for Int32ArrayGPU {
         &self.gpu_device
     }
 
-    fn get_buffer(&self) -> &Buffer {
+    fn get_buffer(&self) -> &ArrowGpuBuffer {
         &self.data
     }
 

@@ -57,7 +57,7 @@ macro_rules! impl_cast {
                 );
 
                 $into_ty {
-                    data: Arc::new(new_buffer),
+                    data: new_buffer.into(),
                     gpu_device: self.gpu_device.clone(),
                     phantom: Default::default(),
                     len: self.len,
@@ -75,7 +75,7 @@ macro_rules! impl_cast {
                     &mut pipeline.encoder,
                 );
                 $into_ty {
-                    data: Arc::new(new_buffer),
+                    data: new_buffer.into(),
                     gpu_device: self.gpu_device.clone(),
                     phantom: Default::default(),
                     len: self.len,
@@ -94,7 +94,7 @@ macro_rules! impl_bitcast {
                 let data = pipeline.clone_buffer(&self.data);
                 let null_buffer =
                     NullBitBufferGpu::clone_null_bit_buffer_op(&self.null_buffer, pipeline);
-                let data = Arc::new(data);
+                let data = data.into();
                 $into_ty {
                     data,
                     gpu_device: self.get_gpu_device(),

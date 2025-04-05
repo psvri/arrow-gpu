@@ -1,9 +1,10 @@
 use super::ArrowPrimitiveType;
+use super::buffer::ArrowGpuBuffer;
 use super::{ArrowArray, ArrowArrayGPU, ArrowType, NullBitBufferGpu, primitive_array_gpu::*};
 use crate::ArrowErrorGPU;
 use crate::gpu_utils::*;
 use crate::kernels::broadcast::Broadcast;
-use std::{any::Any, sync::Arc};
+use std::any::Any;
 use wgpu::Buffer;
 
 /// UInt32 arrow array in gpu
@@ -76,7 +77,7 @@ impl<T: ArrowPrimitiveType<NativeType = u32>> Broadcast<u32> for PrimitiveArrayG
             "broadcast",
             len.div_ceil(256) as u32,
         );
-        let data = Arc::new(gpu_buffer);
+        let data = gpu_buffer.into();
         let null_buffer = None;
 
         Self {
@@ -106,7 +107,7 @@ impl ArrowArray for UInt32ArrayGPU {
         &self.gpu_device
     }
 
-    fn get_buffer(&self) -> &Buffer {
+    fn get_buffer(&self) -> &ArrowGpuBuffer {
         &self.data
     }
 

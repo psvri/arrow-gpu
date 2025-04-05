@@ -2,7 +2,6 @@ use super::{ArrowArrayGPU, primitive_array_gpu::*, u32_gpu::UInt32ArrayGPU};
 use crate::ArrowErrorGPU;
 use crate::gpu_utils::*;
 use crate::kernels::broadcast::Broadcast;
-use std::sync::Arc;
 
 /// Int8 arrow array in gpu
 pub type Int8ArrayGPU = PrimitiveArrayGpu<i8>;
@@ -16,7 +15,7 @@ impl Broadcast<i8> for Int8ArrayGPU {
             | ((value as u32) << 24);
         let gpu_buffer =
             UInt32ArrayGPU::create_broadcast_buffer_op(broadcast_value, new_len as u64, pipeline);
-        let data = Arc::new(gpu_buffer);
+        let data = gpu_buffer.into();
         let null_buffer = None;
 
         Self {

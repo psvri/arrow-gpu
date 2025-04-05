@@ -1,7 +1,7 @@
+use arrow_gpu_array::array::buffer::ArrowGpuBuffer;
 use arrow_gpu_array::array::*;
 use arrow_gpu_array::gpu_utils::*;
 use std::sync::*;
-use wgpu::Buffer;
 
 use crate::MathBinaryType;
 use crate::{FloatMathUnaryType, MathUnaryType};
@@ -16,7 +16,7 @@ impl MathUnaryType for f32 {
     const BUFFER_SIZE_MULTIPLIER: u64 = 1;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,
@@ -38,7 +38,7 @@ impl MathBinaryType for f32 {
     const BUFFER_SIZE_MULTIPLIER: u64 = 1;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,
@@ -59,7 +59,7 @@ impl FloatMathUnaryType for f32 {
     const BUFFER_SIZE_MULTIPLIER: u64 = 1;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,

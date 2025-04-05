@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
+use arrow_gpu_array::array::buffer::ArrowGpuBuffer;
 use arrow_gpu_array::array::{
     ArrayUtils, ArrowArrayGPU, ArrowPrimitiveType, NullBitBufferGpu, PrimitiveArrayGpu,
 };
 use arrow_gpu_array::gpu_utils::*;
-use wgpu::Buffer;
 
 pub(crate) mod f32;
 pub(crate) mod i32;
@@ -52,7 +52,7 @@ pub trait MathUnaryType {
     const BUFFER_SIZE_MULTIPLIER: u64;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,
@@ -78,7 +78,7 @@ pub trait MathBinaryType {
     const BUFFER_SIZE_MULTIPLIER: u64;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,
@@ -128,7 +128,7 @@ pub trait FloatMathUnaryType {
     const BUFFER_SIZE_MULTIPLIER: u64;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,
@@ -156,7 +156,7 @@ macro_rules! apply_function_op {
         );
 
         return <T as $trait_name>::create_new(
-            Arc::new(new_buffer),
+            new_buffer.into(),
             $self.gpu_device.clone(),
             $self.len,
             new_null_buffer,
@@ -184,7 +184,7 @@ macro_rules! apply_function_op {
         );
 
         return <T as $trait_name>::create_new(
-            Arc::new(new_buffer),
+            new_buffer.into(),
             $self.gpu_device.clone(),
             $self.len,
             new_null_buffer,

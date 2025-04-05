@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::Cast;
 use arrow_gpu_array::array::{BooleanArrayGPU, Float32ArrayGPU, NullBitBufferGpu};
 use arrow_gpu_array::gpu_utils::*;
@@ -67,7 +65,7 @@ impl Cast<Float32ArrayGPU> for BooleanArrayGPU {
         );
 
         Float32ArrayGPU {
-            data: Arc::new(new_buffer),
+            data: new_buffer.into(),
             gpu_device: self.gpu_device.clone(),
             phantom: Default::default(),
             len: self.len,

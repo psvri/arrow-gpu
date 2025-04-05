@@ -130,7 +130,7 @@ macro_rules! apply_function_min_max {
         );
 
         return Self {
-            data: Arc::new(new_buffer),
+            data: new_buffer.into(),
             gpu_device: $self.gpu_device.clone(),
             len: $self.len,
             phantom: std::marker::PhantomData,

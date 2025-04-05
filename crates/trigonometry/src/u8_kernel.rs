@@ -1,7 +1,7 @@
+use arrow_gpu_array::array::buffer::ArrowGpuBuffer;
 use arrow_gpu_array::array::*;
 use arrow_gpu_array::gpu_utils::*;
 use std::sync::Arc;
-use wgpu::Buffer;
 
 use crate::{HyperbolicType, TrigonometricType};
 
@@ -16,7 +16,7 @@ impl HyperbolicType for u8 {
     const BUFFER_SIZE_MULTIPLIER: u64 = 4;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,
@@ -38,7 +38,7 @@ impl TrigonometricType for u8 {
     const BUFFER_SIZE_MULTIPLIER: u64 = 4;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,

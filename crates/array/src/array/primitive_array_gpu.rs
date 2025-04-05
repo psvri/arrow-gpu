@@ -1,16 +1,16 @@
 use super::ArrayUtils;
 use super::NullBitBufferGpu;
+use super::buffer::ArrowGpuBuffer;
 use crate::array::{ArrowPrimitiveType, BooleanBufferBuilder};
 use crate::gpu_utils::*;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use std::sync::Arc;
-use wgpu::Buffer;
 use wgpu::util::align_to;
 
 /// Arrow array backed by primitive types stored in GPU
 pub struct PrimitiveArrayGpu<T: ArrowPrimitiveType> {
-    pub data: Arc<Buffer>,
+    pub data: ArrowGpuBuffer,
     pub gpu_device: Arc<GpuDevice>,
     pub phantom: PhantomData<T>,
     /// Actual len of the array
@@ -46,7 +46,7 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
         let null_buffer = NullBitBufferGpu::new(gpu_device.clone(), &null_buffer_builder);
 
         Self {
-            data: Arc::new(data),
+            data: data.into(),
             gpu_device,
             phantom: Default::default(),
             len: value.len(),
@@ -59,7 +59,7 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
         let null_buffer = None;
 
         Self {
-            data: Arc::new(data),
+            data: data.into(),
             gpu_device,
             phantom: Default::default(),
             len: value.len(),
@@ -104,10 +104,10 @@ impl<T: ArrowPrimitiveType> PrimitiveArrayGpu<T> {
     }
 
     pub fn clone_array(&self) -> Self {
-        let data = self.gpu_device.clone_buffer(&self.data);
+        let data = self.gpu_device.clone_buffer(&self.data).into();
         let null_buffer = NullBitBufferGpu::clone_null_bit_buffer(&self.null_buffer);
         Self {
-            data: Arc::new(data),
+            data,
             gpu_device: self.gpu_device.clone(),
             phantom: PhantomData,
             len: self.len,

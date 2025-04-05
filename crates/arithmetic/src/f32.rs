@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use arrow_gpu_array::array::buffer::ArrowGpuBuffer;
 use arrow_gpu_array::array::{types::*, *};
 use arrow_gpu_array::gpu_utils::*;
 
@@ -103,7 +104,7 @@ impl NegUnaryType for f32 {
     const BUFFER_SIZE_MULTIPLIER: u64 = 1;
 
     fn create_new(
-        data: Arc<wgpu::Buffer>,
+        data: ArrowGpuBuffer,
         gpu_device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,

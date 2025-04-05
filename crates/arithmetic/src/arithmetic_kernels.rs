@@ -1,9 +1,9 @@
+use arrow_gpu_array::array::buffer::ArrowGpuBuffer;
 use arrow_gpu_array::array::{
     ArrayUtils, ArrowArrayGPU, ArrowPrimitiveType, NullBitBufferGpu, PrimitiveArrayGpu,
 };
 use arrow_gpu_array::gpu_utils::*;
 use std::sync::Arc;
-use wgpu::Buffer;
 
 macro_rules! default_impl {
     ($self: ident, $operand: ident, $fn: ident) => {
@@ -286,7 +286,7 @@ pub trait NegUnaryType {
     const BUFFER_SIZE_MULTIPLIER: u64;
 
     fn create_new(
-        data: Arc<Buffer>,
+        data: ArrowGpuBuffer,
         device: Arc<GpuDevice>,
         len: usize,
         null_buffer: Option<NullBitBufferGpu>,
@@ -310,7 +310,7 @@ impl<T: NegUnaryType + ArrowPrimitiveType> Neg for PrimitiveArrayGpu<T> {
             NullBitBufferGpu::clone_null_bit_buffer_pass(&self.null_buffer, &mut pipeline.encoder);
 
         <T as NegUnaryType>::create_new(
-            Arc::new(new_buffer),
+            new_buffer.into(),
             self.gpu_device.clone(),
             self.len,
             new_null_buffer,
