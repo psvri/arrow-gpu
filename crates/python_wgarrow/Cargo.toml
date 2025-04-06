@@ -1,0 +1,13 @@
+[package]
+name = "wgarrow"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "wgarrow"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = {version = "0.24.1", features = ["extension-module"]}
+arrow_gpu = {path = "../arrow"}

@@ -11,7 +11,8 @@ members = [
     "crates/logical",
     "crates/routines",
     "crates/compare",
-    "crates/math"
+    "crates/math",
+    "crates/python_wgarrow"
 ]
 
 [workspace.package]
