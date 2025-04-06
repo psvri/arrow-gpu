@@ -1,9 +1,9 @@
+use super::buffer::ArrowGpuBuffer;
 use super::{ArrowArray, ArrowArrayGPU, ArrowType, NullBitBufferGpu, primitive_array_gpu::*};
 use crate::ArrowErrorGPU;
 use crate::gpu_utils::*;
 use crate::kernels::broadcast::Broadcast;
-use std::{any::Any, sync::Arc};
-use wgpu::Buffer;
+use std::any::Any;
 
 const F32_BROADCAST_SHADER: &str = include_str!("../../compute_shaders/f32/broadcast.wgsl");
 
@@ -23,7 +23,7 @@ impl Broadcast<f32> for Float32ArrayGPU {
             "broadcast",
             dispatch_size as u32,
         );
-        let data = Arc::new(gpu_buffer);
+        let data = gpu_buffer.into();
         let null_buffer = None;
 
         Self {
@@ -73,7 +73,7 @@ impl ArrowArray for Float32ArrayGPU {
         &self.gpu_device
     }
 
-    fn get_buffer(&self) -> &Buffer {
+    fn get_buffer(&self) -> &ArrowGpuBuffer {
         &self.data
     }
 
@@ -86,6 +86,7 @@ impl ArrowArray for Float32ArrayGPU {
 mod tests {
     use super::*;
     use crate::array::primitive_array_gpu::test::*;
+    use std::sync::Arc;
 
     #[test]
     fn test_f32_array_from_optinal_vec() {

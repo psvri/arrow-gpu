@@ -1,9 +1,7 @@
-use arrow_gpu_array::array::{types::Int32Type, *};
-use arrow_gpu_array::gpu_utils::*;
-use std::sync::Arc;
-
 use crate::impl_arithmetic_op;
 use crate::*;
+use arrow_gpu_array::array::{types::Int32Type, *};
+use arrow_gpu_array::gpu_utils::*;
 
 const I32_SCALAR_SHADER: &str = include_str!("../compute_shaders/i32/scalar.wgsl");
 const I32_ARRAY_SHADER: &str = include_str!("../compute_shaders/i32/array.wgsl");

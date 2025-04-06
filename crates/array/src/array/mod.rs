@@ -2,12 +2,13 @@ use crate::gpu_utils::*;
 use crate::kernels::ScalarValue;
 use crate::kernels::broadcast::Broadcast;
 use crate::utils::ScalarArray;
+use buffer::ArrowGpuBuffer;
 use bytemuck::Pod;
 use std::sync::Arc;
 use std::{any::Any, fmt::Debug};
-use wgpu::Buffer;
 
 pub(crate) mod boolean_gpu;
+pub mod buffer;
 pub(crate) mod date32_gpu;
 pub(crate) mod f32_gpu;
 pub(crate) mod i16_gpu;
@@ -88,7 +89,7 @@ pub(crate) trait ArrowArray: Any + Sync + Send + Debug {
     fn get_data_type(&self) -> ArrowType;
     fn get_memory_used(&self) -> u64;
     fn get_gpu_device(&self) -> &GpuDevice;
-    fn get_buffer(&self) -> &Buffer;
+    fn get_buffer(&self) -> &ArrowGpuBuffer;
     fn get_null_bit_buffer(&self) -> Option<&NullBitBufferGpu>;
 }
 

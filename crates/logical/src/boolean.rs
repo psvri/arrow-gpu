@@ -131,7 +131,7 @@ impl LogicalContains for BooleanArrayGPU {
         );
 
         let uint32_arr = UInt32ArrayGPU {
-            data: Arc::new(bitcounts),
+            data: bitcounts.into(),
             gpu_device: self.gpu_device.clone(),
             phantom: std::marker::PhantomData,
             len: (self.data.size() / 4) as usize,

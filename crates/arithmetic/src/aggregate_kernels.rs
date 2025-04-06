@@ -2,7 +2,6 @@ use arrow_gpu_array::{
     array::{ArrayUtils, ArrowPrimitiveType, PrimitiveArrayGpu},
     gpu_utils::ArrowComputePipeline,
 };
-use std::sync::Arc;
 
 /// Trait for sum of all elements in the array
 pub trait Sum: ArrayUtils + Sized {
@@ -43,7 +42,7 @@ impl<T: Sum32Bit> Sum for PrimitiveArrayGpu<T> {
             );
         }
         Self {
-            data: Arc::new(temp_buffer),
+            data: temp_buffer.into(),
             gpu_device: self.get_gpu_device(),
             phantom: std::marker::PhantomData,
             len: 1,
